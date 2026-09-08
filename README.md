@@ -1,11 +1,37 @@
 # MUSA Grader
 
 Semi-automatic grading for Jupyter Notebook assignments in **MUSA 5500: Geospatial
-Data Science in Python**. Built to the prototype specification in [design.md](design.md).
+Data Science in Python**. Built to the prototype specification in [design.md](design.md),
+and graded against the real student template in
+[assignment_template/assignment-1.ipynb](assignment_template/assignment-1.ipynb).
 
 The guiding principle: **automate what is objectively testable, surface ambiguity,
 and make human review fast.** Every deduction traces back to a deterministic test,
 a structural check, a notebook result, or an explicit human judgement.
+
+## Grading works, not outputs
+
+Students download their own Zillow ZHVI extract, and Zillow revises and extends
+that file every month. Row counts, ZIP counts and final percentages therefore
+differ legitimately between submissions, so the grader never compares against a
+stored answer. It asks whether each step in the instructions *worked*, and
+verifies it against the student's own data:
+
+| Instruction | How it is checked |
+|---|---|
+| Load the data | pandas import, a `read_*` call, a relative path, a wide frame with many month columns |
+| Trim to Philadelphia | every ZIP in the subset is a Philadelphia ZIP, and City/State hold no other place |
+| Melt to tidy | rows equal **this student's own** (unique ZIPs x unique dates), values in a column named `ZHVI` |
+| Split Center City | the two frames partition **this student's own** Philadelphia ZIP set, using the template's ZIP list |
+| Percent increase function | called on a frame the grader builds, so the right answer is known whatever data was loaded |
+| Compare the two groups | both averages exist, are plausible, and run in the Donut Effect direction |
+
+The only fixed values in `rubrics/hw1.yaml` are the ones the assignment itself
+fixes: the Center City ZIP list printed in the student template, and the two
+comparison dates (2020-03-31 and 2022-03-31) named in the instructions.
+
+A regression test proves the point: the same notebook graded against a shorter,
+smaller, rescaled ZHVI file still scores 100/100.
 
 ---
 
@@ -26,6 +52,10 @@ Generate the demo data and example submissions:
 ```bash
 python examples/make_example_data.py && python examples/make_example_submissions.py
 ```
+
+That builds seven submissions covering the cases a TA meets: two correct, one with
+plausible mistakes, one with two notebooks, one that crashes partway, one with no
+notebook, and the untouched template.
 
 Start the app:
 
@@ -105,14 +135,30 @@ Anything below the threshold (default 0.80) goes to the review queue.
 
 ### 4. Hidden tests
 
-Hidden test *calls* run inside the student's kernel; the *expected values* stay on
-the grading host. Nothing in the container, and nothing in the executed notebook
-saved back to `results/`, reveals the answer key — the probe cells are stripped
-before the notebook is stored. A test suite asserts this.
+`calculate_percent_increase(group_df)` takes a DataFrame, so it cannot be tested
+with literal arguments. Instead the probe reads the column names and date dtype of
+the student's own tidy frame, builds a synthetic group frame from interpolated
+anchor points using those names, and calls the function with it. The expected
+answer follows from the anchors, so it is known regardless of what the student
+loaded. If the notebook crashed before producing a tidy frame, the probe falls
+back to a frame carrying every common spelling (`date`/`Date`, `ZHVI`/`value`) at
+once, so the function can still be tested.
 
-Common near-misses are graded as near-misses rather than as failures: returning
-`0.2` instead of `20` is scored as a units slip, and an inverted sign is scored as
-an inverted sign.
+The anchors deliberately imply a *different* answer for the first and last rows
+than for the two dates named in the assignment. That is how the most common wrong
+implementation is identified by name rather than just marked wrong:
+
+| What the function does | Result |
+|---|---|
+| uses 2020-03-31 and 2022-03-31 | pass |
+| uses the first and last rows | 50% credit, named in the feedback |
+| returns `0.5` instead of `50` | 60% credit, named as a units slip |
+| left as the unfilled template | 0, detected by parsing the body, not by searching for the template comment |
+
+Hidden test *calls* run inside the student's kernel; the credit ratios and the
+expected values stay on the grading host. Nothing in the container, and nothing in
+the executed notebook saved back to `results/`, reveals the answer key — the probe
+cells are stripped before the notebook is stored. A test asserts this.
 
 ### 5. Confidence and review
 
@@ -141,26 +187,27 @@ overrides** restores the human decisions on top.
 
 ## Configuring the rubric
 
-Everything the grader expects lives in `rubrics/hw1.yaml` — ZIP lists, row counts,
-tolerances, hidden test cases, the final answer. Change the YAML, press
-**Regrade**; no Python edits required.
+Everything the grader expects lives in `rubrics/hw1.yaml` — the Center City ZIP
+list, the comparison dates, the hidden test anchors, the credit ratios for common
+near-misses. Change the YAML, press **Regrade**; no Python edits required.
 
-> **Before grading a real class**, replace the values marked `VERIFY` with the
-> official solution's numbers. The shipped values are the ground truth of the
-> synthetic dataset in `examples/data/`, which `examples/make_example_data.py`
-> generates and whose answers it prints.
+> **Before grading a real class**, check the two things the assignment fixes:
+> the `center_city_zips` list matches the one printed in the student template,
+> and `start_date`/`end_date` match the dates in the instructions. Nothing else
+> needs updating when the data changes — that is the point of the design above.
 
-To point the grader at the real assignment data: drop the official CSV into the
-students' `data/` folders, re-run the solution notebook, and update
-`expected_zip_count`, `expected_row_count`, `expected_center_city_zips` and
-`expected_value` to match.
+`examples/data/` holds a synthetic ZHVI file used only to exercise the pipeline.
+It is not an answer key: no check compares against it.
 
 ---
 
 ## Optional LLM grading
 
-Off by default. When enabled (Settings → Qualitative grading, plus
-`ANTHROPIC_API_KEY` in the environment) it grades only the written response.
+Off by default, and unused by Assignment 1 — that assignment asks for no written
+answer, so it has no qualitative rubric item. The machinery is here for the later
+assignments, which do ask students to interpret their results. When enabled
+(Settings → Qualitative grading, plus `ANTHROPIC_API_KEY` in the environment) it
+grades only free-text responses.
 
 The interface is provider-independent: `LLMQualitativeGrader` takes any
 `complete(system, user) -> str` callable. Two rules are enforced in code rather
@@ -199,8 +246,9 @@ assignments/
   hw1.py                Assignment 1 checks
 rubrics/hw1.yaml        the answer key, as configuration
 docker/                 grading image
-tests/                  70 tests
-examples/               synthetic data, three demo notebooks, six submissions
+tests/                  76 tests
+examples/               synthetic data, three demo notebooks, seven submissions
+assignment_template/    the notebooks handed to students
 ```
 
 ---
@@ -224,7 +272,7 @@ results/<session_id>/
 ## Tests
 
 ```bash
-python -m pytest              # 70 tests, ~17s
+python -m pytest              # 76 tests, ~23s
 python -m pytest -m "not slow"  # skip the ones that execute real kernels
 ```
 
@@ -236,7 +284,9 @@ Implemented: Assignment 1, Streamlit UI, Docker isolation, rubric engine, review
 queue, manual overrides, regrading, exports, optional LLM grading.
 
 Not built (per design.md §37): Canvas API integration, authentication, cloud
-deployment, student accounts, a database, live scraping, Assignments 2–6.
+deployment, student accounts, a database, live scraping, Assignments 3–6. Their
+templates are in `assignment_template/` and the architecture is ready for them —
+each needs a rubric YAML and a grader class.
 
 Adding an assignment means a rubric YAML plus a grader class in `assignments/`
 that registers `check_<rubric_id>` methods — `assignments/base.py` handles
