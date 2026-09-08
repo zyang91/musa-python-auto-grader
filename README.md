@@ -170,6 +170,15 @@ cells are stripped before the notebook is stored. A test asserts this.
 | high ambiguity | 0.40 → review |
 | execution failure, multiple notebooks, missing objects | review |
 | qualitative item without LLM grading | review |
+| **any deduction at all** | **review** |
+
+The last row is the strongest rule: **anything short of full marks goes to the
+review queue.** An automated deduction is a claim about a student's work, so a
+person signs off before it becomes a grade. Full marks need no defence and pass
+straight through. The queue entry names which items lost points and how many, and
+still sorts broken submissions above small deductions. Marking a submission
+reviewed — or overriding it back to full marks — clears it. The rule can be turned
+off in Settings for a large class.
 
 ### 6. Manual overrides
 

@@ -18,12 +18,19 @@ DEFAULT_CONFIDENCE_THRESHOLD = 0.80
 
 
 def apply_review_policy(
-    result: SubmissionResult, confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD
+    result: SubmissionResult,
+    confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD,
+    review_below_full_marks: bool = True,
 ) -> SubmissionResult:
     """Decide what a human still has to look at.
 
     Flags are additive and explicit: a TA should be able to read why a submission
     reached the queue without opening the raw results.
+
+    With ``review_below_full_marks`` on (the default), every deduction goes to the
+    queue: an automated deduction is a claim about a student's work, and a person
+    signs off on it before it becomes a grade. Full marks need no defence, so a
+    clean submission passes straight through.
     """
     reasons: list[str] = []
 
@@ -60,6 +67,18 @@ def apply_review_policy(
             )
         elif item.status == STATUS_NOT_FOUND and item.points_possible > 0:
             reasons.append(f"Could not locate the work for {item.name}")
+
+    if review_below_full_marks and result.items:
+        lost = [
+            f"{item.name} ({item.final_score:g}/{item.points_possible:g})"
+            for item in result.items
+            if item.final_score < item.points_possible
+        ]
+        if lost:
+            reasons.append(
+                f"Not full marks — {result.total_score:g}/{result.max_score:g}: "
+                + ", ".join(lost)
+            )
 
     # De-duplicate while preserving order.
     seen: set[str] = set()
@@ -193,9 +212,17 @@ def review_queue(results: Iterable[SubmissionResult]) -> list[dict[str, Any]]:
                 "all_reasons": reasons,
                 "score": result.total_score if result.items else None,
                 "max_score": result.max_score,
+                "percentage": result.percentage,
                 "confidence": result.confidence,
                 "execution_ok": result.execution.success,
             }
         )
-    queue.sort(key=lambda entry: (entry["execution_ok"], entry["confidence"] or 0))
+    # Broken submissions first, then least confident, then biggest deduction.
+    queue.sort(
+        key=lambda entry: (
+            entry["execution_ok"],
+            entry["confidence"] if entry["confidence"] is not None else 0,
+            entry["percentage"] if entry["percentage"] is not None else 0,
+        )
+    )
     return queue

@@ -51,6 +51,8 @@ class GraderSettings:
     memory_limit: str = "2g"
     cpu_limit: str = "1.0"
     confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD
+    # Any deduction goes to the review queue, not just uncertain ones.
+    review_below_full_marks: bool = True
     llm_enabled: bool = False
     llm_provider: str = "anthropic"
     llm_model: str = "claude-sonnet-5"
@@ -75,6 +77,7 @@ class GraderSettings:
             "memory_limit": self.memory_limit,
             "cpu_limit": self.cpu_limit,
             "confidence_threshold": self.confidence_threshold,
+            "review_below_full_marks": self.review_below_full_marks,
             "llm_enabled": self.llm_enabled,
             "llm_provider": self.llm_provider,
             "llm_model": self.llm_model,
@@ -241,7 +244,11 @@ class GradingService:
                     qualitative_grader=self.qualitative_grader,
                 )
             )
-            return apply_review_policy(result, self.settings.confidence_threshold)
+            return apply_review_policy(
+                result,
+                self.settings.confidence_threshold,
+                self.settings.review_below_full_marks,
+            )
 
         try:
             prepare_workdir(candidate, workdir)
@@ -292,7 +299,11 @@ class GradingService:
             _stage(progress, progress_callback, "feedback", "running")
             result.review_reasons = list(candidate.review_reasons)
             result.status = "graded"
-            apply_review_policy(result, self.settings.confidence_threshold)
+            apply_review_policy(
+                result,
+                self.settings.confidence_threshold,
+                self.settings.review_below_full_marks,
+            )
             _stage(progress, progress_callback, "feedback", "done")
         except Exception as exc:
             result.status = "error"

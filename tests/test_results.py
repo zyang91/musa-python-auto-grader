@@ -172,3 +172,48 @@ def test_neighbour_navigation(tmp_path):
     )
     assert session.neighbour("student_001", 1) == "student_002"
     assert session.neighbour("student_001", -1) is None
+
+
+# ---------------------------------------------------------------------------
+# Every deduction is reviewed (not only the uncertain ones)
+# ---------------------------------------------------------------------------
+
+def test_any_deduction_reaches_the_queue():
+    result = make_result(score=19.5)  # 29.5 / 30, everything confident
+    apply_review_policy(result, 0.8)
+    assert result.needs_review is True
+    assert any("Not full marks" in reason for reason in result.review_reasons)
+    assert "Item B (19.5/20)" in result.review_reasons[-1]
+
+
+def test_full_marks_pass_straight_through():
+    result = make_result(score=20.0)  # 30 / 30
+    apply_review_policy(result, 0.8)
+    assert result.review_reasons == []
+    assert result.needs_review is False
+
+
+def test_an_override_to_full_marks_clears_the_flag(tmp_path):
+    session = make_session(tmp_path, [make_result(score=15.0)])
+    apply_review_policy(session.results["student_001"], 0.8)
+    assert session.results["student_001"].needs_review is True
+
+    session.set_override("student_001", "b", 20.0, "credit for a valid alternative")
+    apply_review_policy(session.results["student_001"], 0.8)
+    assert session.results["student_001"].needs_review is False
+
+
+def test_the_rule_can_be_switched_off():
+    result = make_result(score=19.5)
+    apply_review_policy(result, 0.8, review_below_full_marks=False)
+    assert result.needs_review is False
+
+
+def test_bigger_deductions_sort_higher_in_the_queue():
+    small = make_result("student_001", score=19.0)
+    large = make_result("student_002", score=2.0)
+    for result in (small, large):
+        apply_review_policy(result, 0.8)
+    assert [entry["student_id"] for entry in review_queue([small, large])] == [
+        "student_002", "student_001",
+    ]

@@ -45,6 +45,15 @@ def render() -> None:
 
     st.divider()
     st.markdown("### Review")
+    config.review_below_full_marks = st.toggle(
+        "Review every submission that loses points",
+        value=config.review_below_full_marks,
+        help=(
+            "On: any deduction goes to the review queue, so a person signs off on "
+            "every point taken away. Off: only uncertain or failed submissions are "
+            "flagged."
+        ),
+    )
     config.confidence_threshold = st.slider(
         "Confidence threshold for manual review",
         0.0, 1.0, float(config.confidence_threshold), 0.05,
