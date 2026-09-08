@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import ast
 import re
+import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -44,6 +45,7 @@ class NotebookAnalysis:
     n_code_cells: int = 0
     n_markdown_cells: int = 0
     code_source: str = ""
+    code_cells: list[str] = field(default_factory=list)
     markdown_cells: list[str] = field(default_factory=list)
     imports: set[str] = field(default_factory=set)
     functions: list[dict[str, Any]] = field(default_factory=list)
@@ -55,6 +57,8 @@ class NotebookAnalysis:
     data_path_literals: list[str] = field(default_factory=list)
     plot_calls: int = 0
     has_syntax_error: bool = False
+    # Cells that could not be parsed; the rest of the notebook is still analysed.
+    unparsed_cells: list[int] = field(default_factory=list)
     stored_outputs: dict[str, int] = field(default_factory=dict)
     stored_errors: list[dict[str, Any]] = field(default_factory=list)
 
@@ -77,6 +81,7 @@ class NotebookAnalysis:
             "data_path_literals": self.data_path_literals,
             "plot_calls": self.plot_calls,
             "has_syntax_error": self.has_syntax_error,
+            "unparsed_cells": self.unparsed_cells,
             "stored_outputs": self.stored_outputs,
             "stored_errors": self.stored_errors,
             "markdown_cells": self.markdown_cells,
@@ -130,12 +135,68 @@ def analyze_notebook(path: str | Path) -> NotebookAnalysis:
             analysis.markdown_cells.append(source)
 
     analysis.stored_outputs = output_counts
+    analysis.code_cells = code_chunks
     analysis.code_source = "\n\n".join(code_chunks)
     _analyze_code(analysis)
     return analysis
 
 
+# IPython syntax that is not Python.
+IPYTHON_LINE_PREFIXES = ("%", "!", "?")
+IMPORT_RE = re.compile(
+    r"^[ \t]*(?:from[ \t]+([\w.]+)[ \t]+import\b|import[ \t]+([^\n#]+))", re.M
+)
+READ_CALL_RE = re.compile(
+    r"\b(read_(?:csv|excel|json|parquet|file|table|html|feather|stata))[ \t]*\("
+    r"[ \t]*(?:[rRbBuUfF]*(['\"])([^'\"\n]{1,300})\2)?"
+)
+STRING_LITERAL_RE = re.compile(r"(['\"])([^'\"\n]{1,300})\1")
+
+
+def _clean_cell(source: str) -> str:
+    """Turn a Jupyter cell into something ``ast.parse`` will accept."""
+    lines = []
+    for line in source.splitlines():
+        if line.lstrip().startswith(IPYTHON_LINE_PREFIXES):
+            lines.append("")  # magic or shell escape
+            continue
+        # `pd.read_csv?` and `df.head??` are IPython help, not Python.
+        trimmed = line.rstrip()
+        if trimmed.endswith("?"):
+            line = trimmed.rstrip("?")
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def _parse_cell(source: str) -> tuple[ast.AST, str] | None:
+    """Parse one cell, recovering from the usual notebook oddities.
+
+    Returns the tree and the exact text it was parsed from, so source segments
+    stay accurate.
+    """
+    attempts = [
+        source,
+        textwrap.dedent(source),
+        # A cell that continues an indented block from the cell above.
+        "if True:\n" + textwrap.indent(source, "    "),
+    ]
+    for candidate in attempts:
+        try:
+            return ast.parse(candidate), candidate
+        except SyntaxError:
+            continue
+    return None
+
+
 def _analyze_code(analysis: NotebookAnalysis) -> None:
+    """Collect structural facts cell by cell.
+
+    Parsing per cell rather than parsing the whole notebook at once matters more
+    than it looks: one cell containing `pd.read_csv?`, a stray indent or an
+    unclosed bracket used to make the entire analysis come back empty, which
+    showed up as a student being told they never imported pandas when the import
+    was on the first line of the first cell.
+    """
     source = analysis.code_source
     analysis.plot_calls = sum(source.count(hint) for hint in PLOT_HINTS)
 
@@ -144,27 +205,27 @@ def _analyze_code(analysis: NotebookAnalysis) -> None:
         if candidate not in analysis.absolute_paths:
             analysis.absolute_paths.append(candidate)
 
-    # IPython magics/shell escapes are not valid Python; strip them before parsing.
-    cleaned = "\n".join(
-        "" if line.lstrip().startswith(("%", "!", "?")) else line
-        for line in source.splitlines()
-    )
-    try:
-        tree = ast.parse(cleaned)
-    except SyntaxError as exc:
-        analysis.has_syntax_error = True
-        analysis.parse_error = f"SyntaxError: {exc.msg} (line {exc.lineno})"
-        return
+    for index, cell in enumerate(analysis.code_cells, start=1):
+        cleaned = _clean_cell(cell)
+        if not cleaned.strip():
+            continue
+        parsed = _parse_cell(cleaned)
+        if parsed is None:
+            # Keep what this cell plainly says even though it will not parse.
+            analysis.has_syntax_error = True
+            analysis.unparsed_cells.append(index)
+            if analysis.parse_error is None:
+                analysis.parse_error = f"code cell {index} could not be parsed"
+            _scan_text(analysis, cleaned)
+            continue
+        tree, parsed_source = parsed
+        _collect_from_tree(analysis, tree, parsed_source)
 
+
+def _collect_from_tree(analysis: NotebookAnalysis, tree: ast.AST, source: str) -> None:
     for node in ast.walk(tree):
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            text = node.value.strip()
-            if (
-                text.lower().endswith(DATA_SUFFIXES)
-                and text not in analysis.data_path_literals
-                and len(text) < 300
-            ):
-                analysis.data_path_literals.append(text)
+            _note_data_literal(analysis, node.value)
         if isinstance(node, ast.Import):
             for alias in node.names:
                 analysis.imports.add(alias.name.split(".")[0])
@@ -179,7 +240,7 @@ def _analyze_code(analysis: NotebookAnalysis) -> None:
                     "arity": len(args),
                     "has_docstring": bool(ast.get_docstring(node)),
                     "lineno": node.lineno,
-                    "source": _segment(cleaned, node),
+                    "source": _segment(source, node),
                 }
             )
         elif isinstance(node, ast.Call):
@@ -190,6 +251,35 @@ def _analyze_code(analysis: NotebookAnalysis) -> None:
                 for arg in node.args[:1]:
                     if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
                         analysis.referenced_files.append(arg.value)
+
+
+def _scan_text(analysis: NotebookAnalysis, text: str) -> None:
+    """Regex fallback for a cell that will not parse."""
+    for module, modules in IMPORT_RE.findall(text):
+        if module:
+            analysis.imports.add(module.split(".")[0])
+        for name in modules.split(","):
+            name = name.strip().split(" as ")[0].strip()
+            if name:
+                analysis.imports.add(name.split(".")[0])
+
+    for name, _, path in READ_CALL_RE.findall(text):
+        analysis.read_calls.append(name)
+        if path:
+            analysis.referenced_files.append(path)
+
+    for _, literal in STRING_LITERAL_RE.findall(text):
+        _note_data_literal(analysis, literal)
+
+
+def _note_data_literal(analysis: NotebookAnalysis, text: str) -> None:
+    text = text.strip()
+    if (
+        text.lower().endswith(DATA_SUFFIXES)
+        and text not in analysis.data_path_literals
+        and len(text) < 300
+    ):
+        analysis.data_path_literals.append(text)
 
 
 def _segment(source: str, node: ast.AST) -> str:

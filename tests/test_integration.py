@@ -31,11 +31,28 @@ def _service(data=(SHARED_DATA,), **overrides):
     return GradingService.from_rubric_path("rubrics/hw1.yaml", settings)
 
 
+def _demo_submissions(dest):
+    """Build the demo tree from examples/, rather than reading the folder itself.
+
+    `examples/submissions/` is a working area — real student notebooks get
+    dropped into it — so the tests must not depend on its contents.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "make_example_submissions", "examples/make_example_submissions.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.build_submissions(dest)
+
+
 @pytest.fixture(scope="module")
 def graded(tmp_path_factory):
-    root = tmp_path_factory.mktemp("results")
+    root = tmp_path_factory.mktemp("run")
+    submissions = _demo_submissions(root / "submissions")
     service = _service()
-    loaded = service.load_submissions("examples/submissions")
+    loaded = service.load_submissions(submissions)
     session = service.new_session(loaded.source)
     session.root = root / session.session_id
     return service, loaded, service.run(loaded.candidates, session=session)
@@ -45,7 +62,8 @@ def test_submissions_contain_no_data(graded):
     """The demo mirrors the real hand-in: notebooks and nothing else."""
     from pathlib import Path
 
-    assert not list(Path("examples/submissions").rglob("*.csv"))
+    _, loaded, _ = graded
+    assert not list(Path(loaded.source).rglob("*.csv"))
 
 
 def test_preflight_warns_when_no_data_is_configured():

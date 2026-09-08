@@ -222,18 +222,23 @@ LAYOUT = {
 }
 
 
-def main() -> None:
-    if not DATA.exists():
-        raise SystemExit("run examples/make_example_data.py first")
-
+def write_notebooks() -> None:
     for filename, builder in NOTEBOOKS.items():
         nbformat.write(builder(), str(HERE / filename))
-        print(f"wrote examples/{filename}")
 
-    if SUBMISSIONS.exists():
-        shutil.rmtree(SUBMISSIONS)
+
+def build_submissions(dest: Path) -> Path:
+    """Lay out the demo submissions under ``dest``.
+
+    Tests call this with a temporary directory so they never depend on — or
+    overwrite — whatever is sitting in `examples/submissions/`, which doubles as
+    a scratch area for real student work.
+    """
+    dest = Path(dest)
+    if dest.exists():
+        shutil.rmtree(dest)
     for student, notebooks in LAYOUT.items():
-        folder = SUBMISSIONS / student
+        folder = dest / student
         folder.mkdir(parents=True, exist_ok=True)
         for source, target in notebooks:
             origin = TEMPLATE if source == "__template__" else HERE / source
@@ -242,6 +247,16 @@ def main() -> None:
             shutil.copy2(origin, folder / target)
         if not notebooks:
             (folder / "README.txt").write_text("I could not upload my notebook in time.\n")
+    return dest
+
+
+def main() -> None:
+    if not DATA.exists():
+        raise SystemExit("run examples/make_example_data.py first")
+    write_notebooks()
+    for filename in NOTEBOOKS:
+        print(f"wrote examples/{filename}")
+    build_submissions(SUBMISSIONS)
     print(f"wrote {len(LAYOUT)} submissions to examples/submissions/")
 
 

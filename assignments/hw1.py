@@ -135,6 +135,10 @@ class HW1Grader(AssignmentGrader):
             "loaded_dataframe": inspection.describe_dataframe(wide[0]) if wide else None,
             "date_columns_detected": self._date_column_count(wide[0]) if wide else 0,
         }
+        if analysis.unparsed_cells:
+            # Surfaced, never deducted: IPython syntax like `pd.read_csv?` runs
+            # fine in Jupyter but is not valid Python.
+            evidence["cells_not_statically_parsed"] = analysis.unparsed_cells
 
         score = max(float(item.points) - sum(d[0] for d in deductions), 0.0)
         if not deductions:

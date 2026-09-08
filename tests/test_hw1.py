@@ -422,3 +422,69 @@ def test_no_probe_means_review_not_a_silent_zero(rubric):
     by_id = {r.rubric_id: r for r in results}
     assert by_id["philadelphia_subset"].status == STATUS_EXECUTION_ERROR
     assert by_id["philadelphia_subset"].confidence == 0.0
+
+
+# ---------------------------------------------------------------------------
+# Static analysis must not be blinded by one odd cell
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "cells",
+    [
+        pytest.param(["import pandas as pd", "pd.read_csv?", "df = pd.read_csv('data/x.csv')"],
+                     id="ipython-help"),
+        pytest.param(["import pandas as pd", "df.head??", "df = pd.read_csv('data/x.csv')"],
+                     id="ipython-help-double"),
+        pytest.param(["import pandas as pd", "df = pd.read_csv('data/x.csv'", "df.head()"],
+                     id="unclosed-bracket"),
+        pytest.param(["import pandas as pd", "print 'hi'", "df = pd.read_csv('data/x.csv')"],
+                     id="python-2-print"),
+        pytest.param(["import pandas as pd", "    df = pd.read_csv('data/x.csv')"],
+                     id="stray-indent"),
+        pytest.param(["import pandas as pd\ndf = pd.read_csv('data/x.csv'", "df.head()"],
+                     id="broken-first-cell"),
+        pytest.param(["%matplotlib inline\nimport pandas as pd",
+                      "!ls data", "df = pd.read_csv('data/x.csv')"],
+                     id="magics-and-shell"),
+    ],
+)
+def test_an_unparsable_cell_does_not_hide_the_rest(tmp_path, cells):
+    """A student who imported pandas must never be told they did not.
+
+    One cell of IPython syntax used to make the whole notebook analyse as empty.
+    """
+    import nbformat
+    from nbformat.v4 import new_code_cell, new_notebook
+
+    from grader.notebook import analyze_notebook
+
+    path = tmp_path / "assignment-1.ipynb"
+    nbformat.write(new_notebook(cells=[new_code_cell(c) for c in cells]), str(path))
+
+    analysis = analyze_notebook(path)
+    assert "pandas" in analysis.imports
+    assert analysis.read_calls
+    # The data path is still found, so the file can be placed for execution.
+    assert "data/x.csv" in analysis.data_path_literals
+
+
+def test_ipython_help_does_not_cost_the_student_points(rubric, probe_payload, tmp_path):
+    import nbformat
+    from nbformat.v4 import new_code_cell, new_notebook
+
+    from grader.notebook import analyze_notebook
+
+    path = tmp_path / "assignment-1.ipynb"
+    nbformat.write(
+        new_notebook(cells=[
+            new_code_cell("import pandas as pd"),
+            new_code_cell("pd.read_csv?"),
+            new_code_cell("zhvi = pd.read_csv('data/zillow.csv')"),
+        ]),
+        str(path),
+    )
+    result = grade_item(
+        rubric, "data_loading", probe=probe_payload(), analysis=analyze_notebook(path)
+    )
+    assert result.status == STATUS_PASS
+    assert result.automatic_score == 10
