@@ -64,13 +64,20 @@ Start the app:
 streamlit run app.py
 ```
 
-Then, in the sidebar: pick **Assignment 1**, set the **assignment data file**
+Then, in the sidebar: pick **Assignment 1**, **upload the assignment data file**
 (for the demo, `examples/data/zillow_zhvi.csv`), load `examples/submissions`,
 choose an execution mode, and press **Run Grader**.
 
 For a real class, download the ZHVI extract from
 [Zillow research data](https://www.zillow.com/research/data/) — *ZHVI All Homes,
-by ZIP code* — and point the sidebar at that file instead. Nothing else changes.
+by ZIP code* — and upload that instead. Nothing else changes.
+
+The sidebar takes the file by **upload**, so it does not have to live anywhere in
+particular; uploads are kept in `.musa_grader_data/` and survive a restart. If the
+file is already on the grading machine, the *"or use a file already on this
+machine"* expander takes a path instead. Either way the files currently in use are
+listed with their size and can be removed individually, and the app refuses to
+start a run until at least one is set.
 
 A terminal equivalent exists for scripted runs:
 
@@ -110,8 +117,8 @@ renders what comes back.
 ### 0. The data comes from you, not the students
 
 Students hand in **a notebook and nothing else**, so the grader supplies the data.
-Point it at the Zillow extract once (sidebar, or `--data` on the CLI) and before
-each submission runs it places that file at:
+Upload the Zillow extract once (sidebar, or `--data` on the CLI) and before each
+submission runs it places that file at:
 
 * every relative path the notebook actually reads from — parsed out of the
   notebook, including paths held in a variable rather than passed inline, and
@@ -284,7 +291,7 @@ assignments/
   hw1.py                Assignment 1 checks
 rubrics/hw1.yaml        the answer key, as configuration
 docker/                 grading image
-tests/                  90 tests
+tests/                  99 tests
 examples/               synthetic data, three demo notebooks, seven submissions
 assignment_template/    the notebooks handed to students
 ```
@@ -310,7 +317,7 @@ results/<session_id>/
 ## Tests
 
 ```bash
-python -m pytest              # 90 tests, ~22s
+python -m pytest              # 99 tests, ~22s
 python -m pytest -m "not slow"  # skip the ones that execute real kernels
 ```
 
