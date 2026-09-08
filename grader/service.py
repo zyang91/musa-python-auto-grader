@@ -50,6 +50,9 @@ class GraderSettings:
     cell_timeout_seconds: int = 300
     memory_limit: str = "2g"
     cpu_limit: str = "1.0"
+    # Data files the instructor supplies for every submission (design note: from
+    # HW1 onwards students hand in a notebook and nothing else).
+    shared_data_paths: list[str] = field(default_factory=list)
     confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD
     # Any deduction goes to the review queue, not just uncertain ones.
     review_below_full_marks: bool = True
@@ -76,6 +79,7 @@ class GraderSettings:
             "cell_timeout_seconds": self.cell_timeout_seconds,
             "memory_limit": self.memory_limit,
             "cpu_limit": self.cpu_limit,
+            "shared_data_paths": list(self.shared_data_paths),
             "confidence_threshold": self.confidence_threshold,
             "review_below_full_marks": self.review_below_full_marks,
             "llm_enabled": self.llm_enabled,
@@ -117,6 +121,27 @@ class GradingService:
     def from_rubric_path(cls, path: str | Path, settings: GraderSettings | None = None,
                          qualitative_grader: Any | None = None) -> "GradingService":
         return cls(load_rubric(path), settings, qualitative_grader)
+
+    # -- configuration checks ---------------------------------------------
+    def preflight(self) -> list[str]:
+        """Problems that would make a grading run misleading rather than wrong.
+
+        The big one: this assignment's students submit a notebook and nothing
+        else, so without instructor-supplied data every notebook fails at
+        ``read_csv`` and the whole class looks broken.
+        """
+        problems: list[str] = []
+        if self.rubric.requires_data and not self.settings.shared_data_paths:
+            wanted = self.rubric.data.get("description", "the assignment data file")
+            problems.append(
+                "No assignment data file is set. Students submit only a notebook, "
+                f"so the grader has to supply {wanted.strip()} "
+                "Upload it in the sidebar before running."
+            )
+        for path in self.settings.shared_data_paths:
+            if not Path(path).is_file():
+                problems.append(f"Assignment data file not found: {path}")
+        return problems
 
     # -- step 1: find submissions -----------------------------------------
     def load_submissions(self, source: str | Path, extract_to: str | Path | None = None) -> LoadedSubmissions:
@@ -251,7 +276,23 @@ class GradingService:
             )
 
         try:
-            prepare_workdir(candidate, workdir)
+            # Static analysis first: it tells us which paths the notebook reads
+            # from, and the data has to be in place before the notebook runs.
+            _stage(progress, progress_callback, "structural", "running")
+            analysis = analyze_notebook(candidate.notebook_path)
+            _stage(progress, progress_callback, "structural", "done")
+
+            prepare_workdir(
+                candidate,
+                workdir,
+                shared_data=self.settings.shared_data_paths,
+                # Read-call arguments first, then any other path-looking literal.
+                referenced_paths=analysis.referenced_files + [
+                    literal for literal in analysis.data_path_literals
+                    if literal not in analysis.referenced_files
+                ],
+                fallback_dirs=self.rubric.data.get("fallback_locations", ["data", ""]),
+            )
 
             _stage(progress, progress_callback, "execution", "running")
             execution, probe = execute_submission(
@@ -268,8 +309,6 @@ class GradingService:
                 if stored:
                     result.execution.executed_notebook_path = stored
 
-            _stage(progress, progress_callback, "structural", "running")
-            analysis = analyze_notebook(candidate.notebook_path)
             result.artifacts = {
                 "absolute_paths": analysis.absolute_paths,
                 "imports": sorted(analysis.imports),
@@ -278,8 +317,8 @@ class GradingService:
                 "n_markdown_cells": analysis.n_markdown_cells,
                 "probe_ok": bool(probe),
                 "probe_errors": (probe or {}).get("errors", []),
+                "data_placement": candidate.data_placement,
             }
-            _stage(progress, progress_callback, "structural", "done")
 
             _stage(progress, progress_callback, "hidden", "running")
             context = GradingContext(

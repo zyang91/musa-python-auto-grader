@@ -36,6 +36,17 @@ discovery:
   notebook_name_hints: ["assignment-1", "assignment1", "assignment_1", "hw1", "hw-1", "homework1", "musa"]
   ignore_name_patterns: ["checkpoint", "untitled", "scratch", "practice", "lecture", "solution", "draft", "copy of"]
 
+data:
+  # Students submit a notebook only — the data comes from the instructor and is
+  # placed into every submission before it runs, at whatever relative path the
+  # notebook actually reads from (plus these conventional locations).
+  required: true
+  description: >
+    Zillow ZHVI by ZIP code, e.g.
+    Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv from
+    https://www.zillow.com/research/data/
+  fallback_locations: ["data", ""]
+
 probe:
   # Deliberately excludes a bare "region": RegionID values are five digits too,
   # and would be mistaken for ZIP codes.

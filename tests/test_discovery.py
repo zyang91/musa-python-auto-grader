@@ -122,3 +122,75 @@ def test_choose_notebook_prefers_shallower_files(tmp_path):
     shallow = _touch(tmp_path / "hw1.ipynb", "{}" + " " * 100)
     chosen, reasons = choose_notebook([deep, shallow], ["hw1"], [], root=tmp_path)
     assert chosen == shallow or REASON_MULTIPLE_NOTEBOOKS in reasons
+
+
+# ---------------------------------------------------------------------------
+# Instructor-supplied data (students hand in notebooks only)
+# ---------------------------------------------------------------------------
+
+def test_data_is_placed_at_every_path_the_notebook_reads(tmp_path):
+    from grader.discovery import place_shared_data
+
+    source = _touch(tmp_path / "Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv", "a\n1\n")
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+
+    report = place_shared_data(
+        workdir, [source], referenced_paths=["data/zillow.csv", "./zhvi.csv"]
+    )
+    placed = {entry["path"] for entry in report["placed"]}
+    assert "data/zillow.csv" in placed
+    assert "./zhvi.csv" in placed
+    # Conventional locations too, for notebooks whose path we could not parse.
+    assert f"data/{source.name}" in placed
+    assert source.name in placed
+
+
+def test_placement_refuses_paths_outside_the_workdir(tmp_path):
+    from grader.discovery import place_shared_data
+
+    source = _touch(tmp_path / "data.csv", "a\n1\n")
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+
+    report = place_shared_data(
+        workdir, [source],
+        referenced_paths=["../../escape.csv", "/etc/passwd", "data/../../evil.csv"],
+    )
+    assert len(report["skipped"]) == 3
+    assert not (tmp_path / "escape.csv").exists()
+    assert not (tmp_path / "evil.csv").exists()
+
+
+def test_a_students_own_file_is_never_overwritten(tmp_path):
+    from grader.discovery import place_shared_data
+
+    source = _touch(tmp_path / "shared.csv", "shared\n")
+    workdir = tmp_path / "work"
+    _touch(workdir / "data" / "shared.csv", "student's own\n")
+
+    place_shared_data(workdir, [source], referenced_paths=["data/shared.csv"])
+    assert (workdir / "data" / "shared.csv").read_text() == "student's own\n"
+
+
+def test_a_large_file_is_linked_rather_than_copied(tmp_path):
+    """Fifty submissions must not mean fifty copies of a 117 MB file."""
+    from grader.discovery import place_shared_data
+
+    source = _touch(tmp_path / "big.csv", "a\n1\n")
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+
+    report = place_shared_data(workdir, [source], referenced_paths=["data/big.csv"])
+    assert report["placed"][0]["action"] == "linked"
+    assert (workdir / "data" / "big.csv").stat().st_ino == source.stat().st_ino
+
+
+def test_missing_source_is_reported_not_raised(tmp_path):
+    from grader.discovery import place_shared_data
+
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    report = place_shared_data(workdir, [tmp_path / "nope.csv"], referenced_paths=[])
+    assert report["missing_sources"] == [str(tmp_path / "nope.csv")]
+    assert report["placed"] == []

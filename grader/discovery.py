@@ -7,11 +7,13 @@ is flagged for review rather than graded against the wrong notebook.
 
 from __future__ import annotations
 
+import difflib
+import os
 import re
 import shutil
 import zipfile
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
 from .utils import slugify
@@ -45,6 +47,7 @@ class SubmissionCandidate:
     warnings: list[str] = field(default_factory=list)
     review_reasons: list[str] = field(default_factory=list)
     late: bool = False
+    data_placement: dict[str, Any] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
@@ -300,7 +303,120 @@ def _deduplicate(candidates: list[SubmissionCandidate]) -> list[SubmissionCandid
     return sorted(seen.values(), key=lambda c: c.student_id)
 
 
-def prepare_workdir(candidate: SubmissionCandidate, workdir: str | Path) -> Path:
+def _link_or_copy(source: Path, target: Path) -> str:
+    """Hard-link the file if possible, else copy it.
+
+    The ZHVI extract is well over 100 MB; hard-linking it into fifty working
+    directories costs nothing, while copying it would cost gigabytes. A hard link
+    is a real directory entry, so it is still visible inside the grading
+    container's bind mount.
+    """
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        return "already present"
+    try:
+        os.link(source, target)
+        return "linked"
+    except OSError:
+        # Different filesystem, or a filesystem without hard links.
+        shutil.copy2(source, target)
+        return "copied"
+
+
+def _is_safe_relative_path(text: str) -> bool:
+    if not text or text.startswith(("/", "~", "http://", "https://")):
+        return False
+    if re.match(r"^[A-Za-z]:[\\/]", text):  # Windows absolute path
+        return False
+    path = PurePosixPath(text.replace("\\", "/"))
+    if any(part == ".." for part in path.parts):
+        return False
+    return len(path.parts) <= 6
+
+
+def _best_source(sources: list[Path], target_name: str) -> Path | None:
+    """Pick which supplied file belongs at a path the notebook asked for."""
+    suffix = PurePosixPath(target_name).suffix.lower()
+    same_suffix = [s for s in sources if s.suffix.lower() == suffix] or sources
+    if len(same_suffix) == 1:
+        return same_suffix[0]
+    scored = sorted(
+        same_suffix,
+        key=lambda s: difflib.SequenceMatcher(
+            None, s.name.lower(), PurePosixPath(target_name).name.lower()
+        ).ratio(),
+        reverse=True,
+    )
+    return scored[0] if scored else None
+
+
+def place_shared_data(
+    workdir: str | Path,
+    shared_files: Iterable[str | Path],
+    referenced_paths: Iterable[str] = (),
+    fallback_dirs: Iterable[str] = ("data", ""),
+    max_placements: int = 12,
+) -> dict[str, Any]:
+    """Put instructor-supplied data where a notebook expects to find it.
+
+    Students submit a notebook and nothing else, so the data has to come from the
+    grader. Rather than dictating one filename, this puts the supplied file at
+    every relative path the notebook actually passes to a ``read_*`` call, plus
+    the conventional ``data/<name>`` and ``<name>`` locations. A notebook that
+    reads ``data/zillow.csv`` and one that reads the full Zillow filename both
+    find their file.
+    """
+    workdir = Path(workdir)
+    sources = [Path(f) for f in shared_files]
+    missing = [str(s) for s in sources if not s.is_file()]
+    sources = [s for s in sources if s.is_file()]
+
+    report: dict[str, Any] = {
+        "supplied": [str(s) for s in sources],
+        "missing_sources": missing,
+        "placed": [],
+        "skipped": [],
+    }
+    if not sources:
+        return report
+
+    targets: list[tuple[str, Path]] = []
+    for reference in referenced_paths:
+        if not _is_safe_relative_path(str(reference)):
+            report["skipped"].append(str(reference))
+            continue
+        source = _best_source(sources, str(reference))
+        if source is not None:
+            targets.append((str(reference).replace("\\", "/"), source))
+
+    # Conventional locations, so a notebook that builds its path dynamically
+    # (or that we could not parse) still finds the file.
+    for source in sources:
+        for directory in fallback_dirs:
+            relative = f"{directory}/{source.name}" if directory else source.name
+            targets.append((relative, source))
+
+    seen: set[str] = set()
+    for relative, source in targets:
+        if relative in seen or len(report["placed"]) >= max_placements:
+            continue
+        seen.add(relative)
+        try:
+            action = _link_or_copy(source, workdir / relative)
+        except OSError as exc:  # pragma: no cover - defensive
+            report["skipped"].append(f"{relative}: {exc}")
+            continue
+        report["placed"].append({"path": relative, "source": source.name, "action": action})
+    return report
+
+
+def prepare_workdir(
+    candidate: SubmissionCandidate,
+    workdir: str | Path,
+    shared_data: Iterable[str | Path] = (),
+    referenced_paths: Iterable[str] = (),
+    fallback_dirs: Iterable[str] = ("data", ""),
+) -> Path:
     """Copy one submission into an isolated working directory (design.md §17).
 
     The notebook always lands at ``<workdir>/notebook.ipynb`` so the executor does
@@ -339,4 +455,10 @@ def prepare_workdir(candidate: SubmissionCandidate, workdir: str | Path) -> Path
                 shutil.copy2(path, target)
 
     shutil.copy2(candidate.notebook_path, workdir / "notebook.ipynb")
+
+    # Instructor-supplied data goes in last, and never over a student's own file.
+    if shared_data:
+        candidate.data_placement = place_shared_data(
+            workdir, shared_data, referenced_paths, fallback_dirs
+        )
     return workdir

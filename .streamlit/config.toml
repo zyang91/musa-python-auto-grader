@@ -1,5 +1,7 @@
 [server]
 headless = true
+# The Zillow ZHVI extract is well over the 200 MB default.
+maxUploadSize = 600
 fileWatcherType = "none"
 
 [browser]

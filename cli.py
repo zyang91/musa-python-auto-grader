@@ -35,6 +35,7 @@ def cmd_grade(args: argparse.Namespace) -> int:
         return 2
 
     settings = GraderSettings(
+        shared_data_paths=[str(Path(p).expanduser()) for p in (args.data or [])],
         execution_mode=args.mode,
         docker_image=args.image,
         cell_timeout_seconds=args.cell_timeout,
@@ -42,6 +43,9 @@ def cmd_grade(args: argparse.Namespace) -> int:
         confidence_threshold=args.confidence_threshold,
     )
     service = GradingService.from_rubric_path(rubric_path, settings)
+    for problem in service.preflight():
+        print(f"warning: {problem}", file=sys.stderr)
+
     loaded = service.load_submissions(args.submissions)
     print(f"{len(loaded.candidates)} submissions found in {loaded.source}")
 
@@ -88,6 +92,11 @@ def main(argv: list[str] | None = None) -> int:
     grade = subparsers.add_parser("grade", help="grade a folder or Canvas ZIP")
     grade.add_argument("submissions", help="submissions folder or Canvas export ZIP")
     grade.add_argument("--rubric", default="rubrics/hw1.yaml")
+    grade.add_argument(
+        "--data", action="append", metavar="PATH",
+        help="assignment data file to place into every submission; repeatable. "
+             "Students submit notebooks only, so this is normally required.",
+    )
     grade.add_argument("--mode", choices=[MODE_DOCKER, MODE_LOCAL], default=MODE_DOCKER,
                        help="'local' runs student code without isolation")
     grade.add_argument("--image", default="musa-grader:latest")

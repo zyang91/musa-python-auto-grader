@@ -19,9 +19,14 @@ ID_COLUMNS = ["RegionID", "SizeRank", "RegionName", "RegionType", "StateName",
               "State", "City", "Metro", "CountyName"]
 
 
-def _service(**overrides):
+SHARED_DATA = "examples/data/zillow_zhvi.csv"
+
+
+def _service(data=(SHARED_DATA,), **overrides):
+    """Students submit notebooks only; the grader supplies the data."""
     settings = GraderSettings(
-        execution_mode=MODE_LOCAL, cell_timeout_seconds=90, timeout_seconds=240, **overrides
+        execution_mode=MODE_LOCAL, cell_timeout_seconds=90, timeout_seconds=240,
+        shared_data_paths=list(data), **overrides
     )
     return GradingService.from_rubric_path("rubrics/hw1.yaml", settings)
 
@@ -34,6 +39,40 @@ def graded(tmp_path_factory):
     session = service.new_session(loaded.source)
     session.root = root / session.session_id
     return service, loaded, service.run(loaded.candidates, session=session)
+
+
+def test_submissions_contain_no_data(graded):
+    """The demo mirrors the real hand-in: notebooks and nothing else."""
+    from pathlib import Path
+
+    assert not list(Path("examples/submissions").rglob("*.csv"))
+
+
+def test_preflight_warns_when_no_data_is_configured():
+    problems = _service(data=()).preflight()
+    assert problems and "submit only a notebook" in problems[0]
+
+
+def test_preflight_warns_about_a_missing_file():
+    problems = _service(data=("/nope/missing.csv",)).preflight()
+    assert any("not found" in p for p in problems)
+
+
+def test_data_is_placed_where_each_notebook_reads_from(graded):
+    """Three notebooks, three different paths, all supplied from one file."""
+    _, _, session = graded
+    paths = {
+        student: {
+            entry["path"]
+            for entry in session.results[student].artifacts["data_placement"]["placed"]
+        }
+        for student in ("student_001", "student_003", "student_005")
+    }
+    assert "data/zillow_zhvi.csv" in paths["student_001"]
+    # student_003 keeps the path in a variable, under the real Zillow filename.
+    assert "data/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv" in paths["student_003"]
+    # student_005 reads from the working directory root.
+    assert "zillow_zhvi.csv" in paths["student_005"]
 
 
 def test_all_example_submissions_are_discovered(graded):
@@ -141,13 +180,16 @@ def test_same_notebook_different_zillow_vintage_scores_the_same(tmp_path):
     for column in dates[20:]:
         altered[column] = (altered[column] * 1.37).round(0)
 
-    submission = tmp_path / "student_alt"
-    (submission / "data").mkdir(parents=True)
-    altered.to_csv(submission / "data" / "zillow_zhvi.csv", index=False)
+    altered_file = tmp_path / "alternate_vintage.csv"
+    altered.to_csv(altered_file, index=False)
+
+    submissions = tmp_path / "submissions"
+    submission = submissions / "student_alt"
+    submission.mkdir(parents=True)
     shutil.copy2("examples/good_submission.ipynb", submission / "assignment-1.ipynb")
 
-    service = _service()
-    loaded = service.load_submissions(tmp_path)
+    service = _service(data=(str(altered_file),))
+    loaded = service.load_submissions(submissions)
     session = service.new_session(loaded.source)
     session.root = tmp_path / "results"
     result = service.run(loaded.candidates, session=session).results["student_alt"]

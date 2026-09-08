@@ -222,4 +222,4 @@ results/
 .musa_grader_workdir/
 submissions/
 
-.DS_Store
+.DS_Store.musa_grader_data/

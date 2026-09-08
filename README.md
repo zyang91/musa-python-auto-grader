@@ -55,7 +55,8 @@ python examples/make_example_data.py && python examples/make_example_submissions
 
 That builds seven submissions covering the cases a TA meets: two correct, one with
 plausible mistakes, one with two notebooks, one that crashes partway, one with no
-notebook, and the untouched template.
+notebook, and the untouched template. They contain notebooks only — no data —
+exactly as the class hands work in.
 
 Start the app:
 
@@ -63,13 +64,18 @@ Start the app:
 streamlit run app.py
 ```
 
-Then, in the sidebar: pick **Assignment 1**, load `examples/submissions`, choose an
-execution mode, and press **Run Grader**.
+Then, in the sidebar: pick **Assignment 1**, set the **assignment data file**
+(for the demo, `examples/data/zillow_zhvi.csv`), load `examples/submissions`,
+choose an execution mode, and press **Run Grader**.
+
+For a real class, download the ZHVI extract from
+[Zillow research data](https://www.zillow.com/research/data/) — *ZHVI All Homes,
+by ZIP code* — and point the sidebar at that file instead. Nothing else changes.
 
 A terminal equivalent exists for scripted runs:
 
 ```bash
-python cli.py grade examples/submissions --mode docker
+python cli.py grade examples/submissions --mode docker --data examples/data/zillow_zhvi.csv
 ```
 
 ---
@@ -101,6 +107,28 @@ Streamlit UI  →  GradingService  →  executor  →  assignment grader  →  r
 The UI contains no grading logic; it calls `grader.service.GradingService` and
 renders what comes back.
 
+### 0. The data comes from you, not the students
+
+Students hand in **a notebook and nothing else**, so the grader supplies the data.
+Point it at the Zillow extract once (sidebar, or `--data` on the CLI) and before
+each submission runs it places that file at:
+
+* every relative path the notebook actually reads from — parsed out of the
+  notebook, including paths held in a variable rather than passed inline, and
+* the conventional `data/<name>` and `<name>` locations, for notebooks whose path
+  is built dynamically.
+
+So a notebook reading `data/zillow.csv` and one reading
+`data/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` both find their file,
+with no naming convention imposed on the class. The file is **hard-linked**, not
+copied, so fifty submissions cost one copy of a 117 MB extract rather than fifty.
+A student's own file is never overwritten, and paths that escape the working
+directory (`../`, absolute, Windows drive letters) are refused.
+
+Everyone is then graded against the *same* data, which is what makes the class
+comparable — and a notebook that hardcodes `/Users/me/Desktop/...` still fails, as
+it should, because that path cannot be supplied.
+
 ### 1. Discovery
 
 Notebook filenames are not standardised, so submissions are scored by name hints,
@@ -109,6 +137,7 @@ not guessed** — it reaches the review queue with `multiple_notebooks`.
 
 Both layouts from the spec are supported: a folder of student folders, and a flat
 Canvas export ZIP (`doejane_12345_67890_assignment1.ipynb`, `_late_` included).
+Submissions are expected to be notebooks only — the data is supplied by you.
 
 ### 2. Execution
 
@@ -255,7 +284,7 @@ assignments/
   hw1.py                Assignment 1 checks
 rubrics/hw1.yaml        the answer key, as configuration
 docker/                 grading image
-tests/                  76 tests
+tests/                  90 tests
 examples/               synthetic data, three demo notebooks, seven submissions
 assignment_template/    the notebooks handed to students
 ```
@@ -281,7 +310,7 @@ results/<session_id>/
 ## Tests
 
 ```bash
-python -m pytest              # 76 tests, ~23s
+python -m pytest              # 90 tests, ~22s
 python -m pytest -m "not slow"  # skip the ones that execute real kernels
 ```
 

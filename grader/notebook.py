@@ -18,6 +18,11 @@ import nbformat
 ABSOLUTE_PATH_RE = re.compile(
     r"""(?P<quote>['"])(?P<path>(?:[A-Za-z]:[\\/]|/(?:Users|home|mnt|Volumes|var|tmp)/|~[\\/])[^'"]{2,200})(?P=quote)"""
 )
+# Any string literal that looks like a data file the notebook wants to open.
+DATA_SUFFIXES = (
+    ".csv", ".tsv", ".json", ".geojson", ".xlsx", ".xls", ".parquet",
+    ".shp", ".gpkg", ".tif", ".txt", ".zip", ".gz",
+)
 READ_FUNCS = {
     "read_csv", "read_excel", "read_json", "read_parquet", "read_file",
     "read_table", "read_html", "read_feather", "read_stata",
@@ -45,6 +50,9 @@ class NotebookAnalysis:
     absolute_paths: list[str] = field(default_factory=list)
     read_calls: list[str] = field(default_factory=list)
     referenced_files: list[str] = field(default_factory=list)
+    # Every data-file-looking string literal, wherever it appears — students
+    # often assign the path to a variable before reading it.
+    data_path_literals: list[str] = field(default_factory=list)
     plot_calls: int = 0
     has_syntax_error: bool = False
     stored_outputs: dict[str, int] = field(default_factory=dict)
@@ -66,6 +74,7 @@ class NotebookAnalysis:
             "absolute_paths": self.absolute_paths,
             "read_calls": self.read_calls,
             "referenced_files": self.referenced_files,
+            "data_path_literals": self.data_path_literals,
             "plot_calls": self.plot_calls,
             "has_syntax_error": self.has_syntax_error,
             "stored_outputs": self.stored_outputs,
@@ -148,6 +157,14 @@ def _analyze_code(analysis: NotebookAnalysis) -> None:
         return
 
     for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            text = node.value.strip()
+            if (
+                text.lower().endswith(DATA_SUFFIXES)
+                and text not in analysis.data_path_literals
+                and len(text) < 300
+            ):
+                analysis.data_path_literals.append(text)
         if isinstance(node, ast.Import):
             for alias in node.names:
                 analysis.imports.add(alias.name.split(".")[0])

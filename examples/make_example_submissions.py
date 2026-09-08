@@ -2,6 +2,11 @@
 
 Four cases a TA actually meets: a correct submission, one with plausible
 mistakes, one that crashes partway, and the untouched template.
+
+Submissions contain notebooks only — no data. That mirrors how the class hands
+work in, and it is the grader that supplies the ZHVI file at run time (see
+`place_shared_data` in grader/discovery.py). The notebooks below deliberately
+read from different paths to exercise that placement.
 """
 
 from __future__ import annotations
@@ -103,9 +108,9 @@ def partial_notebook() -> nbformat.NotebookNode:
             "import os\n\n"
             "import pandas as pd\n\n"
             '# Falls back to where the file lives on my laptop\n'
-            'path = "data/zillow_zhvi.csv"\n'
+            'path = "data/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv"\n'
             "if not os.path.exists(path):\n"
-            '    path = "/Users/student/Desktop/musa/zillow_zhvi.csv"\n'
+            '    path = "/Users/student/Desktop/musa/zillow.csv"\n'
             "df = pd.read_csv(path)\n"
             "df.shape"
         ),
@@ -158,7 +163,7 @@ def broken_notebook() -> nbformat.NotebookNode:
         new_markdown_cell(HEADINGS[1]),
         new_code_cell(
             "import pandas as pd\n\n"
-            'zhvi = pd.read_csv("data/zillow_zhvi.csv")\n'
+            'zhvi = pd.read_csv("zillow_zhvi.csv")\n'
             "zhvi.shape"
         ),
         new_markdown_cell(HEADINGS[2]),
@@ -229,8 +234,7 @@ def main() -> None:
         shutil.rmtree(SUBMISSIONS)
     for student, notebooks in LAYOUT.items():
         folder = SUBMISSIONS / student
-        (folder / "data").mkdir(parents=True, exist_ok=True)
-        shutil.copy2(DATA, folder / "data" / DATA.name)
+        folder.mkdir(parents=True, exist_ok=True)
         for source, target in notebooks:
             origin = TEMPLATE if source == "__template__" else HERE / source
             if not origin.exists():

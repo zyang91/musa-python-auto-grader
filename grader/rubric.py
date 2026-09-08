@@ -49,6 +49,8 @@ class Rubric:
     settings: dict[str, Any] = field(default_factory=dict)
     probe: dict[str, Any] = field(default_factory=dict)
     discovery: dict[str, Any] = field(default_factory=dict)
+    # Data the instructor supplies for every submission (design.md §16-17).
+    data: dict[str, Any] = field(default_factory=dict)
     source_path: str | None = None
 
     def item(self, rubric_id: str) -> RubricItem | None:
@@ -56,6 +58,10 @@ class Rubric:
             if i.id == rubric_id:
                 return i
         return None
+
+    @property
+    def requires_data(self) -> bool:
+        return bool(self.data.get("required"))
 
     @property
     def declared_points(self) -> float:
@@ -121,6 +127,7 @@ def load_rubric(path: str | Path) -> Rubric:
         settings=data.get("settings") or {},
         probe=data.get("probe") or {},
         discovery=data.get("discovery") or {},
+        data=data.get("data") or {},
         source_path=str(path),
     )
 

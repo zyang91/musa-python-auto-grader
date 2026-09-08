@@ -9,7 +9,7 @@ from __future__ import annotations
 import tempfile
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 import streamlit as st
 
@@ -19,6 +19,9 @@ from grader.models import GradingProgress
 from grader.results import GradingSession, list_sessions
 from grader.rubric import available_rubrics, load_rubric
 from grader.service import GraderSettings, GradingService, LoadedSubmissions
+
+# Uploaded data files live here so they survive reruns and app restarts.
+DATA_DIR = Path(__file__).resolve().parent.parent / ".musa_grader_data"
 
 PAGES = [
     "🏠 Overview",
@@ -139,6 +142,60 @@ def drain_toast() -> str | None:
 # ---------------------------------------------------------------------------
 # Submission loading
 # ---------------------------------------------------------------------------
+
+def set_shared_data(paths: list[str]) -> None:
+    """Replace the instructor-supplied data files, expanding `~` for the user."""
+    settings().shared_data_paths = _dedupe(
+        str(Path(p).expanduser()) for p in paths if str(p).strip()
+    )
+
+
+def add_data_files(paths: Iterable[str]) -> None:
+    """Add files, keeping the existing ones and ignoring duplicates."""
+    settings().shared_data_paths = _dedupe(
+        list(settings().shared_data_paths)
+        + [str(Path(p).expanduser()) for p in paths if str(p).strip()]
+    )
+
+
+def remove_data_file(path: str) -> None:
+    settings().shared_data_paths = [
+        p for p in settings().shared_data_paths if p != path
+    ]
+
+
+def _dedupe(paths: Iterable[str]) -> list[str]:
+    seen: set[str] = set()
+    return [p for p in paths if not (p in seen or seen.add(p))]
+
+
+def save_uploaded_data(uploaded_file) -> str:
+    """Persist an uploaded data file next to the app.
+
+    Streamlit hands the same upload back on every rerun, so an unchanged file is
+    written once — re-writing a 117 MB extract on each interaction would make the
+    whole UI crawl.
+    """
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    target = DATA_DIR / Path(uploaded_file.name).name
+    size = getattr(uploaded_file, "size", None)
+    if not (target.exists() and size is not None and target.stat().st_size == size):
+        target.write_bytes(uploaded_file.getbuffer())
+    return str(target)
+
+
+def describe_data_file(path: str) -> str:
+    resolved = Path(path)
+    if not resolved.is_file():
+        return f"⚠ missing: {resolved.name}"
+    megabytes = resolved.stat().st_size / 1_048_576
+    return f"{resolved.name} ({megabytes:,.0f} MB)"
+
+
+def preflight() -> list[str]:
+    svc = service()
+    return svc.preflight() if svc is not None else []
+
 
 def load_from_path(path: str) -> None:
     svc = service()

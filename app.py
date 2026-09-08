@@ -8,6 +8,8 @@ renders what comes back (design.md §4).
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import streamlit as st
 
 import grader
@@ -36,6 +38,50 @@ PAGE_RENDERERS = {
     "📤 Export": export.render,
     "⚙ Settings": settings_page.render,
 }
+
+
+def data_section(config, rubric) -> None:
+    """Assignment data, supplied by the instructor (design.md §16-17).
+
+    Uploading is the primary path: the file does not have to already live
+    somewhere on this machine, and nothing about its location is assumed.
+    """
+    st.markdown("**Assignment data**")
+    st.caption(
+        "Students submit only a notebook, so you supply the data file here and "
+        "the grader places it into every submission."
+    )
+
+    uploads = st.file_uploader(
+        "Upload data file(s)",
+        type=["csv", "tsv", "zip", "json", "geojson", "xlsx", "xls", "parquet", "txt", "gz"],
+        accept_multiple_files=True,
+        key="shared_data_upload",
+        help="Uploads are kept in .musa_grader_data/ so they survive a restart.",
+    )
+    if uploads:
+        state.add_data_files([state.save_uploaded_data(upload) for upload in uploads])
+
+    with st.expander("or use a file already on this machine"):
+        existing_path = st.text_input(
+            "Path to the data file",
+            key="shared_data_path",
+            placeholder="~/Downloads/Zip_zhvi_..._month.csv",
+        )
+        if st.button("Add this file", use_container_width=True, disabled=not existing_path):
+            state.add_data_files([existing_path])
+            st.rerun()
+
+    if config.shared_data_paths:
+        st.caption("In use:")
+        for path in list(config.shared_data_paths):
+            row = st.columns([6, 1])
+            row[0].write(state.describe_data_file(path))
+            if row[1].button("✕", key=f"drop_data_{path}", help="Remove"):
+                state.remove_data_file(path)
+                st.rerun()
+    else:
+        st.caption(rubric.data.get("description", "").strip() or "No data file set yet.")
 
 
 def sidebar() -> None:
@@ -72,6 +118,11 @@ def sidebar() -> None:
             state.load_from_path(folder)
             st.rerun()
 
+        rubric = state.current_rubric()
+        if rubric is not None and rubric.requires_data:
+            st.divider()
+            data_section(config, rubric)
+
         st.divider()
         st.markdown("**Execution mode**")
         mode = st.radio(
@@ -98,6 +149,8 @@ def sidebar() -> None:
         if loaded is not None:
             st.caption(f"{len(loaded.candidates)} submissions loaded")
 
+        for problem in state.preflight():
+            st.error(problem, icon="🚫")
         for warning in state.execution_warnings():
             st.warning(warning, icon="⚠")
 
