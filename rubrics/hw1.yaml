@@ -116,6 +116,9 @@ rubric:
         ["19123", "19102", "19103", "19106", "19107", "19109", "19130", "19146", "19147"]
       require_partition: true
       partition_tolerance: 0.02
+      # Below this overlap with the expected ZIP set, a frame is reported as
+      # "not found" rather than as a wrong answer.
+      min_match_similarity: 0.25
 
   - id: percent_increase_function
     name: Percent increase function works

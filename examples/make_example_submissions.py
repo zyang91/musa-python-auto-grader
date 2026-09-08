@@ -209,7 +209,7 @@ LAYOUT = {
     "student_003": [("partial_submission.ipynb", "assignment1.ipynb")],
     "student_004": [
         ("good_submission.ipynb", "assignment-1.ipynb"),
-        ("partial_submission.ipynb", "assignment-1-draft.ipynb"),
+        ("partial_submission.ipynb", "assignment-1-final.ipynb"),
     ],
     "student_005": [("broken_submission.ipynb", "submission.ipynb")],
     "student_006": [],  # submitted no notebook at all

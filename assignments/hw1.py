@@ -197,7 +197,7 @@ class HW1Grader(AssignmentGrader):
         candidates.sort(key=lambda c: (len(c["philly"]), c["purity"]), reverse=True)
         best = candidates[0]
         widest = len(best["philly"])
-        plausible = [c for c in candidates if len(c["philly"]) >= 0.9 * widest]
+        plausible = [c for c in candidates if len(c["philly"]) >= 0.98 * widest]
         confidence = inspection.confidence_for_candidates(
             len({frozenset(c["philly"]) for c in plausible})
         )
@@ -312,7 +312,7 @@ class HW1Grader(AssignmentGrader):
         # comparable size count towards ambiguity.
         consistent = [c for c in candidates if c["consistency"]["ok"]] or candidates
         widest = max(c["rows"] for c in consistent)
-        plausible = [c for c in consistent if c["rows"] >= 0.9 * widest]
+        plausible = [c for c in consistent if c["rows"] >= 0.98 * widest]
         confidence = inspection.confidence_for_candidates(
             len({c["rows"] for c in plausible})
         )
@@ -433,9 +433,12 @@ class HW1Grader(AssignmentGrader):
         expected_center = listed & philly
         expected_rest = philly - listed
 
-        frames = self._zip_frames(ctx)
-        center_match = self._best_zip_match(frames, expected_center)
-        rest_match = self._best_zip_match(frames, expected_rest)
+        # A frame holding the whole Philadelphia ZIP set is the un-split data, not
+        # half of the split, so it cannot answer either side.
+        frames = [f for f in self._zip_frames(ctx) if (f["zips"] & philly) != philly]
+        floor = float(config.get("min_match_similarity", 0.25))
+        center_match = self._best_zip_match(frames, expected_center, floor)
+        rest_match = self._best_zip_match(frames, expected_rest, floor)
 
         evidence = {
             "center_city_zips_from_template": sorted(listed),
@@ -493,20 +496,34 @@ class HW1Grader(AssignmentGrader):
                    "remaining ZIP codes")
             )
         status = STATUS_PARTIAL if score > 0 else STATUS_FAIL
+        sentence = "; ".join(problems)
         return self.result(item, score, status, confidence,
-                           "; ".join(problems).capitalize() + ".", evidence)
+                           sentence[:1].upper() + sentence[1:] + ".", evidence)
 
     @staticmethod
-    def _best_zip_match(frames: list[dict[str, Any]], target: set[str]) -> dict[str, Any] | None:
+    def _best_zip_match(
+        frames: list[dict[str, Any]], target: set[str], floor: float = 0.25
+    ) -> dict[str, Any] | None:
+        """Best frame for a target ZIP set, or None when nothing plausible matches.
+
+        A candidate must be mostly *inside* the target (precision), not merely
+        overlap it — otherwise a frame holding all of Philadelphia would be
+        reported as the "rest of the city" frame just because it contains those
+        ZIP codes among many others.
+        """
         if not target:
             return None
         best = None
         for frame in frames:
-            similarity = jaccard(frame["zips"], target)
-            if similarity <= 0.0:
+            zips = frame["zips"]
+            if not zips:
+                continue
+            precision = len(zips & target) / len(zips)
+            similarity = jaccard(zips, target)
+            if precision < 0.8 or similarity < floor:
                 continue
             if best is None or similarity > best["similarity"]:
-                best = {**frame, "similarity": similarity}
+                best = {**frame, "similarity": similarity, "precision": precision}
         return best
 
     # -----------------------------------------------------------------
