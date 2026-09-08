@@ -1,0 +1,10 @@
+{
+  "rows": 58,
+  "date_columns": 102,
+  "philadelphia_zip_codes": 46,
+  "tidy_rows": 4692,
+  "center_city_zip_codes": 9,
+  "outside_zip_codes": 37,
+  "mean_percent_increase_center_city": 8.2,
+  "mean_percent_increase_outside": 26.8
+}

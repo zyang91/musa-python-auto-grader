@@ -1,0 +1,175 @@
+# ---------------------------------------------------------------------------
+# MUSA 5500 — Assignment 1: The Donut Effect for Philadelphia ZIP Codes
+#
+# Graded against assignment_template/assignment-1.ipynb.
+#
+# DESIGN NOTE — why there are almost no absolute numbers in here:
+# students download their own Zillow ZHVI extract, and Zillow revises and
+# extends that file continuously. Row counts, ZIP counts and final percentages
+# therefore differ legitimately between submissions. So the checks below ask
+# "did this step work, as the instructions describe it?" and verify results
+# against the student's OWN data (does the tidy frame match their own ZIP x date
+# grid; do the two split frames partition their own Philadelphia ZIPs; does
+# their function return the right answer on a known input we construct).
+#
+# The only fixed values are the ones the assignment itself fixes: the Center
+# City ZIP list handed to students in the template, and the two comparison
+# dates named in the instructions.
+# ---------------------------------------------------------------------------
+
+assignment:
+  id: hw1
+  name: "Assignment 1: The Donut Effect"
+  version: HW1-v2
+  total_points: 100
+  description: >
+    Load the Zillow ZHVI data, trim to Philadelphia, melt to tidy format with a
+    ZHVI column, split Center City from the rest of the city, and compare average
+    home value appreciation from March 2020 to March 2022.
+
+settings:
+  confidence_review_threshold: 0.80
+  execution_timeout_seconds: 600
+  score_rounding: 0.5
+
+discovery:
+  notebook_name_hints: ["assignment-1", "assignment1", "assignment_1", "hw1", "hw-1", "homework1", "musa"]
+  ignore_name_patterns: ["checkpoint", "untitled", "scratch", "practice", "lecture", "solution", "draft", "copy of"]
+
+probe:
+  # Deliberately excludes a bare "region": RegionID values are five digits too,
+  # and would be mistaken for ZIP codes.
+  id_column_hints: ["zipcode", "zip_code", "zip", "regionname", "postal"]
+  date_column_hints: ["date", "month", "year", "period", "time", "variable"]
+  value_column_hints: ["zhvi", "value", "home_value", "price", "index"]
+  max_head_rows: 5
+  max_unique_values: 120
+
+rubric:
+
+  - id: notebook_execution
+    name: Notebook executes successfully
+    points: 10
+    type: execution
+    description: The notebook runs top to bottom in a clean environment.
+    config:
+      partial_credit_ratio: 0.4
+
+  - id: data_loading
+    name: Data loaded correctly
+    points: 10
+    type: structural
+    description: The ZHVI file is read with pandas from a relative path.
+    config:
+      required_imports: ["pandas"]
+      absolute_path_penalty: 4
+      missing_read_penalty: 6
+      no_dataframe_penalty: 4
+      # A ZHVI extract is wide: many month columns. The exact number varies with
+      # the vintage of the download, so only a floor is checked.
+      min_date_columns: 24
+
+  - id: philadelphia_subset
+    name: Data trimmed to Philadelphia
+    points: 15
+    type: deterministic
+    description: A Philadelphia-only subset of the ZHVI data exists.
+    config:
+      expected_zip_prefix: "191"
+      # Only the City/State columns themselves — Metro is "Philadelphia-Camden-
+      # Wilmington" and RegionName holds ZIP codes, so neither can be compared
+      # against a city name.
+      city_column_hints: ["city"]
+      state_column_hints: ["state"]
+      expected_city_values: ["Philadelphia"]
+      expected_state_values: ["PA", "Pennsylvania"]
+      # Sanity floor only — used to reject candidates that are obviously not the
+      # Philadelphia subset, never to check an expected count.
+      min_zip_count: 10
+
+  - id: tidy_transformation
+    name: Data melted into tidy format
+    points: 20
+    type: deterministic
+    description: >
+      Wide date columns are melted into rows, with the values in a column named
+      ZHVI as the instructions require.
+    config:
+      required_value_column: "ZHVI"
+      value_column_alternatives: ["value", "home_value", "zhvi_value", "price"]
+      wrong_name_penalty_ratio: 0.25
+      # The melt is verified against the student's own data: rows should equal
+      # their own (unique ZIP codes x unique dates), whatever those numbers are.
+      consistency_tolerance: 0.02
+      min_long_ratio: 4.0
+
+  - id: center_city_split
+    name: Center City split correctly
+    points: 15
+    type: deterministic
+    description: >
+      The tidy data is split into a greater-Center-City frame and a frame for the
+      rest of Philadelphia, using the ZIP list supplied in the template.
+    config:
+      # Fixed by the assignment: this list is printed in the student template.
+      center_city_zips:
+        ["19123", "19102", "19103", "19106", "19107", "19109", "19130", "19146", "19147"]
+      require_partition: true
+      partition_tolerance: 0.02
+
+  - id: percent_increase_function
+    name: Percent increase function works
+    points: 20
+    type: hidden_test
+    description: >
+      calculate_percent_increase(group_df) returns the percent change in ZHVI
+      between the two dates named in the assignment.
+    config:
+      type: group_frame
+      selector:
+        name_hints: ["percent", "increase", "calculate", "change", "growth", "appreciation", "pct"]
+        arity: 1
+      # Fixed by the assignment text.
+      start_date: "2020-03-31"
+      end_date: "2022-03-31"
+      frame:
+        date_column_hints: ["date", "month", "period", "variable", "time"]
+        value_column_hints: ["zhvi", "value", "home_value", "price"]
+        default_id_column: "RegionName"
+        default_date_column: "date"
+        default_value_column: "ZHVI"
+        min_rows_for_schema: 50
+      # Each case is a synthetic group frame interpolated between these anchors,
+      # so the expected answer is known no matter what data the student loaded.
+      # The first and last anchors deliberately imply a different answer, which
+      # is how a first-row/last-row implementation is detected.
+      cases:
+        - label: "100 → 150 (Mar 2020 → Mar 2022)"
+          anchors: [["2019-01-31", 80], ["2020-03-31", 100], ["2022-03-31", 150], ["2023-12-31", 200]]
+        - label: "200 → 100 (a decrease)"
+          anchors: [["2019-01-31", 250], ["2020-03-31", 200], ["2022-03-31", 100], ["2023-12-31", 90]]
+        - label: "300 → 300 (no change)"
+          anchors: [["2019-01-31", 200], ["2020-03-31", 300], ["2022-03-31", 300], ["2023-12-31", 400]]
+      rel_tol: 0.001
+      abs_tol: 0.001
+      # Returning 0.5 instead of 50 is a units slip, not a broken formula.
+      fraction_form_credit_ratio: 0.6
+      # Using the first and last rows instead of the two named dates.
+      first_last_credit_ratio: 0.5
+      stub_credit_ratio: 0.0
+
+  - id: donut_effect_comparison
+    name: Center City vs. rest of Philadelphia compared
+    points: 10
+    type: deterministic
+    description: >
+      Average percent increase is computed per ZIP code for both groups and the
+      two averages are compared.
+    config:
+      # Only the shape of the answer is checked, never its value: the numbers
+      # depend on the vintage of the student's Zillow download.
+      plausible_range: [-100, 1000]
+      expect_outside_greater: true
+      center_hints: ["center", "cc", "downtown", "inside", "in_"]
+      outside_hints: ["outside", "non", "not", "rest", "other", "out", "remaining", "beyond"]
+      percent_hints: ["percent", "pct", "increase", "change", "growth", "appreciation"]

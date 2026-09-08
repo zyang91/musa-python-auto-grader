@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "musa-grader"
+version = "0.1.0"
+description = "Semi-automatic grading system for Jupyter Notebook assignments in MUSA 5500"
+requires-python = ">=3.10"
+dependencies = [
+    "nbformat>=5.9",
+    "nbclient>=0.8",
+    "nbconvert>=7.10",
+    "ipykernel>=6.25",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "PyYAML>=6.0",
+    "streamlit>=1.30",
+    "altair>=5.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[tool.setuptools]
+packages = ["grader", "assignments", "ui"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+markers = [
+    "slow: executes a real notebook kernel (a few seconds each)",
+]

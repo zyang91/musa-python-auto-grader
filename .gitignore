@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# MUSA Grader
+results/
+.musa_grader_workdir/
+submissions/
+
+.DS_Store

@@ -1,0 +1,15 @@
+# Core grading engine
+nbformat>=5.9
+nbclient>=0.8
+nbconvert>=7.10
+ipykernel>=6.25
+pandas>=2.0
+numpy>=1.24
+PyYAML>=6.0
+
+# UI
+streamlit>=1.30
+altair>=5.0
+
+# Dev / tests
+pytest>=7.4
