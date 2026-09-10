@@ -1,0 +1,292 @@
+# ---------------------------------------------------------------------------
+# MUSA 5500 — Assignment 2: Exploratory visualization with matplotlib,
+# seaborn and altair.
+#
+# DESIGN NOTE — why this rubric splits every requirement in two:
+# students pick their own dataset, so there is no answer key at all. Nothing
+# about the *content* of a chart is gradeable automatically. What is gradeable
+# is what the student's code demonstrably did:
+#
+#   * an Altair chart compiles to a Vega-Lite specification, and that spec is in
+#     the notebook's own output. A mean/count/bin transformation, an interval
+#     brush and a transform_filter() cross-filter are read straight out of it —
+#     these are facts, not guesses, and they are scored automatically.
+#   * matplotlib and seaborn produce a picture and nothing else. Whether one was
+#     drawn, and whether it rendered, is a fact. Whether it is *well designed* is
+#     not, and the assignment explicitly grades aesthetics — so that goes to a
+#     person.
+#   * every written rationale and conclusion is read by a person.
+#
+# DESIGN NOTE — why the evidence is the student's own saved output:
+# students hand in a notebook without the dataset, so the grading run has nothing
+# to read: it fails at `read_csv` and draws nothing. The charts therefore have to
+# be read out of the outputs already saved in the submitted notebook, and the
+# execution item grades whether the student ran their notebook cleanly before
+# submitting rather than whether it runs here. What is being marked is that the
+# student can *produce these elements* — not whether their numbers are right,
+# which with a dataset of their own choosing was never checkable anyway.
+#
+# So the mechanical half (70 points) is graded; the judgement half (30 points)
+# arrives pre-filled with a defensible provisional score plus the evidence
+# behind it, flagged for review. A TA confirms or adjusts rather than starting
+# from a blank box. Nothing here ever awards judgement marks silently: every
+# qualitative item is returned as manual_review whatever its score.
+# ---------------------------------------------------------------------------
+
+assignment:
+  id: hw2
+  name: "Assignment 2: Exploratory Visualization"
+  version: HW2-v1
+  total_points: 100
+  description: >
+    Explore a dataset of the student's own choosing and build charts with
+    matplotlib, seaborn and altair: one matplotlib chart with reasoning, one
+    seaborn chart with motivation, and three altair charts using a transformation
+    and a brush selection, each with a written conclusion below it.
+
+settings:
+  # Only score_rounding is read by the engine (assignments/base.py). Timeouts and
+  # the review threshold are runtime settings, set in the app's Settings page or
+  # on the cli.py command line, not per rubric.
+  score_rounding: 0.5
+
+discovery:
+  notebook_name_hints: ["assignment-2", "assignment2", "assignment_2", "hw2", "hw-2", "homework2", "musa"]
+  ignore_name_patterns: ["checkpoint", "untitled", "scratch", "practice", "lecture", "solution", "draft", "copy of"]
+
+data:
+  # The opposite of Assignment 1: the dataset is the student's own choice, and
+  # the grader has no copy of it. Nothing is supplied, and nothing about the
+  # data's *contents* is graded — only that the notebook loads one, and loads it
+  # the way the instructions ask.
+  required: false
+  student_supplied: true
+  description: >
+    A dataset of the student's choosing (OpenDataPhilly or, by prior arrangement,
+    elsewhere). Not submitted to the grader.
+  fallback_locations: ["data", ""]
+
+probe:
+  id_column_hints: ["id", "objectid", "zipcode", "zip_code", "zip", "district", "name"]
+  date_column_hints: ["date", "time", "month", "year", "period", "timestamp", "created"]
+  value_column_hints: ["count", "value", "total", "amount", "n", "price", "rate"]
+  max_head_rows: 5
+  max_unique_values: 60
+
+rubric:
+
+  - id: notebook_execution
+    name: Notebook was run and submitted with its outputs
+    points: 10
+    type: execution
+    description: >
+      The submitted notebook shows a complete, clean run: every cell has output
+      and none of them is an error. The grader has no copy of the student's
+      dataset, so it cannot re-run the notebook to check this itself.
+    config:
+      # Kept for the case where an instructor *does* supply data: a clean
+      # execution here is stronger evidence than a saved output and takes over.
+      partial_credit_ratio: 0.4
+      # Nothing was saved at all — not even a traceback — so there are no charts
+      # to grade and, with no dataset, no way to produce any.
+      no_outputs_penalty: 7
+      # Each cell that errored in the student's own run, up to the cap.
+      error_penalty_each: 3
+      max_error_penalty: 7
+      # Below this share of code cells carrying output, the notebook reads as
+      # partly run rather than run through.
+      min_output_coverage: 0.5
+      low_coverage_penalty: 3
+
+  - id: data_loading
+    name: Dataset loaded from a relative path
+    points: 10
+    type: structural
+    description: >
+      A dataset is read with pandas through a relative path, as the instructions
+      require. Only the loading step is graded — the grader has no copy of the
+      data and nothing about its contents is checked.
+    config:
+      required_imports: ["pandas"]
+      import_alternatives: ["geopandas"]
+      missing_read_penalty: 5
+      absolute_path_penalty: 4
+      # "submit your data to Canvas directly using relative path" — a download
+      # is not a relative path, and it also cannot work in the grading container,
+      # which runs with networking disabled.
+      remote_read_penalty: 4
+
+  # -- matplotlib ---------------------------------------------------------
+  - id: matplotlib_chart
+    name: Matplotlib chart present and rendered
+    points: 10
+    type: deterministic
+    description: At least one chart drawn with matplotlib (or pandas/geopandas .plot).
+    config:
+      library: matplotlib
+      required_count: 1
+      # A chart that is in the code but produced no image did not render.
+      not_rendered_credit_ratio: 0.5
+      # A chart seen only in the student's own saved output is the normal case
+      # here, not a degraded one — it is still their work, just not reproduced by
+      # us. Slightly below the fully verified 0.95, and above the review
+      # threshold so it does not flag every submission on its own.
+      submitted_only_confidence: 0.85
+
+  - id: matplotlib_rationale
+    name: Reasoning for using matplotlib
+    points: 5
+    type: qualitative
+    description: >
+      A written explanation of what aspect of the data is shown and why
+      matplotlib suits it.
+    config:
+      library: matplotlib
+      min_words: 25
+      partial_words: 10
+      keywords: ["matplotlib", "because", "chose", "choice", "why", "suits",
+                 "control", "customis", "customiz", "aspect", "reason"]
+      llm_criteria:
+        - "Names the aspect of the dataset the chart shows"
+        - "Gives a reason for using matplotlib for that aspect specifically"
+        - "Is the student's own reasoning, not a restatement of the instructions"
+
+  - id: matplotlib_aesthetics
+    name: Matplotlib chart aesthetics (colour and clarity)
+    points: 5
+    type: qualitative
+    description: >
+      The assignment grades colour choices and clarity. Labelling and colour
+      signals are extracted automatically; the picture is judged by a person.
+    config:
+      library: matplotlib
+      # Signals from grader/charts.py::AESTHETIC_PATTERNS. Weights are relative.
+      weighted_signals:
+        title: 2.0
+        x_label: 1.5
+        y_label: 1.5
+        explicit_colors: 2.0
+        figure_size: 1.0
+        legend: 0.75
+        tick_control: 0.5
+        grid_or_style: 0.5
+        annotation: 0.25
+      # Signals cannot prove a chart looks good, so an unreviewed provisional
+      # score never reaches full marks on its own.
+      provisional_ceiling_ratio: 0.8
+
+  # -- seaborn ------------------------------------------------------------
+  - id: seaborn_chart
+    name: Seaborn chart present and rendered
+    points: 10
+    type: deterministic
+    description: At least one chart drawn with seaborn, distinct from the matplotlib chart.
+    config:
+      library: seaborn
+      required_count: 1
+      not_rendered_credit_ratio: 0.5
+      submitted_only_confidence: 0.85
+
+  - id: seaborn_rationale
+    name: Motivation for the seaborn plot type
+    points: 5
+    type: qualitative
+    description: >
+      A written motivation for the *type* of seaborn plot chosen and why it fits
+      the data.
+    config:
+      library: seaborn
+      min_words: 25
+      partial_words: 10
+      keywords: ["seaborn", "distribution", "because", "chose", "choice", "why",
+                 "plot type", "boxplot", "violin", "heatmap", "kde", "regression",
+                 "categor", "compar", "relationship"]
+      llm_criteria:
+        - "Names the type of seaborn plot used"
+        - "Explains why that plot type fits this data, not just what it shows"
+        - "Is the student's own reasoning, not a restatement of the instructions"
+
+  # -- altair -------------------------------------------------------------
+  - id: altair_charts
+    name: Three Altair charts
+    points: 15
+    type: deterministic
+    description: Three distinct Altair charts, each of which rendered.
+    config:
+      library: altair
+      required_count: 3
+      not_rendered_credit_ratio: 0.5
+      submitted_only_confidence: 0.85
+      # Three charts that are the same chart three times is one chart. Sameness
+      # is judged on mark type plus encoded fields.
+      distinctness_penalty_ratio: 0.25
+
+  - id: altair_transformation
+    name: Altair transformation used
+    points: 8
+    type: deterministic
+    description: >
+      At least one Altair chart applies a transformation — mean, count, binning,
+      time unit, window — either as transform_*() or inside an encoding.
+    config:
+      # Read out of the compiled Vega-Lite spec. A bare filter is a subset, not a
+      # transformation of the values, so it does not count on its own.
+      static_only_credit_ratio: 0.5
+      source_patterns:
+        ["transform_aggregate", "transform_bin", "transform_calculate",
+         "transform_window", "transform_timeunit", "transform_joinaggregate",
+         "transform_density", "transform_loess", "transform_regression",
+         "transform_fold", "transform_pivot", "transform_quantile",
+         "mean(", "count(", "sum(", "median(", "average(", "min(", "max(",
+         "bin=", "bin=True", "alt.Bin", "timeUnit", "aggregate="]
+
+  - id: altair_brush_selection
+    name: Brush selection used
+    points: 7
+    type: deterministic
+    description: >
+      An interval (brush) selection is added to at least one Altair chart.
+    config:
+      # `.interactive()` also compiles to an interval selection, but binds it to
+      # the scales for pan/zoom. That is not a brush, and grader/charts.py
+      # excludes it — otherwise every student who added zoom would get this mark.
+      static_only_credit_ratio: 0.5
+      # A point selection is a selection, but the assignment asks for a brush.
+      point_selection_credit_ratio: 0.5
+      source_patterns:
+        ["selection_interval", "selection_interval(", "alt.selection(",
+         "add_params", "add_selection", "brush"]
+
+  - id: chart_conclusions
+    name: Written conclusion below each chart
+    points: 15
+    type: qualitative
+    description: >
+      A short discussion of the main conclusion in a markdown cell below each
+      chart. Coverage and position are checked automatically; whether each
+      discussion actually says something is judged by a person.
+    config:
+      # The assignment requires a discussion under each of the five required
+      # charts; the count follows the chart requirements above.
+      expected_charts: 5
+      min_words: 15
+      partial_words: 6
+      llm_criteria:
+        - "States a conclusion drawn from the chart, not a description of it"
+        - "Refers to what this specific chart shows"
+        - "Is a few sentences, as the assignment asks"
+
+  # -- extra credit -------------------------------------------------------
+  - id: altair_dashboard_extra_credit
+    name: "Extra credit: cross-filtered two-chart Altair dashboard"
+    points: 0
+    type: deterministic
+    description: >
+      Two Altair charts composed together where a selection on one filters the
+      other via transform_filter(). Worth no points in the rubric total; when it
+      is found, the item is flagged so a TA can award the bonus by hand.
+    config:
+      # A rubric's items must sum to its total, so extra credit cannot carry
+      # points here. It is reported instead, and a manual override on this item
+      # adds to the student's total without changing the maximum.
+      suggested_points: 5

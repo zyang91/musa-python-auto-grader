@@ -221,5 +221,8 @@ __marimo__/
 results/
 .musa_grader_workdir/
 submissions/
+# Assignment 2's demo tree, rebuilt by examples/make_hw2_submissions.py and
+# doubling as a scratch area for real student notebooks.
+hw2_submissions/
 
 .DS_Store.musa_grader_data/

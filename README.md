@@ -9,7 +9,18 @@ The guiding principle: **automate what is objectively testable, surface ambiguit
 and make human review fast.** Every deduction traces back to a deterministic test,
 a structural check, a notebook result, or an explicit human judgement.
 
-## Grading works, not outputs
+## Two assignments, two ways of not having an answer key
+
+| | Assignment 1 — The Donut Effect | Assignment 2 — Exploratory Visualization |
+|---|---|---|
+| Dataset | One Zillow file, **supplied by the grader** | The student's own choice, **never handed in** |
+| Why there is no answer key | Zillow revises the file monthly, so counts and percentages differ legitimately | Every student explores a different dataset |
+| What is graded | Whether each step *worked*, against the student's own data | Whether the student can *produce the required elements* |
+| Where the evidence comes from | The grading run's own execution | The outputs the student saved in the notebook |
+
+---
+
+## Assignment 1 — grading works, not outputs
 
 Students download their own Zillow ZHVI extract, and Zillow revises and extends
 that file every month. Row counts, ZIP counts and final percentages therefore
@@ -35,6 +46,51 @@ smaller, rescaled ZHVI file still scores 100/100.
 
 ---
 
+## Assignment 2 — grading elements, not answers
+
+Students pick their own dataset and hand in **the notebook alone**. The grader has
+no copy of the data, so it cannot re-run anything: every submission dies at
+`read_csv`. Nothing about the *content* of a chart was ever checkable, and this
+assignment does not ask it to be — it asks whether the student can produce the
+required elements.
+
+So the rubric splits down the middle of the assignment text.
+
+**Facts, graded automatically (70 points).** An Altair chart compiles to a
+Vega-Lite specification, and that specification sits in the notebook's own saved
+output. A mean/count/bin transformation, an interval brush and a
+`transform_filter()` cross-filter are *read out of it* rather than guessed from
+source text — which is what lets the grader tell apart the three things students
+most often confuse:
+
+| Student wrote | Vega-Lite says | Verdict |
+|---|---|---|
+| `alt.selection_interval()` + `add_params` | `params: [{select: {type: interval}}]` | brush ✓ |
+| `.interactive()` | the same, plus `bind: "scales"` | pan/zoom, **not** a brush |
+| `alt.selection_point()` | `select: {type: point}` | a selection, half credit |
+| `transform_filter("datum.x > 5")` | `filter` with no param | a subset, **not** a transformation |
+| `transform_filter(brush)` across `hconcat` | `filter: {param: …}` + two views | cross-filter ✓ extra credit |
+
+**Judgement, graded by a person (30 points).** The assignment marks the matplotlib
+chart on "colour choices and clarity" and asks for written reasoning under each
+chart. A picture's quality and a paragraph's substance are not machine facts.
+Those items come back as `manual_review` **always, whatever they score**, carrying
+a provisional score built from real signals — labelling and colour calls extracted
+from the source, word counts and the position of each markdown cell — plus the
+text itself. A TA confirms or adjusts a number instead of starting from a blank
+box.
+
+Where the evidence is read from is recorded per chart. When an instructor *does*
+supply the dataset, a freshly executed chart takes over from the saved one
+automatically, and the confidence rises from 0.85 to 0.95.
+
+The extra credit dashboard carries **0 points** in the rubric so it never inflates
+the maximum. When it is found, the item is flagged with the suggested bonus; a
+manual override on it adds to the student's total without changing what they are
+graded out of.
+
+---
+
 ## Quickstart
 
 ```bash
@@ -53,10 +109,22 @@ Generate the demo data and example submissions:
 python examples/make_example_data.py && python examples/make_example_submissions.py
 ```
 
-That builds seven submissions covering the cases a TA meets: two correct, one with
-plausible mistakes, one with two notebooks, one that crashes partway, one with no
-notebook, and the untouched template. They contain notebooks only — no data —
-exactly as the class hands work in.
+That builds seven Assignment 1 submissions covering the cases a TA meets: two
+correct, one with plausible mistakes, one with two notebooks, one that crashes
+partway, one with no notebook, and the untouched template. They contain notebooks
+only — no data — exactly as the class hands work in.
+
+For Assignment 2:
+
+```bash
+python examples/make_hw2_data.py && python examples/make_hw2_submissions.py
+```
+
+Those four are **executed against the data and saved with their outputs, then
+handed in without it** — which is how the class submits, and the only reason there
+is anything to grade. One does everything including the extra credit, one makes
+the usual near-misses, one errored in the student's own run, and one was never run
+at all.
 
 Start the app:
 
@@ -67,6 +135,10 @@ streamlit run app.py
 Then, in the sidebar: pick **Assignment 1**, **upload the assignment data file**
 (for the demo, `examples/data/zillow_zhvi.csv`), load `examples/submissions`,
 choose an execution mode, and press **Run Grader**.
+
+Assignment 2 needs no data file at all: pick **Assignment 2**, load
+`examples/hw2_submissions`, and run. Every notebook will fail to execute, and that
+is expected — the rubric grades the outputs the students saved.
 
 For a real class, download the ZHVI extract from
 [Zillow research data](https://www.zillow.com/research/data/) — *ZHVI All Homes,
@@ -232,7 +304,8 @@ overrides** restores the human decisions on top.
 
 ## Configuring the rubric
 
-Everything the grader expects lives in `rubrics/hw1.yaml` — the Center City ZIP
+Everything the grader expects lives in `rubrics/hw1.yaml` and `rubrics/hw2.yaml` —
+the Center City ZIP
 list, the comparison dates, the hidden test anchors, the credit ratios for common
 near-misses. Change the YAML, press **Regrade**; no Python edits required.
 
@@ -241,18 +314,25 @@ near-misses. Change the YAML, press **Regrade**; no Python edits required.
 > and `start_date`/`end_date` match the dates in the instructions. Nothing else
 > needs updating when the data changes — that is the point of the design above.
 
-`examples/data/` holds a synthetic ZHVI file used only to exercise the pipeline.
-It is not an answer key: no check compares against it.
+For Assignment 2 there is nothing to correct against an official solution — no
+expected values exist. What `rubrics/hw2.yaml` holds instead is policy: how much a
+chart that never rendered is worth, what counts as a transformation, how many
+words make a discussion, and the ceiling on an unreviewed aesthetics score.
+
+`examples/data/` holds a synthetic ZHVI file and a synthetic 311 extract, used
+only to exercise the pipeline. Neither is an answer key: no check compares against
+them.
 
 ---
 
 ## Optional LLM grading
 
-Off by default, and unused by Assignment 1 — that assignment asks for no written
-answer, so it has no qualitative rubric item. The machinery is here for the later
-assignments, which do ask students to interpret their results. When enabled
-(Settings → Qualitative grading, plus `ANTHROPIC_API_KEY` in the environment) it
-grades only free-text responses.
+Off by default. Assignment 1 asks for no written answer, so it has no qualitative
+rubric item; Assignment 2 has four of them, and is where this earns its keep. When
+enabled (Settings → Qualitative grading, plus `ANTHROPIC_API_KEY` in the
+environment) it grades only free-text responses — the rationales and the chart
+conclusions. The matplotlib **aesthetics** item is never sent: it is a question
+about a picture, and no text answers it.
 
 The interface is provider-independent: `LLMQualitativeGrader` takes any
 `complete(system, user) -> str` callable. Two rules are enforced in code rather
@@ -261,7 +341,10 @@ text is sent, and any low-confidence judgement is routed to a human instead of
 being applied silently.
 
 With LLM grading off, written responses are scored structurally (does a real
-response exist, is it substantial) and always sent to the review queue.
+response exist, is it substantial, is it in the right place) and always sent to
+the review queue. With it on, a judgement the model is confident enough to defend
+replaces the provisional score; anything less falls back to the structural score
+and the human.
 
 There is deliberately **no AI-writing detection, no plagiarism scoring and no
 writing-style classification**. The grader evaluates assignment performance.
@@ -281,6 +364,7 @@ grader/
   probe_runtime.py      injected into the student kernel; never runs on the host
   notebook_runner.py    standalone runner executed in the subprocess/container
   notebook.py           static analysis and read-only rendering
+  charts.py             chart evidence: library attribution, Vega-Lite specs
   inspection.py         candidate matching over the probe payload
   scoring.py            review policy, class summary
   feedback.py           student markdown feedback
@@ -289,10 +373,12 @@ grader/
 assignments/
   base.py               rubric dispatch, shared execution check
   hw1.py                Assignment 1 checks
+  hw2.py                Assignment 2 checks
 rubrics/hw1.yaml        the answer key, as configuration
+rubrics/hw2.yaml        the grading policy, as configuration
 docker/                 grading image
-tests/                  99 tests
-examples/               synthetic data, three demo notebooks, seven submissions
+tests/                  197 tests
+examples/               synthetic data, six demo notebooks, eleven submissions
 assignment_template/    the notebooks handed to students
 ```
 
@@ -317,7 +403,7 @@ results/<session_id>/
 ## Tests
 
 ```bash
-python -m pytest              # 99 tests, ~22s
+python -m pytest              # 197 tests, ~33s
 python -m pytest -m "not slow"  # skip the ones that execute real kernels
 ```
 
@@ -325,8 +411,8 @@ python -m pytest -m "not slow"  # skip the ones that execute real kernels
 
 ## Scope
 
-Implemented: Assignment 1, Streamlit UI, Docker isolation, rubric engine, review
-queue, manual overrides, regrading, exports, optional LLM grading.
+Implemented: Assignments 1 and 2, Streamlit UI, Docker isolation, rubric engine,
+review queue, manual overrides, regrading, exports, optional LLM grading.
 
 Not built (per design.md §37): Canvas API integration, authentication, cloud
 deployment, student accounts, a database, live scraping, Assignments 3–6. Their

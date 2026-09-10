@@ -7,9 +7,13 @@
 # should ever need network access or host credentials.
 FROM python:3.11-slim
 
+# MPLBACKEND is the *inline* backend, not Agg. Under Agg, `plt.show()` draws
+# nothing and the notebook keeps no image — which is fine for Assignment 1 but
+# silently deletes the graded artefact of a visualization assignment. The
+# inline backend renders through Agg too, so it is just as headless.
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    MPLBACKEND=Agg \
+    MPLBACKEND=module://matplotlib_inline.backend_inline \
     MPLCONFIGDIR=/tmp/mpl \
     HOME=/tmp
 
@@ -27,6 +31,9 @@ RUN pip install --no-cache-dir \
     "numpy==1.26.4" \
     "matplotlib==3.9.2" \
     "seaborn==0.13.2" \
+    "altair==5.4.1" \
+    "vega_datasets==0.9.0" \
+    "vl-convert-python==1.6.1" \
     "scikit-learn==1.5.2" \
     "geopandas==1.0.1" \
     "shapely==2.0.6" \
