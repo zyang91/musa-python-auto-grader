@@ -166,3 +166,147 @@ TEMPLATE_STUB_SOURCE = '''def calculate_percent_increase(group_df):
     ## Fill in this part!
     ##
 '''
+
+
+# ---------------------------------------------------------------------------
+# Assignment 2 — chart evidence
+#
+# The HW2 checks read a ``ChartEvidence`` built from a notebook. Unit tests
+# inject it directly at that seam so a rubric check can be exercised without
+# executing a kernel; grader/charts.py is what tests the notebook walk itself.
+# ---------------------------------------------------------------------------
+
+from grader.charts import (  # noqa: E402
+    ALTAIR,
+    MATPLOTLIB,
+    SEABORN,
+    SOURCE_EXECUTED,
+    ChartEvidence,
+    ChartRecord,
+    analyze_spec,
+    prose_word_count,
+)
+
+BRUSH_SPEC = {
+    "mark": {"type": "line"},
+    "encoding": {"x": {"field": "month", "type": "temporal"},
+                 "y": {"aggregate": "count", "type": "quantitative"}},
+    "params": [{"name": "brush", "select": {"type": "interval", "encodings": ["x"]}}],
+}
+BINNED_SPEC = {
+    "mark": {"type": "bar"},
+    "encoding": {"x": {"bin": True, "field": "days_to_close", "type": "quantitative"},
+                 "y": {"aggregate": "count", "type": "quantitative"}},
+}
+COUNT_SPEC = {
+    "mark": {"type": "bar"},
+    "encoding": {"x": {"field": "zipcode", "type": "nominal"},
+                 "y": {"aggregate": "count", "type": "quantitative"}},
+}
+PLAIN_SPEC = {
+    "mark": {"type": "point"},
+    "encoding": {"x": {"field": "lon", "type": "quantitative"},
+                 "y": {"field": "lat", "type": "quantitative"}},
+}
+INTERACTIVE_SPEC = {
+    "mark": {"type": "point"},
+    "encoding": {"x": {"field": "lon", "type": "quantitative"}},
+    "params": [{"name": "p", "select": {"type": "interval"}, "bind": "scales"}],
+}
+DASHBOARD_SPEC = {
+    "hconcat": [
+        {"mark": {"type": "area"},
+         "encoding": {"x": {"field": "month", "type": "temporal"}}, "name": "view_0"},
+        {"mark": {"type": "bar"},
+         "encoding": {"y": {"aggregate": "count", "type": "quantitative"}},
+         "transform": [{"filter": {"param": "period"}}]},
+    ],
+    "params": [{"name": "period", "select": {"type": "interval"}, "views": ["view_0"]}],
+}
+
+GOOD_DISCUSSION = (
+    "Requests concentrate in a handful of ZIP codes rather than spreading evenly "
+    "across the city, and the busiest generate about twice the volume of the quietest."
+)
+MPL_RATIONALE = (
+    "I want to show how monthly request volume moves across two years. It is a single "
+    "continuous series and matplotlib is the right choice because I need direct control "
+    "over the tick spacing and the annotation on the seasonal peak."
+)
+SNS_RATIONALE = (
+    "I chose a seaborn boxplot because the question is about the distribution of "
+    "closure times within each category rather than the average, and a boxplot shows "
+    "the median, the spread and the long tail together."
+)
+WELL_DRESSED_MPL = (
+    'fig, ax = plt.subplots(figsize=(10, 4.5))\n'
+    'ax.plot(monthly.index, monthly.values, color="#1f4e79", linewidth=2)\n'
+    'ax.set_title("Monthly 311 requests")\n'
+    'ax.set_xlabel("Month")\n'
+    'ax.set_ylabel("Requests")\n'
+    'ax.grid(axis="y", alpha=0.3)\n'
+)
+BARE_MPL = "plt.bar(counts.index, counts.values)\nplt.show()"
+
+
+@pytest.fixture(scope="session")
+def hw2_rubric():
+    return load_rubric(ROOT / "rubrics" / "hw2.yaml")
+
+
+def chart_record(library, code_cell=1, rendered=True, spec=None, discussion="",
+                 preamble="", source="", errored=False,
+                 output_source=SOURCE_EXECUTED):
+    from grader.charts import aesthetic_signals
+
+    record = ChartRecord(
+        library=library,
+        code_cell=code_cell,
+        cell_index=code_cell * 2,
+        source=source,
+        rendered=rendered,
+        errored=errored,
+        discussion=discussion,
+        discussion_words=prose_word_count(discussion),
+        preamble=preamble,
+        preamble_words=prose_word_count(preamble),
+        output_source=output_source,
+    )
+    if spec is not None:
+        record.specs = [spec]
+        record.facts = analyze_spec(spec)
+    if library != ALTAIR:
+        record.aesthetics = aesthetic_signals(source)
+    return record
+
+
+@pytest.fixture
+def chart_evidence():
+    """Builder for the chart evidence of a complete HW2 submission."""
+
+    def build(records=None, source=SOURCE_EXECUTED, output_source=None):
+        """``output_source`` restates where every chart's output came from.
+
+        The usual case for this assignment is the student's own saved output,
+        because they do not hand in the dataset the notebook needs.
+        """
+        if records is None:
+            records = [
+                chart_record(MATPLOTLIB, 2, source=WELL_DRESSED_MPL,
+                             preamble=MPL_RATIONALE, discussion=GOOD_DISCUSSION),
+                chart_record(SEABORN, 3, source='sns.boxplot(data=df, x="a", y="b", palette="crest")',
+                             preamble=SNS_RATIONALE, discussion=GOOD_DISCUSSION),
+                chart_record(ALTAIR, 4, spec=COUNT_SPEC, discussion=GOOD_DISCUSSION),
+                chart_record(ALTAIR, 5, spec=BINNED_SPEC, discussion=GOOD_DISCUSSION),
+                chart_record(ALTAIR, 6, spec=BRUSH_SPEC, discussion=GOOD_DISCUSSION),
+            ]
+        records = list(records)
+        if output_source is not None:
+            for record in records:
+                record.output_source = output_source
+        return ChartEvidence(
+            source=source, notebook_path="executed.ipynb", charts=records,
+            n_code_cells=8,
+        )
+
+    return build

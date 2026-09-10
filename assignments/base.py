@@ -38,6 +38,9 @@ class GradingContext:
     discovery_warnings: list[str] = field(default_factory=list)
     qualitative_grader: Any | None = None
     settings: dict[str, Any] = field(default_factory=dict)
+    # Scratch space for work shared between checks on one submission — e.g.
+    # HW2 reads the executed notebook once and grades seven items from it.
+    cache: dict[str, Any] = field(default_factory=dict)
 
     @property
     def probe_ok(self) -> bool:
@@ -267,14 +270,14 @@ def register(cls: type[AssignmentGrader]) -> type[AssignmentGrader]:
 
 def get_grader(rubric: Rubric) -> AssignmentGrader:
     """Return the grader for a rubric, falling back to the generic base."""
-    from . import hw1  # noqa: F401  (import registers the HW1 grader)
+    from . import hw1, hw2  # noqa: F401  (importing registers the graders)
 
     cls = _REGISTRY.get(rubric.id, AssignmentGrader)
     return cls(rubric)
 
 
 def registered_assignments() -> list[str]:
-    from . import hw1  # noqa: F401
+    from . import hw1, hw2  # noqa: F401
 
     return sorted(_REGISTRY)
 

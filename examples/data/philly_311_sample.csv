@@ -1,0 +1,401 @@
+service_request_id,requested_datetime,service_name,agency_responsible,zipcode,status,days_to_close,lat,lon
+1000070,2023-01-01 06:55:00,Pothole Repair,Streets Department,19107,Closed,23.0,39.81778,-75.18417
+1000247,2023-01-03 06:03:00,Traffic Signal Emergency,Parks & Recreation,19146,Open,8.59,39.83715,-75.13031
+1000319,2023-01-07 21:47:00,Illegal Dumping,License & Inspections,19147,Closed,26.96,39.94071,-75.2002
+1000085,2023-01-07 23:43:00,Illegal Dumping,Streets Department,19149,Closed,14.48,39.98793,-75.12461
+1000166,2023-01-08 07:31:00,Maintenance Residential or Commercial,Streets Department,19119,Closed,14.97,39.99522,-75.09348
+1000216,2023-01-08 19:10:00,Rubbish Collection,Parks & Recreation,19121,Open,14.53,39.94568,-75.07213
+1000018,2023-01-10 06:23:00,Rubbish Collection,License & Inspections,19132,Open,3.28,39.94461,-75.27568
+1000090,2023-01-11 12:15:00,Illegal Dumping,Parks & Recreation,19102,Open,6.88,39.88903,-75.19665
+1000298,2023-01-12 19:16:00,Graffiti Removal,Police Department,19125,Open,11.91,40.03333,-75.10398
+1000228,2023-01-13 01:11:00,Illegal Dumping,Streets Department,19145,Closed,17.27,39.94544,-75.10476
+1000151,2023-01-16 23:14:00,Rubbish Collection,License & Inspections,19147,Closed,23.6,39.97709,-75.16578
+1000266,2023-01-18 06:03:00,Graffiti Removal,Parks & Recreation,19104,Closed,29.72,39.9316,-75.19996
+1000099,2023-01-18 10:47:00,Graffiti Removal,Parks & Recreation,19119,Closed,5.46,39.96844,-75.16341
+1000179,2023-01-19 07:41:00,Rubbish Collection,License & Inspections,19102,Closed,4.72,39.91379,-75.17008
+1000270,2023-01-21 13:55:00,Rubbish Collection,Parks & Recreation,19148,Closed,16.56,39.89594,-75.11601
+1000214,2023-01-22 04:27:00,Abandoned Vehicle,License & Inspections,19119,Closed,17.36,39.95046,-75.27046
+1000071,2023-01-26 05:55:00,Graffiti Removal,Police Department,19132,Closed,13.04,39.95994,-75.14313
+1000108,2023-01-28 19:23:00,Illegal Dumping,Police Department,19121,Closed,19.34,39.88997,-75.21781
+1000241,2023-01-30 22:35:00,Abandoned Vehicle,Parks & Recreation,19106,Closed,19.82,39.98055,-75.1758
+1000180,2023-01-31 17:43:00,Rubbish Collection,Streets Department,19123,Closed,17.88,39.92168,-75.13506
+1000088,2023-02-01 00:30:00,Pothole Repair,Streets Department,19123,Closed,10.92,39.94474,-75.19784
+1000185,2023-02-03 09:43:00,Graffiti Removal,Parks & Recreation,19121,Open,12.12,39.95443,-75.16157
+1000066,2023-02-08 00:43:00,Abandoned Vehicle,Streets Department,19123,Open,2.41,39.98959,-75.16503
+1000251,2023-02-10 20:17:00,Illegal Dumping,Parks & Recreation,19130,Closed,6.97,40.01119,-75.21454
+1000250,2023-02-11 00:44:00,Illegal Dumping,Parks & Recreation,19106,Closed,6.86,39.97087,-75.13185
+1000306,2023-02-11 03:56:00,Pothole Repair,Police Department,19130,Closed,12.13,40.01897,-75.12522
+1000311,2023-02-12 12:33:00,Abandoned Vehicle,Police Department,19123,Open,5.7,40.00347,-75.1375
+1000268,2023-02-15 16:02:00,Illegal Dumping,Streets Department,19147,Closed,10.47,39.93426,-75.21873
+1000133,2023-02-16 06:57:00,Pothole Repair,Police Department,19132,Closed,5.79,39.96188,-75.0793
+1000393,2023-02-17 18:10:00,Illegal Dumping,Police Department,19121,Closed,20.31,39.96463,-75.1388
+1000254,2023-02-18 22:14:00,Abandoned Vehicle,Streets Department,19149,In Progress,6.6,39.87693,-75.14749
+1000020,2023-02-20 11:02:00,Pothole Repair,Streets Department,19132,Closed,8.88,39.92387,-75.20893
+1000333,2023-02-26 06:07:00,Maintenance Residential or Commercial,Police Department,19139,Closed,6.09,39.93415,-75.21115
+1000106,2023-03-05 06:36:00,Maintenance Residential or Commercial,Parks & Recreation,19143,Closed,6.14,39.9565,-75.1685
+1000394,2023-03-06 09:34:00,Traffic Signal Emergency,Streets Department,19139,Closed,11.19,39.96717,-75.05444
+1000109,2023-03-07 05:38:00,Illegal Dumping,Parks & Recreation,19107,Closed,18.75,40.01735,-75.05808
+1000260,2023-03-08 04:02:00,Street Light Outage,Parks & Recreation,19104,Open,13.68,39.91441,-75.21716
+1000398,2023-03-09 22:13:00,Pothole Repair,License & Inspections,19102,Closed,4.16,39.92351,-75.10153
+1000207,2023-03-13 06:28:00,Street Light Outage,Parks & Recreation,19130,Closed,9.14,39.9683,-75.17528
+1000341,2023-03-13 22:38:00,Graffiti Removal,Parks & Recreation,19107,Open,40.97,39.95585,-75.22845
+1000386,2023-03-14 18:45:00,Graffiti Removal,Streets Department,19107,Closed,8.49,39.95146,-75.24052
+1000396,2023-03-16 11:09:00,Traffic Signal Emergency,License & Inspections,19132,Closed,49.2,39.91335,-75.04153
+1000164,2023-03-16 23:54:00,Graffiti Removal,Parks & Recreation,19145,Closed,6.44,39.99471,-75.20678
+1000095,2023-03-18 17:12:00,Rubbish Collection,Streets Department,19121,In Progress,18.22,39.92238,-75.08082
+1000084,2023-03-19 07:18:00,Rubbish Collection,License & Inspections,19130,Closed,6.02,39.90925,-75.14977
+1000182,2023-03-24 23:47:00,Abandoned Vehicle,Streets Department,19123,Closed,9.14,39.89666,-75.05566
+1000296,2023-03-25 14:09:00,Street Light Outage,Streets Department,19146,Closed,3.06,39.92619,-75.12735
+1000189,2023-03-27 02:28:00,Illegal Dumping,Parks & Recreation,19102,Open,3.09,39.95583,-75.16293
+1000087,2023-03-27 13:24:00,Illegal Dumping,License & Inspections,19106,Closed,7.47,39.9581,-75.16389
+1000092,2023-03-28 04:57:00,Pothole Repair,Parks & Recreation,19149,Closed,18.53,39.92903,-75.1176
+1000370,2023-03-28 17:59:00,Abandoned Vehicle,Streets Department,19102,Closed,4.21,39.88765,-75.07255
+1000269,2023-03-30 07:55:00,Graffiti Removal,Streets Department,19125,Closed,18.19,39.92311,-75.15162
+1000116,2023-03-31 05:46:00,Illegal Dumping,Parks & Recreation,19134,Open,6.65,39.95452,-75.07947
+1000169,2023-04-01 19:32:00,Rubbish Collection,Parks & Recreation,19125,Closed,5.64,39.97849,-75.16577
+1000201,2023-04-03 01:23:00,Abandoned Vehicle,License & Inspections,19119,Closed,13.76,39.92743,-75.08584
+1000352,2023-04-05 11:29:00,Illegal Dumping,Streets Department,19106,Closed,6.39,39.91373,-75.22079
+1000170,2023-04-06 13:04:00,Traffic Signal Emergency,License & Inspections,19102,Closed,9.41,39.92658,-75.19761
+1000117,2023-04-08 22:40:00,Illegal Dumping,Parks & Recreation,19125,In Progress,11.34,39.9542,-75.1903
+1000294,2023-04-09 17:32:00,Traffic Signal Emergency,Parks & Recreation,19123,Closed,16.97,39.96453,-75.13283
+1000060,2023-04-10 14:22:00,Pothole Repair,Streets Department,19107,Closed,7.44,39.95534,-75.14792
+1000026,2023-04-12 02:12:00,Traffic Signal Emergency,Parks & Recreation,19146,Closed,17.69,39.94335,-75.20703
+1000292,2023-04-12 03:10:00,Traffic Signal Emergency,License & Inspections,19146,Closed,5.52,39.82735,-75.1408
+1000325,2023-04-15 11:04:00,Abandoned Vehicle,License & Inspections,19107,In Progress,20.39,39.89304,-75.11108
+1000335,2023-04-16 03:20:00,Maintenance Residential or Commercial,Streets Department,19119,Closed,8.89,39.93652,-75.19645
+1000278,2023-04-16 16:51:00,Street Light Outage,Streets Department,19121,Open,30.87,39.90955,-75.21087
+1000101,2023-04-17 22:31:00,Illegal Dumping,Streets Department,19134,Closed,8.17,39.98889,-75.23096
+1000157,2023-04-25 22:02:00,Rubbish Collection,Streets Department,19148,Closed,24.26,39.75181,-75.15872
+1000193,2023-04-26 02:20:00,Street Light Outage,Police Department,19147,Closed,8.03,39.95055,-75.22277
+1000376,2023-04-26 17:04:00,Maintenance Residential or Commercial,Streets Department,19107,Closed,7.17,39.92533,-75.16972
+1000159,2023-04-28 00:57:00,Pothole Repair,License & Inspections,19145,In Progress,6.22,39.9295,-75.09509
+1000265,2023-04-29 05:53:00,Graffiti Removal,License & Inspections,19147,Closed,13.96,39.96277,-75.20076
+1000042,2023-05-03 02:25:00,Rubbish Collection,License & Inspections,19147,Closed,30.82,39.90234,-75.20393
+1000397,2023-05-03 23:33:00,Pothole Repair,Parks & Recreation,19125,Closed,21.91,39.96189,-75.15099
+1000218,2023-05-05 08:48:00,Maintenance Residential or Commercial,Police Department,19148,Open,3.94,39.8739,-75.20757
+1000313,2023-05-05 12:27:00,Street Light Outage,Police Department,19139,In Progress,13.47,39.97267,-75.09751
+1000127,2023-05-06 01:07:00,Street Light Outage,Police Department,19145,Closed,31.74,39.90976,-75.12635
+1000336,2023-05-07 05:49:00,Illegal Dumping,Streets Department,19132,Closed,13.63,39.90268,-75.21077
+1000275,2023-05-09 10:39:00,Maintenance Residential or Commercial,Streets Department,19132,Closed,20.76,39.90093,-75.26388
+1000056,2023-05-10 09:02:00,Rubbish Collection,Streets Department,19132,Open,10.85,39.99037,-75.14843
+1000097,2023-05-11 21:32:00,Traffic Signal Emergency,Streets Department,19104,Closed,16.67,39.98271,-75.24381
+1000125,2023-05-11 22:11:00,Rubbish Collection,Streets Department,19119,Open,10.62,39.91371,-75.14702
+1000184,2023-05-12 09:53:00,Traffic Signal Emergency,Police Department,19106,Closed,7.94,39.89902,-75.2222
+1000258,2023-05-12 10:19:00,Abandoned Vehicle,License & Inspections,19123,Closed,19.8,40.0148,-75.15147
+1000382,2023-05-12 12:31:00,Street Light Outage,Streets Department,19149,Closed,18.27,40.02443,-75.14098
+1000039,2023-05-13 23:43:00,Pothole Repair,Streets Department,19123,Open,12.72,39.98426,-75.21474
+1000063,2023-05-16 07:42:00,Traffic Signal Emergency,Streets Department,19125,Closed,12.65,39.89103,-75.21329
+1000320,2023-05-18 05:20:00,Pothole Repair,License & Inspections,19146,Closed,2.92,39.96891,-75.17503
+1000161,2023-05-20 08:28:00,Street Light Outage,Streets Department,19106,Closed,7.8,39.93623,-75.15436
+1000373,2023-05-23 10:13:00,Pothole Repair,License & Inspections,19119,In Progress,11.55,39.93266,-75.0874
+1000167,2023-05-25 02:58:00,Rubbish Collection,License & Inspections,19102,In Progress,5.01,39.94765,-75.10592
+1000238,2023-05-25 09:13:00,Street Light Outage,Police Department,19119,Closed,17.53,39.86392,-75.15108
+1000384,2023-05-26 13:00:00,Abandoned Vehicle,License & Inspections,19149,In Progress,9.2,39.98962,-75.21403
+1000111,2023-05-27 21:56:00,Maintenance Residential or Commercial,Police Department,19139,Closed,6.36,39.92693,-75.10535
+1000121,2023-05-30 14:35:00,Rubbish Collection,License & Inspections,19119,In Progress,7.43,39.93603,-75.23375
+1000162,2023-05-31 06:43:00,Illegal Dumping,License & Inspections,19143,Closed,19.58,39.89994,-75.18039
+1000344,2023-06-01 08:38:00,Traffic Signal Emergency,Parks & Recreation,19123,Open,7.29,40.02317,-75.17584
+1000224,2023-06-01 09:01:00,Rubbish Collection,Parks & Recreation,19107,Closed,7.67,40.05975,-75.07734
+1000240,2023-06-02 14:49:00,Graffiti Removal,Parks & Recreation,19102,Closed,19.95,39.94222,-75.15844
+1000126,2023-06-04 21:31:00,Maintenance Residential or Commercial,Streets Department,19134,Closed,12.65,39.97765,-75.17914
+1000094,2023-06-09 04:27:00,Maintenance Residential or Commercial,Parks & Recreation,19149,Closed,13.8,39.93556,-75.1844
+1000390,2023-06-12 11:52:00,Pothole Repair,License & Inspections,19106,Closed,10.87,39.98224,-75.23924
+1000155,2023-06-20 13:19:00,Street Light Outage,Police Department,19147,Open,25.69,39.92042,-75.21348
+1000356,2023-06-22 11:22:00,Illegal Dumping,License & Inspections,19121,Open,21.89,39.93648,-75.21095
+1000379,2023-06-25 00:09:00,Abandoned Vehicle,Parks & Recreation,19106,Open,5.62,40.01418,-75.24132
+1000257,2023-06-27 23:30:00,Street Light Outage,Streets Department,19130,Closed,4.18,39.98569,-75.17266
+1000346,2023-06-30 06:54:00,Pothole Repair,License & Inspections,19125,Closed,19.64,40.01088,-75.2696
+1000274,2023-06-30 09:06:00,Rubbish Collection,Streets Department,19148,In Progress,19.97,39.93776,-75.2174
+1000399,2023-06-30 21:01:00,Rubbish Collection,Police Department,19143,Closed,13.61,39.97926,-75.22145
+1000239,2023-07-03 20:27:00,Abandoned Vehicle,Parks & Recreation,19149,In Progress,13.03,39.9648,-75.11147
+1000145,2023-07-07 16:31:00,Street Light Outage,Police Department,19130,In Progress,19.39,39.87843,-75.16544
+1000081,2023-07-09 09:56:00,Illegal Dumping,License & Inspections,19132,Closed,7.75,39.99369,-75.13856
+1000055,2023-07-10 10:46:00,Rubbish Collection,License & Inspections,19134,Open,5.69,39.91452,-75.12265
+1000105,2023-07-10 23:03:00,Maintenance Residential or Commercial,License & Inspections,19106,Closed,11.94,39.88199,-75.11829
+1000093,2023-07-13 14:38:00,Street Light Outage,Streets Department,19106,Closed,9.79,39.92774,-75.15664
+1000230,2023-07-13 21:49:00,Street Light Outage,Streets Department,19143,Closed,7.37,39.97682,-75.12847
+1000176,2023-07-14 20:17:00,Illegal Dumping,License & Inspections,19132,In Progress,6.11,39.91966,-75.26235
+1000080,2023-07-14 20:56:00,Maintenance Residential or Commercial,License & Inspections,19119,In Progress,14.26,39.95088,-75.14464
+1000141,2023-07-19 23:32:00,Rubbish Collection,License & Inspections,19130,In Progress,24.67,40.01014,-75.14384
+1000098,2023-07-21 13:25:00,Maintenance Residential or Commercial,License & Inspections,19132,In Progress,16.26,39.94384,-75.06899
+1000287,2023-07-23 20:03:00,Pothole Repair,License & Inspections,19107,Closed,13.11,39.96526,-75.137
+1000368,2023-07-24 18:48:00,Illegal Dumping,License & Inspections,19102,Closed,2.96,39.8891,-75.10404
+1000011,2023-07-26 00:43:00,Graffiti Removal,Police Department,19125,Open,10.34,39.8001,-75.0545
+1000358,2023-07-27 03:29:00,Abandoned Vehicle,Police Department,19107,Closed,13.4,40.00399,-75.18368
+1000217,2023-08-02 02:37:00,Maintenance Residential or Commercial,Streets Department,19106,Closed,10.59,39.95835,-75.18841
+1000316,2023-08-03 18:07:00,Illegal Dumping,Police Department,19106,Closed,12.42,39.84014,-75.062
+1000002,2023-08-08 00:37:00,Maintenance Residential or Commercial,License & Inspections,19139,Closed,6.99,39.93961,-75.1865
+1000129,2023-08-11 09:58:00,Street Light Outage,Parks & Recreation,19147,Closed,29.37,39.9786,-75.253
+1000104,2023-08-13 08:38:00,Illegal Dumping,Police Department,19130,Closed,5.05,39.99291,-75.19411
+1000174,2023-08-13 16:23:00,Pothole Repair,Police Department,19148,In Progress,10.62,39.94796,-75.23832
+1000208,2023-08-15 03:50:00,Traffic Signal Emergency,Police Department,19132,Closed,24.41,39.94632,-75.10042
+1000030,2023-08-16 05:53:00,Rubbish Collection,Streets Department,19104,Open,37.04,39.90496,-75.21744
+1000305,2023-08-16 06:39:00,Abandoned Vehicle,Police Department,19119,Closed,10.61,39.93797,-75.20462
+1000332,2023-08-17 02:41:00,Street Light Outage,Parks & Recreation,19132,In Progress,8.0,39.9257,-75.1781
+1000360,2023-08-26 05:10:00,Maintenance Residential or Commercial,License & Inspections,19121,Closed,10.46,39.96936,-75.16042
+1000064,2023-08-26 14:27:00,Graffiti Removal,Police Department,19106,Closed,11.75,39.91475,-75.25363
+1000273,2023-08-28 08:40:00,Maintenance Residential or Commercial,Parks & Recreation,19102,Closed,7.23,40.02105,-75.1696
+1000168,2023-08-29 07:13:00,Traffic Signal Emergency,Parks & Recreation,19149,Closed,7.85,40.00109,-75.22677
+1000286,2023-08-30 14:19:00,Illegal Dumping,Police Department,19149,Closed,15.47,39.92399,-75.21525
+1000147,2023-09-01 10:28:00,Street Light Outage,Parks & Recreation,19130,Open,12.72,39.98171,-75.08436
+1000297,2023-09-05 16:23:00,Illegal Dumping,Streets Department,19147,Closed,24.16,39.89789,-75.20765
+1000226,2023-09-06 19:22:00,Traffic Signal Emergency,Police Department,19121,Open,16.68,39.93488,-75.26897
+1000043,2023-09-06 19:34:00,Rubbish Collection,License & Inspections,19107,Closed,14.89,39.9147,-75.21788
+1000037,2023-09-06 20:36:00,Graffiti Removal,License & Inspections,19104,Closed,21.94,39.93376,-75.13793
+1000289,2023-09-07 01:39:00,Graffiti Removal,Police Department,19119,Open,23.45,39.88781,-75.16554
+1000005,2023-09-07 12:22:00,Traffic Signal Emergency,Police Department,19145,Closed,4.42,39.91367,-75.13349
+1000248,2023-09-11 18:41:00,Maintenance Residential or Commercial,License & Inspections,19106,Open,11.06,39.99572,-75.17058
+1000044,2023-09-13 16:40:00,Street Light Outage,Police Department,19139,In Progress,9.65,39.88224,-75.10707
+1000196,2023-09-16 19:24:00,Abandoned Vehicle,Police Department,19132,Closed,21.46,39.99522,-75.19524
+1000262,2023-09-23 22:14:00,Illegal Dumping,License & Inspections,19134,Closed,1.97,39.89378,-75.21036
+1000045,2023-09-29 22:15:00,Street Light Outage,Parks & Recreation,19104,In Progress,10.35,39.95982,-75.08102
+1000342,2023-10-01 23:02:00,Street Light Outage,Parks & Recreation,19134,Closed,12.07,40.01793,-75.22687
+1000156,2023-10-02 08:28:00,Abandoned Vehicle,Police Department,19119,Closed,10.5,40.00008,-75.20075
+1000136,2023-10-03 08:38:00,Graffiti Removal,Parks & Recreation,19134,Open,8.03,39.84872,-75.06928
+1000244,2023-10-05 12:56:00,Pothole Repair,Police Department,19104,Open,6.46,39.96843,-75.20571
+1000363,2023-10-06 13:14:00,Abandoned Vehicle,Police Department,19104,Open,2.6,39.99285,-75.22528
+1000361,2023-10-07 18:32:00,Rubbish Collection,License & Inspections,19102,Closed,27.89,39.9389,-75.14112
+1000209,2023-10-08 21:23:00,Illegal Dumping,Parks & Recreation,19148,Closed,15.98,39.98699,-75.17215
+1000366,2023-10-13 11:30:00,Graffiti Removal,Streets Department,19132,In Progress,8.62,39.96516,-75.11279
+1000154,2023-10-14 01:42:00,Rubbish Collection,Police Department,19143,Closed,4.76,39.98789,-75.04947
+1000138,2023-10-15 07:50:00,Street Light Outage,Parks & Recreation,19123,Closed,12.95,39.96155,-75.21597
+1000173,2023-10-15 16:53:00,Maintenance Residential or Commercial,License & Inspections,19107,Closed,10.63,40.00161,-75.1387
+1000267,2023-10-16 21:09:00,Graffiti Removal,Police Department,19149,Closed,14.88,39.97912,-75.16692
+1000235,2023-10-18 03:41:00,Traffic Signal Emergency,Streets Department,19147,Closed,6.37,39.92982,-75.19562
+1000219,2023-10-18 23:37:00,Pothole Repair,License & Inspections,19102,Closed,18.87,39.97044,-75.12875
+1000324,2023-10-19 09:09:00,Graffiti Removal,License & Inspections,19121,Closed,14.71,39.95959,-75.14568
+1000197,2023-10-21 05:51:00,Traffic Signal Emergency,Police Department,19139,Closed,21.17,39.96116,-75.05982
+1000082,2023-10-22 00:24:00,Street Light Outage,Streets Department,19119,Closed,11.96,40.01452,-75.15709
+1000328,2023-10-24 20:26:00,Graffiti Removal,Streets Department,19148,Closed,6.33,39.94354,-75.20813
+1000256,2023-10-25 07:42:00,Traffic Signal Emergency,Parks & Recreation,19123,Closed,21.58,40.03119,-75.18016
+1000110,2023-10-28 01:40:00,Traffic Signal Emergency,Streets Department,19106,Closed,15.52,40.03067,-75.20884
+1000160,2023-10-29 04:32:00,Maintenance Residential or Commercial,Police Department,19132,Open,12.24,39.88099,-75.17618
+1000178,2023-11-02 16:54:00,Maintenance Residential or Commercial,Parks & Recreation,19134,In Progress,9.43,39.86277,-75.13595
+1000327,2023-11-02 23:50:00,Rubbish Collection,Police Department,19106,Closed,28.8,39.97871,-75.12207
+1000001,2023-11-05 19:47:00,Abandoned Vehicle,Parks & Recreation,19102,Closed,11.46,39.92338,-75.18717
+1000086,2023-11-05 21:46:00,Illegal Dumping,Streets Department,19149,Closed,24.22,39.91522,-75.1572
+1000057,2023-11-06 17:46:00,Pothole Repair,Parks & Recreation,19149,Open,19.94,39.92263,-75.16968
+1000148,2023-11-08 06:30:00,Graffiti Removal,Parks & Recreation,19106,Open,19.37,40.04971,-75.15034
+1000215,2023-11-09 17:01:00,Pothole Repair,Parks & Recreation,19146,Closed,13.72,39.89214,-75.15756
+1000089,2023-11-10 01:32:00,Traffic Signal Emergency,License & Inspections,19106,In Progress,15.26,39.97824,-75.13976
+1000004,2023-11-10 20:04:00,Maintenance Residential or Commercial,Streets Department,19104,Closed,4.99,39.97351,-75.0988
+1000143,2023-11-17 21:19:00,Traffic Signal Emergency,Police Department,19139,Closed,21.63,39.92687,-75.0968
+1000381,2023-11-20 01:03:00,Traffic Signal Emergency,Streets Department,19121,Closed,9.34,39.94016,-75.20968
+1000061,2023-11-20 12:23:00,Rubbish Collection,Streets Department,19149,Closed,9.89,39.95234,-75.13341
+1000343,2023-11-21 19:22:00,Traffic Signal Emergency,License & Inspections,19149,Closed,28.13,39.92964,-75.12496
+1000198,2023-11-22 14:29:00,Illegal Dumping,Streets Department,19148,Closed,12.79,40.00031,-75.16263
+1000079,2023-11-25 04:22:00,Street Light Outage,License & Inspections,19121,Open,0.81,40.01916,-75.2877
+1000012,2023-11-25 06:17:00,Graffiti Removal,Police Department,19143,Closed,2.5,39.90016,-75.15835
+1000163,2023-12-01 02:57:00,Abandoned Vehicle,Police Department,19139,In Progress,30.05,39.95589,-75.18214
+1000330,2023-12-04 13:12:00,Illegal Dumping,Police Department,19121,Closed,14.83,39.89492,-75.07558
+1000307,2023-12-04 23:27:00,Pothole Repair,Parks & Recreation,19104,In Progress,8.03,39.93299,-75.21058
+1000374,2023-12-05 22:24:00,Street Light Outage,Parks & Recreation,19107,Closed,20.11,39.97034,-75.18843
+1000171,2023-12-10 23:05:00,Graffiti Removal,Police Department,19132,Open,32.21,39.96658,-75.13008
+1000362,2023-12-11 06:35:00,Rubbish Collection,Parks & Recreation,19139,Open,13.1,39.85549,-75.11734
+1000308,2023-12-12 03:24:00,Maintenance Residential or Commercial,Police Department,19104,Closed,4.4,39.92985,-75.14723
+1000383,2023-12-17 06:44:00,Abandoned Vehicle,Police Department,19106,Closed,23.19,40.00748,-75.1271
+1000391,2023-12-17 21:36:00,Pothole Repair,Streets Department,19125,In Progress,5.72,40.00312,-75.15553
+1000007,2023-12-23 09:29:00,Street Light Outage,Parks & Recreation,19147,Closed,8.9,39.92771,-75.19796
+1000040,2023-12-24 03:45:00,Pothole Repair,Streets Department,19102,Closed,28.18,39.95472,-75.1638
+1000107,2023-12-27 13:10:00,Graffiti Removal,Streets Department,19145,Closed,13.64,39.91175,-75.10224
+1000312,2023-12-30 02:06:00,Pothole Repair,Streets Department,19123,Closed,20.65,39.96197,-75.14545
+1000367,2024-01-03 00:48:00,Traffic Signal Emergency,Streets Department,19132,Closed,8.21,39.99671,-75.1625
+1000236,2024-01-03 05:27:00,Pothole Repair,License & Inspections,19134,Closed,7.8,39.94908,-75.17438
+1000300,2024-01-03 21:46:00,Abandoned Vehicle,Streets Department,19134,Closed,13.9,39.93045,-75.25113
+1000158,2024-01-06 23:50:00,Street Light Outage,License & Inspections,19146,Closed,20.21,39.90535,-75.16602
+1000349,2024-01-14 19:23:00,Street Light Outage,Police Department,19119,Closed,27.76,39.89418,-75.08798
+1000211,2024-01-15 08:24:00,Street Light Outage,Police Department,19106,Closed,15.45,39.95515,-75.11131
+1000290,2024-01-20 07:25:00,Illegal Dumping,License & Inspections,19148,Closed,11.9,39.86915,-75.08629
+1000058,2024-01-20 15:04:00,Traffic Signal Emergency,License & Inspections,19139,In Progress,8.88,39.87664,-75.19546
+1000357,2024-01-21 11:46:00,Pothole Repair,Streets Department,19106,Closed,15.77,39.9752,-75.16634
+1000340,2024-01-26 16:39:00,Abandoned Vehicle,Parks & Recreation,19102,Closed,14.21,39.94212,-75.23698
+1000183,2024-01-27 10:31:00,Pothole Repair,Police Department,19149,Open,14.15,39.92263,-75.09294
+1000078,2024-01-28 14:53:00,Traffic Signal Emergency,Streets Department,19102,Closed,26.96,39.99443,-75.11235
+1000223,2024-01-29 15:27:00,Street Light Outage,Parks & Recreation,19102,Closed,30.54,39.98002,-75.17664
+1000261,2024-01-30 04:13:00,Abandoned Vehicle,Streets Department,19149,Closed,5.5,39.92919,-75.18833
+1000212,2024-01-31 23:29:00,Pothole Repair,Police Department,19132,Closed,15.29,39.93183,-75.15328
+1000387,2024-01-31 23:48:00,Abandoned Vehicle,Police Department,19134,Closed,5.47,39.94884,-75.09322
+1000210,2024-02-02 10:49:00,Traffic Signal Emergency,Parks & Recreation,19147,Closed,13.6,39.98989,-75.11607
+1000293,2024-02-04 06:58:00,Abandoned Vehicle,Parks & Recreation,19146,Open,7.13,39.88999,-75.16734
+1000242,2024-02-07 01:16:00,Illegal Dumping,Parks & Recreation,19145,Closed,6.95,39.87403,-75.12307
+1000181,2024-02-10 06:13:00,Street Light Outage,Parks & Recreation,19147,Closed,5.22,39.8976,-75.19367
+1000077,2024-02-11 20:59:00,Graffiti Removal,Parks & Recreation,19130,Closed,5.61,39.99796,-75.11662
+1000072,2024-02-13 09:01:00,Traffic Signal Emergency,Police Department,19148,Closed,12.38,39.95194,-75.20884
+1000369,2024-02-13 23:34:00,Street Light Outage,Police Department,19149,In Progress,22.7,39.85609,-75.16333
+1000206,2024-02-16 06:00:00,Traffic Signal Emergency,Streets Department,19143,Open,24.81,39.8237,-75.11458
+1000003,2024-02-16 10:20:00,Rubbish Collection,Police Department,19139,Closed,15.43,40.01325,-75.16685
+1000083,2024-02-19 05:34:00,Street Light Outage,License & Inspections,19146,Open,11.91,39.93001,-75.18262
+1000024,2024-02-22 16:10:00,Illegal Dumping,License & Inspections,19125,Closed,8.85,39.87257,-75.17911
+1000067,2024-02-23 17:31:00,Graffiti Removal,License & Inspections,19107,Closed,9.22,39.86499,-75.15233
+1000365,2024-02-24 13:43:00,Traffic Signal Emergency,Parks & Recreation,19107,Closed,19.83,39.97826,-75.15639
+1000378,2024-02-25 21:52:00,Abandoned Vehicle,Streets Department,19134,Closed,12.96,39.95078,-75.19645
+1000253,2024-02-26 06:43:00,Maintenance Residential or Commercial,Streets Department,19106,Closed,25.23,39.96397,-75.13325
+1000282,2024-02-28 02:22:00,Street Light Outage,Parks & Recreation,19146,In Progress,30.71,39.91632,-75.279
+1000302,2024-03-01 19:17:00,Traffic Signal Emergency,License & Inspections,19143,Closed,4.3,39.76558,-75.159
+1000009,2024-03-02 22:21:00,Abandoned Vehicle,License & Inspections,19130,Closed,3.34,39.94678,-75.16863
+1000150,2024-03-06 08:57:00,Graffiti Removal,Police Department,19125,In Progress,14.51,39.89927,-75.11327
+1000271,2024-03-07 10:07:00,Traffic Signal Emergency,Police Department,19147,Closed,19.07,39.99711,-75.14882
+1000062,2024-03-08 02:52:00,Illegal Dumping,License & Inspections,19139,Closed,18.86,39.959,-75.12249
+1000144,2024-03-09 02:58:00,Graffiti Removal,Parks & Recreation,19143,Closed,9.26,39.86006,-75.14185
+1000203,2024-03-09 05:36:00,Illegal Dumping,License & Inspections,19121,Open,5.38,39.98773,-75.10473
+1000280,2024-03-15 13:25:00,Graffiti Removal,Streets Department,19107,Closed,29.21,39.96702,-75.12984
+1000046,2024-03-15 18:48:00,Illegal Dumping,Police Department,19148,Open,14.05,39.9156,-75.1168
+1000091,2024-03-19 03:02:00,Abandoned Vehicle,License & Inspections,19119,Closed,17.3,39.86281,-75.16355
+1000033,2024-03-20 13:42:00,Maintenance Residential or Commercial,License & Inspections,19123,Open,13.62,39.90864,-75.21718
+1000334,2024-03-22 01:49:00,Street Light Outage,Streets Department,19123,Open,24.01,39.97022,-75.20749
+1000303,2024-03-22 23:53:00,Illegal Dumping,Police Department,19134,Closed,9.8,39.91446,-75.23526
+1000036,2024-03-24 12:01:00,Rubbish Collection,Police Department,19121,Closed,24.71,39.95951,-75.0771
+1000310,2024-03-31 07:21:00,Abandoned Vehicle,Streets Department,19143,Open,9.73,39.98899,-75.16197
+1000053,2024-04-03 01:21:00,Maintenance Residential or Commercial,Streets Department,19132,Closed,14.02,39.99838,-75.03648
+1000375,2024-04-05 07:21:00,Illegal Dumping,License & Inspections,19148,Closed,4.63,39.90111,-75.15608
+1000279,2024-04-06 21:37:00,Abandoned Vehicle,Streets Department,19145,Closed,12.06,39.85994,-75.13205
+1000195,2024-04-17 23:19:00,Street Light Outage,License & Inspections,19145,Open,4.78,40.04023,-75.12344
+1000395,2024-04-18 21:42:00,Illegal Dumping,Police Department,19107,Closed,9.1,40.0005,-75.18024
+1000068,2024-04-21 06:40:00,Street Light Outage,License & Inspections,19143,Closed,5.13,39.89153,-75.15348
+1000054,2024-04-21 13:23:00,Traffic Signal Emergency,Streets Department,19143,Closed,14.19,39.95523,-75.18841
+1000010,2024-04-23 06:38:00,Street Light Outage,License & Inspections,19139,Closed,21.13,39.86926,-75.11357
+1000059,2024-04-24 13:07:00,Street Light Outage,Parks & Recreation,19139,Open,10.87,39.91789,-75.14826
+1000245,2024-04-29 05:48:00,Rubbish Collection,License & Inspections,19149,Open,13.33,39.95947,-75.15494
+1000142,2024-05-01 01:56:00,Street Light Outage,License & Inspections,19121,Closed,17.68,39.93321,-75.13466
+1000134,2024-05-01 16:35:00,Graffiti Removal,Parks & Recreation,19146,Closed,11.79,39.85586,-75.21963
+1000017,2024-05-05 23:33:00,Graffiti Removal,Parks & Recreation,19147,Closed,21.01,39.94019,-75.20666
+1000130,2024-05-07 01:34:00,Street Light Outage,Parks & Recreation,19121,Closed,6.89,39.93298,-75.18458
+1000188,2024-05-07 21:40:00,Maintenance Residential or Commercial,License & Inspections,19147,Closed,4.14,39.93809,-75.18468
+1000299,2024-05-09 17:06:00,Illegal Dumping,Streets Department,19123,Closed,10.99,39.95406,-75.08136
+1000234,2024-05-12 19:54:00,Rubbish Collection,Police Department,19145,In Progress,5.8,39.99232,-75.21941
+1000221,2024-05-16 06:39:00,Illegal Dumping,Parks & Recreation,19125,Closed,3.09,39.99581,-75.21929
+1000050,2024-05-17 12:12:00,Graffiti Removal,Parks & Recreation,19119,Closed,34.47,39.93775,-75.15802
+1000285,2024-05-18 02:16:00,Rubbish Collection,Streets Department,19121,Open,20.41,39.92227,-75.17201
+1000202,2024-05-18 05:11:00,Street Light Outage,Streets Department,19148,Closed,10.51,39.9311,-75.14817
+1000337,2024-05-18 15:23:00,Rubbish Collection,License & Inspections,19148,Closed,19.79,39.98014,-75.12257
+1000019,2024-05-21 23:37:00,Street Light Outage,Parks & Recreation,19121,Closed,2.8,39.99356,-75.19598
+1000122,2024-05-22 10:27:00,Maintenance Residential or Commercial,License & Inspections,19102,Closed,32.07,40.01814,-75.1831
+1000023,2024-05-22 13:38:00,Street Light Outage,Streets Department,19119,Closed,19.34,40.0153,-75.14068
+1000014,2024-05-22 23:29:00,Maintenance Residential or Commercial,Parks & Recreation,19130,In Progress,3.38,40.0009,-75.13527
+1000200,2024-05-26 18:35:00,Graffiti Removal,Parks & Recreation,19146,Closed,6.25,39.92598,-75.17412
+1000119,2024-05-27 11:10:00,Rubbish Collection,Streets Department,19130,Closed,7.22,40.02908,-75.23297
+1000295,2024-05-27 14:36:00,Abandoned Vehicle,Police Department,19134,Closed,12.81,39.87228,-75.20498
+1000348,2024-05-28 06:01:00,Street Light Outage,License & Inspections,19143,In Progress,12.87,39.90687,-75.07592
+1000339,2024-05-29 04:34:00,Rubbish Collection,License & Inspections,19123,Closed,20.75,39.97065,-75.14159
+1000112,2024-05-30 16:04:00,Maintenance Residential or Commercial,Streets Department,19130,Open,15.86,39.95748,-75.15913
+1000123,2024-06-02 13:58:00,Graffiti Removal,Streets Department,19147,Closed,8.39,39.92619,-75.22612
+1000222,2024-06-04 00:59:00,Street Light Outage,Police Department,19104,Closed,9.71,40.04878,-75.22163
+1000187,2024-06-06 04:29:00,Illegal Dumping,Police Department,19107,Closed,13.92,39.94597,-75.04213
+1000389,2024-06-06 22:58:00,Rubbish Collection,Police Department,19147,Open,11.98,40.01133,-75.14502
+1000277,2024-06-07 11:29:00,Traffic Signal Emergency,Streets Department,19132,Closed,16.14,39.95914,-75.11036
+1000022,2024-06-08 13:36:00,Illegal Dumping,Police Department,19132,Closed,29.69,39.88702,-75.19675
+1000149,2024-06-12 08:34:00,Abandoned Vehicle,Police Department,19121,Closed,10.72,39.94951,-75.1018
+1000353,2024-06-14 14:44:00,Street Light Outage,Police Department,19147,Open,13.89,39.95681,-75.13729
+1000249,2024-06-15 07:17:00,Maintenance Residential or Commercial,Streets Department,19132,Closed,37.58,39.9595,-75.10174
+1000015,2024-06-16 05:07:00,Street Light Outage,License & Inspections,19149,Closed,20.66,39.98657,-75.06668
+1000351,2024-06-17 09:40:00,Rubbish Collection,License & Inspections,19132,Closed,10.26,39.90178,-75.12366
+1000069,2024-06-17 12:28:00,Street Light Outage,Streets Department,19130,Closed,10.64,39.96004,-75.23089
+1000246,2024-06-17 14:17:00,Traffic Signal Emergency,Streets Department,19146,Closed,9.6,39.98158,-75.10581
+1000338,2024-06-19 04:11:00,Illegal Dumping,Streets Department,19146,In Progress,8.2,39.91779,-75.20545
+1000034,2024-06-20 17:10:00,Pothole Repair,Police Department,19125,Open,6.06,40.00404,-75.17155
+1000102,2024-06-20 20:50:00,Illegal Dumping,Parks & Recreation,19147,Closed,29.28,39.96017,-75.16134
+1000146,2024-06-23 10:47:00,Illegal Dumping,Streets Department,19134,In Progress,11.93,40.02298,-75.20574
+1000225,2024-06-24 02:28:00,Maintenance Residential or Commercial,Parks & Recreation,19147,In Progress,9.39,39.97356,-75.15292
+1000128,2024-06-26 17:51:00,Maintenance Residential or Commercial,Parks & Recreation,19107,Closed,13.6,39.90784,-75.1902
+1000113,2024-07-04 05:56:00,Abandoned Vehicle,Parks & Recreation,19123,Open,9.35,40.00889,-75.19017
+1000175,2024-07-05 21:43:00,Abandoned Vehicle,Streets Department,19146,In Progress,18.51,39.93743,-75.23281
+1000304,2024-07-06 04:54:00,Graffiti Removal,Parks & Recreation,19143,Open,25.03,39.88255,-75.06656
+1000139,2024-07-08 05:07:00,Pothole Repair,Police Department,19134,Closed,18.73,39.84135,-75.15482
+1000264,2024-07-10 05:12:00,Maintenance Residential or Commercial,Streets Department,19145,Closed,8.21,39.90598,-75.11486
+1000049,2024-07-10 20:47:00,Maintenance Residential or Commercial,Streets Department,19106,Closed,9.89,39.97586,-75.18749
+1000329,2024-07-11 07:07:00,Pothole Repair,Police Department,19123,Open,3.95,39.91684,-75.0974
+1000355,2024-07-11 12:50:00,Graffiti Removal,License & Inspections,19130,Closed,16.36,39.92615,-75.18761
+1000190,2024-07-17 11:35:00,Graffiti Removal,Police Department,19139,Closed,13.97,39.9383,-75.24677
+1000220,2024-07-19 08:36:00,Pothole Repair,License & Inspections,19102,Open,8.03,39.94786,-75.17365
+1000041,2024-07-22 03:50:00,Illegal Dumping,Police Department,19134,Closed,12.94,40.00045,-75.26406
+1000000,2024-07-23 07:10:00,Abandoned Vehicle,Parks & Recreation,19143,Closed,10.5,40.02455,-75.0896
+1000364,2024-07-28 12:27:00,Traffic Signal Emergency,Police Department,19104,Closed,16.28,39.93546,-75.13877
+1000314,2024-07-29 17:53:00,Traffic Signal Emergency,License & Inspections,19132,In Progress,7.55,39.97289,-75.213
+1000006,2024-07-31 00:15:00,Rubbish Collection,Streets Department,19147,Closed,8.11,39.97291,-75.17904
+1000172,2024-08-01 04:19:00,Abandoned Vehicle,License & Inspections,19125,Closed,10.79,39.87842,-75.2173
+1000075,2024-08-01 23:10:00,Abandoned Vehicle,Streets Department,19134,Open,24.27,39.94632,-75.15658
+1000359,2024-08-03 17:26:00,Abandoned Vehicle,Parks & Recreation,19107,Closed,14.46,39.94231,-75.11525
+1000284,2024-08-04 21:03:00,Rubbish Collection,Police Department,19121,Closed,3.14,39.87172,-75.11812
+1000115,2024-08-06 06:01:00,Traffic Signal Emergency,Streets Department,19134,Open,22.56,39.90575,-75.14425
+1000008,2024-08-06 11:31:00,Graffiti Removal,Police Department,19148,Closed,10.99,39.86145,-75.14321
+1000191,2024-08-06 21:06:00,Illegal Dumping,Parks & Recreation,19107,Open,3.88,40.01088,-75.10251
+1000074,2024-08-07 18:20:00,Maintenance Residential or Commercial,Streets Department,19148,Closed,22.79,39.87033,-75.20497
+1000031,2024-08-11 18:50:00,Pothole Repair,Police Department,19102,Closed,6.89,40.01192,-75.09499
+1000103,2024-08-11 23:01:00,Street Light Outage,License & Inspections,19123,Closed,2.89,39.86437,-75.1424
+1000255,2024-08-12 13:20:00,Traffic Signal Emergency,License & Inspections,19104,Closed,12.15,39.94888,-75.23197
+1000385,2024-08-12 15:42:00,Maintenance Residential or Commercial,Streets Department,19149,Open,6.15,39.97823,-75.29439
+1000380,2024-08-14 21:46:00,Abandoned Vehicle,Streets Department,19146,In Progress,11.31,39.95608,-75.18031
+1000047,2024-08-18 05:42:00,Maintenance Residential or Commercial,Streets Department,19104,Closed,6.22,39.94854,-75.17288
+1000331,2024-08-23 04:23:00,Graffiti Removal,License & Inspections,19139,Open,15.99,39.91002,-75.13774
+1000048,2024-08-23 22:28:00,Traffic Signal Emergency,Streets Department,19134,Closed,32.31,39.85679,-75.25481
+1000281,2024-08-24 07:28:00,Rubbish Collection,License & Inspections,19102,Closed,6.63,39.91604,-75.22848
+1000204,2024-08-27 13:00:00,Illegal Dumping,Police Department,19123,Open,14.63,39.87777,-75.1488
+1000229,2024-08-28 04:33:00,Pothole Repair,Parks & Recreation,19148,Closed,17.03,39.97815,-75.123
+1000025,2024-08-29 13:31:00,Rubbish Collection,Streets Department,19125,Closed,16.69,39.95408,-75.11902
+1000321,2024-09-02 15:45:00,Street Light Outage,License & Inspections,19123,Closed,4.36,39.97666,-75.24325
+1000322,2024-09-03 02:55:00,Abandoned Vehicle,Police Department,19125,Closed,7.79,39.99454,-75.13854
+1000052,2024-09-05 04:10:00,Abandoned Vehicle,License & Inspections,19148,Open,16.85,39.89498,-75.2322
+1000288,2024-09-08 21:29:00,Maintenance Residential or Commercial,License & Inspections,19125,Closed,40.63,39.91866,-75.17271
+1000323,2024-09-08 23:24:00,Maintenance Residential or Commercial,License & Inspections,19106,Closed,33.74,39.94324,-75.20469
+1000243,2024-09-10 02:31:00,Graffiti Removal,License & Inspections,19121,Closed,13.15,39.9902,-75.19769
+1000076,2024-09-10 12:54:00,Traffic Signal Emergency,Parks & Recreation,19107,Closed,18.23,39.93045,-75.2288
+1000309,2024-09-12 17:05:00,Graffiti Removal,License & Inspections,19125,Closed,8.46,40.00742,-75.21951
+1000114,2024-09-13 10:05:00,Rubbish Collection,Police Department,19107,Closed,23.24,39.98728,-75.173
+1000132,2024-09-17 04:27:00,Traffic Signal Emergency,License & Inspections,19132,Open,5.15,39.94263,-75.1089
+1000186,2024-09-17 22:14:00,Graffiti Removal,License & Inspections,19139,Open,6.55,39.96204,-75.11664
+1000392,2024-09-22 13:14:00,Traffic Signal Emergency,Streets Department,19130,Closed,9.17,39.97944,-75.15481
+1000028,2024-09-22 19:48:00,Rubbish Collection,Police Department,19132,Closed,6.87,39.97342,-75.17121
+1000152,2024-09-26 22:35:00,Pothole Repair,Streets Department,19143,Closed,5.74,39.93106,-75.1427
+1000205,2024-09-27 19:53:00,Pothole Repair,License & Inspections,19139,Closed,18.92,39.9799,-75.1288
+1000326,2024-09-27 21:01:00,Illegal Dumping,License & Inspections,19132,In Progress,11.58,40.04552,-75.19614
+1000315,2024-09-29 06:53:00,Graffiti Removal,Parks & Recreation,19130,Closed,28.41,39.95088,-75.14809
+1000233,2024-10-04 20:09:00,Graffiti Removal,Parks & Recreation,19119,Open,7.57,39.94922,-75.24378
+1000021,2024-10-09 07:22:00,Traffic Signal Emergency,Streets Department,19104,Closed,17.94,40.00693,-75.16262
+1000272,2024-10-11 04:52:00,Maintenance Residential or Commercial,Parks & Recreation,19125,Closed,18.55,39.95461,-75.14549
+1000124,2024-10-12 18:18:00,Rubbish Collection,Police Department,19145,Closed,7.88,39.92401,-75.17407
+1000232,2024-10-13 06:59:00,Illegal Dumping,Police Department,19123,In Progress,27.24,39.90581,-75.18591
+1000035,2024-10-15 22:30:00,Maintenance Residential or Commercial,Streets Department,19146,Closed,15.63,39.98441,-75.16773
+1000165,2024-10-19 08:10:00,Abandoned Vehicle,License & Inspections,19148,Closed,4.15,39.87596,-75.15757
+1000291,2024-10-23 04:05:00,Pothole Repair,Parks & Recreation,19146,Closed,26.58,39.98865,-75.3049
+1000096,2024-10-23 16:03:00,Pothole Repair,Parks & Recreation,19139,Closed,14.01,39.84758,-75.2313
+1000199,2024-10-26 11:34:00,Traffic Signal Emergency,Police Department,19145,Closed,11.81,39.96042,-75.22856
+1000377,2024-10-28 01:06:00,Rubbish Collection,Streets Department,19146,In Progress,5.65,39.87054,-75.12666
+1000032,2024-10-28 15:55:00,Pothole Repair,Police Department,19125,Closed,13.21,39.88562,-75.22028
+1000135,2024-11-01 18:58:00,Abandoned Vehicle,Parks & Recreation,19132,Closed,7.08,39.92375,-75.22937
+1000227,2024-11-02 00:56:00,Street Light Outage,Police Department,19147,Closed,12.75,39.97202,-75.2112
+1000318,2024-11-04 09:45:00,Maintenance Residential or Commercial,Parks & Recreation,19107,Closed,6.14,39.97394,-75.09344
+1000354,2024-11-05 15:48:00,Maintenance Residential or Commercial,Police Department,19134,Closed,5.99,39.90889,-75.24471
+1000252,2024-11-05 21:17:00,Abandoned Vehicle,License & Inspections,19149,Closed,26.43,40.00843,-75.20808
+1000317,2024-11-06 03:15:00,Illegal Dumping,License & Inspections,19106,Open,13.14,39.95818,-75.19351
+1000137,2024-11-08 05:39:00,Maintenance Residential or Commercial,Streets Department,19125,In Progress,13.87,39.97066,-75.1667
+1000065,2024-11-08 13:31:00,Street Light Outage,Parks & Recreation,19132,Closed,9.03,39.93029,-75.1285
+1000177,2024-11-08 13:42:00,Graffiti Removal,Police Department,19146,Open,14.38,39.99522,-75.22963
+1000013,2024-11-13 12:19:00,Maintenance Residential or Commercial,License & Inspections,19123,Closed,34.58,39.97327,-75.21979
+1000372,2024-11-14 10:46:00,Abandoned Vehicle,License & Inspections,19143,Closed,7.2,39.96716,-75.1543
+1000345,2024-11-16 09:21:00,Maintenance Residential or Commercial,Parks & Recreation,19107,Closed,12.03,39.86686,-75.1158
+1000283,2024-11-16 16:58:00,Abandoned Vehicle,License & Inspections,19121,Closed,6.51,39.94036,-75.20773
+1000231,2024-11-16 17:08:00,Abandoned Vehicle,Police Department,19134,Closed,15.57,39.98801,-75.18992
+1000194,2024-11-16 18:59:00,Maintenance Residential or Commercial,Parks & Recreation,19134,Closed,38.45,40.00297,-75.12742
+1000192,2024-11-18 03:42:00,Abandoned Vehicle,Police Department,19107,Closed,31.31,39.89113,-75.18985
+1000027,2024-11-20 07:14:00,Illegal Dumping,License & Inspections,19143,In Progress,21.88,39.8863,-75.12537
+1000371,2024-11-26 16:30:00,Illegal Dumping,Parks & Recreation,19107,Closed,9.5,39.96298,-75.19807
+1000029,2024-11-27 04:16:00,Traffic Signal Emergency,Parks & Recreation,19104,Closed,3.79,39.91776,-75.08886
+1000237,2024-11-28 01:40:00,Maintenance Residential or Commercial,Streets Department,19143,Closed,6.96,39.97474,-75.13553
+1000153,2024-11-29 18:59:00,Street Light Outage,Police Department,19143,Closed,16.94,39.93498,-75.15991
+1000051,2024-11-30 12:31:00,Traffic Signal Emergency,Streets Department,19132,Open,8.3,39.96957,-75.15161
+1000118,2024-12-01 02:42:00,Rubbish Collection,License & Inspections,19104,Open,10.86,39.98929,-75.09798
+1000073,2024-12-01 07:26:00,Traffic Signal Emergency,License & Inspections,19123,Open,8.73,39.89678,-75.21646
+1000038,2024-12-04 21:11:00,Street Light Outage,Streets Department,19148,Open,11.89,39.87664,-75.1694
+1000276,2024-12-06 10:09:00,Abandoned Vehicle,License & Inspections,19146,Open,8.64,39.99503,-75.11928
+1000301,2024-12-06 15:39:00,Maintenance Residential or Commercial,Police Department,19130,Closed,9.49,39.97773,-75.10487
+1000213,2024-12-06 18:12:00,Abandoned Vehicle,Streets Department,19125,Closed,32.11,39.96989,-75.09606
+1000131,2024-12-08 17:10:00,Graffiti Removal,Police Department,19148,Open,29.15,39.98321,-75.17605
+1000120,2024-12-11 06:15:00,Maintenance Residential or Commercial,Streets Department,19147,Closed,11.76,39.86131,-75.15756
+1000388,2024-12-11 14:29:00,Rubbish Collection,License & Inspections,19139,Closed,26.43,39.85996,-75.14382
+1000347,2024-12-11 23:23:00,Rubbish Collection,Streets Department,19139,Closed,23.41,39.96557,-75.22731
+1000140,2024-12-14 05:54:00,Maintenance Residential or Commercial,Police Department,19148,Closed,11.38,39.91129,-75.17319
+1000350,2024-12-18 19:38:00,Street Light Outage,License & Inspections,19104,Closed,15.47,40.009,-75.13383
+1000263,2024-12-23 16:10:00,Maintenance Residential or Commercial,Streets Department,19130,Closed,13.72,40.08749,-75.15723
+1000100,2024-12-25 22:47:00,Graffiti Removal,Parks & Recreation,19148,Open,27.47,40.03005,-75.22766
+1000016,2024-12-26 05:08:00,Maintenance Residential or Commercial,Parks & Recreation,19132,In Progress,5.45,39.95465,-75.13227
+1000259,2024-12-30 18:08:00,Abandoned Vehicle,Police Department,19139,Open,17.04,40.00871,-75.19126

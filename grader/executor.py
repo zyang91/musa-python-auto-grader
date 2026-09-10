@@ -249,7 +249,9 @@ def _build_command(workdir: Path, config: ExecutionConfig) -> list[str]:
             "--read-only",
             "--tmpfs", "/tmp:rw,size=256m",
             "--env", "HOME=/tmp",
-            "--env", "MPLBACKEND=Agg",
+            # Not Agg: under Agg a figure is never displayed, so a chart the
+            # student drew leaves no image in the notebook to grade.
+            "--env", "MPLBACKEND=module://matplotlib_inline.backend_inline",
             "--env", "MPLCONFIGDIR=/tmp/mpl",
             "--workdir", "/grading",
             "-v", f"{workdir}:/grading:rw",
