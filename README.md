@@ -7,13 +7,15 @@ and graded against the real student template in
 
 The guiding principle: **automate what is objectively testable, surface ambiguity,
 and make human review fast.** Every deduction traces back to a deterministic test,
-a structural check, a notebook result, or an explicit human judgement.
+a structural check, a notebook result, or an explicit human judgement. 
 
-## Note on student data. 
-Grading runs entirely on the instructor's or TA's machine; submissions are never uploaded anywhere.
-The Streamlit UI binds to localhost, and notebooks execute in a Docker container with no network access.
-Failure pattern is reproduced in tests/ with synthetic fixtures, and no student file, name, or identifier appears in this repository for model calibration only.
-We only used LLM to assist build this tool, but no student assignments were upload to LLM.
+Grading principle. The grader is a screening tool, not a scoring tool. It can only clear a submission, never mark one down: any submission that does not come back at full marks is read by a person, and the deduction stands or falls on that reading. Efficiency comes from the submissions the grader clears, not from trusting it where it is uncertain.
+
+## Note on student data 
+- Grading runs entirely on the instructor's or TA's machine; submissions are never uploaded anywhere.
+- The Streamlit UI binds to localhost, and notebooks execute in a Docker container with no network access.
+- Failure pattern is reproduced in tests/ with synthetic fixtures, and no student file, name, or identifier appears in this repository for model calibration only.
+- We only used LLM to assist build this tool, but no student assignments were upload to LLM.
 
 
 ## Two assignments, two ways of not having an answer key
