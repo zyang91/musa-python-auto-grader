@@ -9,7 +9,12 @@ The guiding principle: **automate what is objectively testable, surface ambiguit
 and make human review fast.** Every deduction traces back to a deterministic test,
 a structural check, a notebook result, or an explicit human judgement.
 
-**Note on student data. Grading runs entirely on the instructor's or TA's machine; submissions are never uploaded anywhere. The class run referenced above was used only to observe how the grader failed. Every failure pattern is reproduced in tests/ with synthetic fixtures, and no student file, name, or identifier appears in this repository.
+## Note on student data. 
+Grading runs entirely on the instructor's or TA's machine; submissions are never uploaded anywhere.
+The Streamlit UI binds to localhost, and notebooks execute in a Docker container with no network access.
+Failure pattern is reproduced in tests/ with synthetic fixtures, and no student file, name, or identifier appears in this repository for model calibration only.
+We only used LLM to assist build this tool, but no student assignments were upload to LLM.
+
 
 ## Two assignments, two ways of not having an answer key
 
