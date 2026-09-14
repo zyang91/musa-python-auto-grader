@@ -162,14 +162,31 @@ def test_placement_refuses_paths_outside_the_workdir(tmp_path):
     assert not (tmp_path / "evil.csv").exists()
 
 
-def test_a_students_own_file_is_never_overwritten(tmp_path):
+def test_uploaded_data_replaces_a_students_copy_by_default(tmp_path):
+    """The whole class runs on the uploaded file; the student's original is kept."""
+    from grader.discovery import place_shared_data
+
+    source = _touch(tmp_path / "shared.csv", "shared\n")
+    original = _touch(tmp_path / "submission" / "data" / "shared.csv", "student's own\n")
+    workdir = tmp_path / "work"
+    _touch(workdir / "data" / "shared.csv", "student's own\n")
+
+    report = place_shared_data(workdir, [source], referenced_paths=["data/shared.csv"])
+    assert (workdir / "data" / "shared.csv").read_text() == "shared\n"
+    assert report["placed"][0]["action"] == "replaced student file"
+    assert original.read_text() == "student's own\n"
+
+
+def test_prefer_student_files_keeps_their_copy(tmp_path):
     from grader.discovery import place_shared_data
 
     source = _touch(tmp_path / "shared.csv", "shared\n")
     workdir = tmp_path / "work"
     _touch(workdir / "data" / "shared.csv", "student's own\n")
 
-    place_shared_data(workdir, [source], referenced_paths=["data/shared.csv"])
+    place_shared_data(
+        workdir, [source], referenced_paths=["data/shared.csv"], prefer_student_files=True
+    )
     assert (workdir / "data" / "shared.csv").read_text() == "student's own\n"
 
 
@@ -194,3 +211,30 @@ def test_missing_source_is_reported_not_raised(tmp_path):
     report = place_shared_data(workdir, [tmp_path / "nope.csv"], referenced_paths=[])
     assert report["missing_sources"] == [str(tmp_path / "nope.csv")]
     assert report["placed"] == []
+
+
+def test_prefer_student_files_finds_a_canvas_flattened_copy(tmp_path):
+    """Canvas turned the student's data/x.csv into a bare x.csv at the root."""
+    from grader.discovery import place_shared_data
+
+    source = _touch(tmp_path / "Zip_zhvi_official.csv", "official\n")
+    workdir = tmp_path / "work"
+    _touch(workdir / "Zip_zhvi_assignment-1-data.csv", "student's own\n")
+
+    report = place_shared_data(
+        workdir, [source], referenced_paths=["data/Zip_zhvi_assignment-1-data.csv"],
+        prefer_student_files=True,
+    )
+    assert (workdir / "data" / "Zip_zhvi_assignment-1-data.csv").read_text() == "student's own\n"
+    assert report["placed"][0]["action"] == "student file linked"
+
+
+def test_by_default_the_flattened_copy_is_not_used(tmp_path):
+    from grader.discovery import place_shared_data
+
+    source = _touch(tmp_path / "Zip_zhvi_official.csv", "official\n")
+    workdir = tmp_path / "work"
+    _touch(workdir / "Zip_zhvi_assignment-1-data.csv", "student's own\n")
+
+    place_shared_data(workdir, [source], referenced_paths=["data/Zip_zhvi_assignment-1-data.csv"])
+    assert (workdir / "data" / "Zip_zhvi_assignment-1-data.csv").read_text() == "official\n"

@@ -213,9 +213,45 @@ def load_from_path(path: str) -> None:
 
 def load_from_upload(uploaded_file) -> None:
     temp_dir = Path(tempfile.mkdtemp(prefix="musa_upload_"))
-    zip_path = temp_dir / uploaded_file.name
+    zip_path = temp_dir / Path(uploaded_file.name).name
     zip_path.write_bytes(uploaded_file.getbuffer())
     load_from_path(str(zip_path))
+
+
+def _upload_identity(uploaded_file) -> str:
+    file_id = getattr(uploaded_file, "file_id", None)
+    if file_id:
+        return str(file_id)
+    return f"{uploaded_file.name}:{getattr(uploaded_file, 'size', '')}"
+
+
+def load_upload_once(uploaded_file) -> bool:
+    """Load a newly uploaded ZIP as soon as it arrives.
+
+    Previously the upload also needed a separate "Load ZIP" click, and until that
+    click the Run button stayed disabled with no explanation. Streamlit hands the
+    same upload back on every rerun, so the identity check keeps a large archive
+    from being re-extracted on each interaction. Returns True when it loaded.
+    """
+    identity = _upload_identity(uploaded_file)
+    if st.session_state.get("loaded_upload_id") == identity:
+        return False
+    st.session_state.loaded_upload_id = identity
+    load_from_upload(uploaded_file)
+    return True
+
+
+def run_blockers() -> list[str]:
+    """Why the Run button is disabled, in words a TA can act on."""
+    reasons: list[str] = []
+    if is_grading():
+        reasons.append("Grading is already running.")
+    current = loaded()
+    if current is None:
+        reasons.append("Load submissions first: upload a ZIP or load a folder.")
+    elif not current.candidates:
+        reasons.append("No submissions were found in what you loaded.")
+    return reasons
 
 
 def load_session_from_disk(path: str) -> None:
@@ -258,9 +294,9 @@ def start_grading(preserve_overrides: bool = False) -> None:
     snapshot = (
         existing.collect_overrides() if (preserve_overrides and existing is not None) else None
     )
-    target_session = None
+    # Always a named session: without it the saved session forgot its source.
+    target_session = svc.new_session(loaded_submissions.source)
     if existing is not None and preserve_overrides:
-        target_session = svc.new_session(loaded_submissions.source)
         target_session.session_id = existing.session_id
         target_session.root = existing.root
         target_session.created_at = existing.created_at

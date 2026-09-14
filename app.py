@@ -108,15 +108,31 @@ def sidebar() -> None:
 
         st.divider()
         st.markdown("**Submissions**")
-        uploaded = st.file_uploader("Upload Canvas ZIP", type=["zip"])
-        if uploaded is not None and st.button("Load ZIP", use_container_width=True):
-            state.load_from_upload(uploaded)
+        uploaded = st.file_uploader("Upload Canvas ZIP", type=["zip"], key="submissions_zip")
+        if uploaded is not None and state.load_upload_once(uploaded):
             st.rerun()
 
         folder = st.text_input("or local folder", value="examples/submissions")
         if st.button("Load folder", use_container_width=True):
+            # A folder replaces an earlier upload; re-uploading should load again.
+            st.session_state.loaded_upload_id = None
             state.load_from_path(folder)
             st.rerun()
+
+        loaded = state.loaded()
+        if st.session_state.last_error:
+            st.error(f"Could not load submissions — {st.session_state.last_error}")
+        elif loaded is not None:
+            if loaded.candidates:
+                st.success(
+                    f"{len(loaded.candidates)} submissions loaded from "
+                    f"`{Path(loaded.source).name}`"
+                )
+            else:
+                st.warning(
+                    f"`{Path(loaded.source).name}` loaded, but no notebooks were found "
+                    "in it."
+                )
 
         rubric = state.current_rubric()
         if rubric is not None and rubric.requires_data:
@@ -138,16 +154,17 @@ def sidebar() -> None:
         config.llm_enabled = st.checkbox("Enable LLM grading", value=config.llm_enabled)
 
         st.divider()
-        loaded = state.loaded()
+        blockers = state.run_blockers()
         st.button(
             "▶ Run Grader",
             type="primary",
             use_container_width=True,
-            disabled=loaded is None or state.is_grading(),
+            disabled=bool(blockers),
             on_click=state.start_grading,
+            help=" ".join(blockers) if blockers else None,
         )
-        if loaded is not None:
-            st.caption(f"{len(loaded.candidates)} submissions loaded")
+        for reason in blockers:
+            st.caption(f"Run is disabled: {reason}")
 
         for problem in state.preflight():
             st.error(problem, icon="🚫")

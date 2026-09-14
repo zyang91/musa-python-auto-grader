@@ -39,8 +39,18 @@ from grader.utils import as_float, is_close, jaccard, normalize_zips
 
 from .base import AssignmentGrader, GradingContext, register
 
-# A Zillow extract's value columns are dates: "2020-03-31", "2020-03", "3/31/20".
-DATE_COLUMN_RE = re.compile(r"(19|20)\d{2}[-/_.]?\d{1,2}")
+# Name words that place a value in one group or the other (see _group_of).
+DEFAULT_CENTER_WORDS = ("center", "centre", "cc", "inner", "inside", "in",
+                        "within", "downtown", "core", "central")
+DEFAULT_OUTSIDE_WORDS = ("outside", "outer", "out", "non", "not", "rest", "other",
+                         "others", "remaining", "suburb", "suburbs", "beyond",
+                         "excluding", "noncenter")
+
+# A Zillow extract's value columns are dates: "2020-03-31", "2020-03", and — once
+# Excel has re-saved the file — "3/31/2020" or "3/31/20".
+DATE_COLUMN_RE = re.compile(
+    r"(19|20)\d{2}[-/_.]?\d{1,2}|^\d{1,2}[-/.]\d{1,2}[-/.](19|20)?\d{2}$"
+)
 
 
 @register
@@ -75,13 +85,31 @@ class HW1Grader(AssignmentGrader):
         return frames
 
     def _philadelphia_zips(self, ctx: GradingContext, prefix: str = "191") -> set[str]:
-        """The student's own Philadelphia ZIP universe — the yardstick for the split."""
-        best: set[str] = set()
+        """The student's own Philadelphia ZIP codes (prefix-filtered)."""
+        return {z for z in self._student_zip_universe(ctx, prefix) if z.startswith(prefix)}
+
+    def _student_zip_universe(self, ctx: GradingContext, prefix: str = "191") -> set[str]:
+        """Every ZIP in the student's own Philadelphia subset, mistakes included.
+
+        The split is graded against this rather than against true Philadelphia:
+        a student whose subset still contains a Philadelphia, MS row has already
+        lost points for the subset, and should not lose them a second time for
+        splitting that same subset correctly.
+        """
+        best: tuple[int, float] = (0, 0.0)
+        universe: set[str] = set()
         for frame in self._zip_frames(ctx):
-            local = {z for z in frame["zips"] if z.startswith(prefix)}
-            if len(local) > len(best) and len(local) >= 0.6 * len(frame["zips"]):
-                best = local
-        return best
+            zips = frame["zips"]
+            local = {z for z in zips if z.startswith(prefix)}
+            purity = len(local) / len(zips)
+            if purity < 0.6:
+                continue  # the unfiltered source file, not a Philadelphia subset
+            # Most Philadelphia ZIPs first; on a tie, the purest frame, so the raw
+            # file's other cities never leak into the yardstick.
+            key = (len(local), purity)
+            if key > best:
+                best, universe = key, set(zips)
+        return universe
 
     @staticmethod
     def _column_values(profile: dict[str, Any], column: str | None) -> list[str]:
@@ -424,7 +452,7 @@ class HW1Grader(AssignmentGrader):
         if not listed:
             return self.check_unimplemented(ctx, item)
 
-        philly = self._philadelphia_zips(ctx)
+        philly = self._student_zip_universe(ctx)
         if not philly:
             return self.result(
                 item, 0.0, STATUS_NOT_FOUND, 0.6,
@@ -439,7 +467,7 @@ class HW1Grader(AssignmentGrader):
 
         # A frame holding the whole Philadelphia ZIP set is the un-split data, not
         # half of the split, so it cannot answer either side.
-        frames = [f for f in self._zip_frames(ctx) if (f["zips"] & philly) != philly]
+        frames = [f for f in self._zip_frames(ctx) if not f["zips"] >= philly]
         floor = float(config.get("min_match_similarity", 0.25))
         center_match = self._best_zip_match(frames, expected_center, floor)
         rest_match = self._best_zip_match(frames, expected_rest, floor)
@@ -480,6 +508,17 @@ class HW1Grader(AssignmentGrader):
                 evidence,
             )
 
+        flag = self._flag_column_split(ctx, expected_center)
+        if flag is not None:
+            ratio = float(config.get("flag_column_credit_ratio", 1.0))
+            evidence["flag_column"] = flag
+            return self.result(
+                item, item.points * ratio, STATUS_PASS if ratio >= 1 else STATUS_PARTIAL, 0.95,
+                f"Split correctly with a True/False column (`{flag['frame']}.{flag['column']}`) "
+                "rather than two separate dataframes; the grouping it defines is right.",
+                evidence,
+            )
+
         problems = []
         if not center_match or center_score < 0.999:
             missing = sorted(expected_center - (center_match["zips"] if center_match else set()))
@@ -503,6 +542,21 @@ class HW1Grader(AssignmentGrader):
         sentence = "; ".join(problems)
         return self.result(item, score, status, confidence,
                            sentence[:1].upper() + sentence[1:] + ".", evidence)
+
+    def _flag_column_split(
+        self, ctx: GradingContext, expected_center: set[str]
+    ) -> dict[str, Any] | None:
+        """A boolean column whose True rows are exactly the Center City ZIP codes."""
+        if not expected_center:
+            return None
+        for profile in inspection.dataframes(ctx.probe):
+            for column, mapping in (profile.get("boolean_group_values") or {}).items():
+                for id_column, values in mapping.items():
+                    marked = normalize_zips(values)
+                    if marked and jaccard(marked, expected_center) >= 0.999:
+                        return {"frame": profile.get("name"), "column": column,
+                                "id_column": id_column, "zips": sorted(marked)}
+        return None
 
     @staticmethod
     def _best_zip_match(
@@ -580,6 +634,15 @@ class HW1Grader(AssignmentGrader):
             )
             actual = call.get("value") if call.get("ok") else None
             numeric = as_float(actual)
+            table = call.get("table") if call.get("ok") else None
+            tabular = numeric is None and bool(table and table.get("numbers"))
+            if tabular:
+                matches = [n for n in table["numbers"] if is_close(n, expected, rel_tol, abs_tol)]
+                # Read the table's answer only when it is unambiguous.
+                numeric = matches[0] if matches else None
+                actual = f"table {table.get('shape')} containing {numeric}" if matches else (
+                    f"table {table.get('shape')}: {table['numbers'][:6]}"
+                )
 
             passed = call.get("ok") and is_close(numeric, expected, rel_tol, abs_tol)
             results.append(
@@ -598,6 +661,8 @@ class HW1Grader(AssignmentGrader):
                     ),
                     "error": call.get("error"),
                     "schema_used": call.get("schema_used"),
+                    "tabular": tabular,
+                    "whole_frame": str(call.get("schema_used", "")).endswith("_multi_group"),
                 }
             )
 
@@ -646,6 +711,23 @@ class HW1Grader(AssignmentGrader):
             if passed == total:
                 feedback = f"All {total} hidden tests passed."
                 status = STATUS_PASS
+                notes = []
+                if any(r["tabular"] for r in results):
+                    score *= float(config.get("tabular_return_credit_ratio", 1.0))
+                    notes.append("it returns a table rather than a single number")
+                if any(r["whole_frame"] for r in results):
+                    score *= float(config.get("whole_frame_credit_ratio", 1.0))
+                    notes.append(
+                        "it only works on a frame holding several ZIP codes, not on the "
+                        "one-ZIP group that groupby().apply() passes"
+                    )
+                if notes:
+                    feedback = (
+                        f"All {total} hidden tests produced the correct percent increase, "
+                        "though " + " and ".join(notes) + "."
+                    )
+                    if score < item.points:
+                        status = STATUS_PARTIAL
             elif passed == 0:
                 feedback = f"The function failed all {total} hidden tests."
                 status = STATUS_FAIL
@@ -657,6 +739,12 @@ class HW1Grader(AssignmentGrader):
             feedback += (
                 " Several functions matched the expected signature, so the graded one "
                 "may not be the intended answer."
+            )
+        if entry.get("selected_by") == "behaviour":
+            confidence = min(confidence, 0.9)
+            feedback += (
+                f" (Graded `{entry.get('function_name')}`, identified by what it computes: "
+                "its name does not say it is the percent-increase function.)"
             )
         return self.result(item, score, status, confidence, feedback, evidence)
 
@@ -714,10 +802,11 @@ class HW1Grader(AssignmentGrader):
 
         config = item.config
         low, high = config.get("plausible_range", [-100, 1000])
-        center_hints = [h.lower() for h in config.get("center_hints", ["center"])]
-        outside_hints = [h.lower() for h in config.get("outside_hints", ["outside", "non"])]
+        center_words = {w.lower() for w in config.get("center_words", DEFAULT_CENTER_WORDS)}
+        outside_words = {w.lower() for w in config.get("outside_words", DEFAULT_OUTSIDE_WORDS)}
+        percent_hints = [h.lower() for h in config.get("percent_hints", ["percent", "increase"])]
 
-        candidates = self._percent_candidates(ctx, float(low), float(high))
+        candidates = self._percent_candidates(ctx, float(low), float(high), percent_hints)
         if not candidates:
             return self.result(
                 item, 0.0, STATUS_NOT_FOUND, 0.6,
@@ -726,12 +815,13 @@ class HW1Grader(AssignmentGrader):
                 {"note": "Values that are only printed, never assigned, cannot be inspected."},
             )
 
-        center, outside = self._classify(candidates, center_hints, outside_hints)
+        center, outside = self._classify(candidates, center_words, outside_words)
 
         evidence = {
             "candidate_values": [
-                {"name": c["name"], "value": round(c["value"], 2), "source": c["source"]}
-                for c in candidates[:10]
+                {"name": c["name"], "value": round(c["value"], 2), "source": c["source"],
+                 "group": self._group_of(c, center_words, outside_words)[0]}
+                for c in candidates[:12]
             ],
             "center_city_value": center and round(center["value"], 2),
             "outside_value": outside and round(outside["value"], 2),
@@ -771,50 +861,131 @@ class HW1Grader(AssignmentGrader):
         )
 
     def _percent_candidates(
-        self, ctx: GradingContext, low: float, high: float
+        self,
+        ctx: GradingContext,
+        low: float,
+        high: float,
+        percent_hints: list[str] | None = None,
     ) -> list[dict[str, Any]]:
-        """Scalars and per-ZIP result series that look like percent changes."""
+        """Values that could be a group's average percent increase.
+
+        Looked for, most direct first: assigned numbers; means of per-ZIP result
+        series; means of percent columns in small result tables (a function that
+        returns a DataFrame); and per-flag means of a series grouped by a
+        True/False Center City column.
+        """
+        percent_hints = percent_hints or ["percent", "pct", "increase", "change", "growth"]
         out: list[dict[str, Any]] = []
         for entry in inspection.scalars(ctx.probe):
             value = as_float(entry.get("value"))
             if value is None or isinstance(entry.get("value"), bool):
                 continue
             if low <= value <= high:
-                out.append({"name": entry["name"], "value": value, "source": "variable"})
+                out.append({"name": entry["name"], "value": value, "source": "variable",
+                            "rank": 0})
+
+        flags = self._center_flags(ctx)
         for entry in (ctx.probe or {}).get("series", []) or []:
             summary = entry.get("numeric_summary") or {}
             mean = as_float(summary.get("mean"))
-            if mean is None or not (low <= mean <= high):
+            if mean is not None and low <= mean <= high:
+                out.append(
+                    {"name": entry["name"], "value": mean, "rank": 1,
+                     "source": f"mean of series `{entry['name']}` ({summary.get('count')} values)"}
+                )
+            for key, value in (entry.get("bool_level_means") or {}).items():
+                number = as_float(value)
+                if number is None or not (low <= number <= high) or not flags:
+                    continue
+                group = "center" if key == "True" else "outside"
+                out.append(
+                    {"name": f"{entry['name']}[{key}]", "value": number, "rank": 1,
+                     "group": group,
+                     "source": f"mean of `{entry['name']}` where the Center City flag is {key}"}
+                )
+
+        for profile in inspection.dataframes(ctx.probe):
+            if profile.get("rows", 0) > 500:
                 continue
-            out.append(
-                {"name": entry["name"], "value": mean,
-                 "source": f"mean of series `{entry['name']}` ({summary.get('count')} ZIP codes)"}
-            )
+            for column, summary in (profile.get("numeric_summary") or {}).items():
+                if not any(hint in str(column).lower() for hint in percent_hints):
+                    continue
+                mean = as_float((summary or {}).get("mean"))
+                if mean is None or not (low <= mean <= high):
+                    continue
+                out.append(
+                    {"name": f"{profile['name']}.{column}", "value": mean, "rank": 2,
+                     "source": f"mean of column `{column}` in `{profile['name']}`"}
+                )
         return out
 
-    @staticmethod
-    def _classify(
-        candidates: list[dict[str, Any]],
-        center_hints: list[str],
-        outside_hints: list[str],
-    ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
-        """Assign values to the two groups by variable name.
+    def _center_flags(self, ctx: GradingContext) -> list[str]:
+        """Boolean columns whose True rows are the Center City ZIP codes."""
+        split = self.rubric.item("center_city_split")
+        listed = normalize_zips((split.config if split else {}).get("center_city_zips", []))
+        universe = self._student_zip_universe(ctx)
+        expected = listed & universe if universe else listed
+        found = []
+        for profile in inspection.dataframes(ctx.probe):
+            for column, mapping in (profile.get("boolean_group_values") or {}).items():
+                for values in mapping.values():
+                    if expected and jaccard(normalize_zips(values), expected) >= 0.9:
+                        found.append(column)
+        return found
 
-        Scoring both sides and comparing them, rather than excluding one side's
-        words outright, is what lets `non_cc_avg` land on the "outside" side even
-        though its name also contains "cc".
+    @staticmethod
+    def _name_tokens(name: str) -> list[str]:
+        """`Average_Not_Center_city`, `avgOutcity`, `noncc_mean` -> word tokens."""
+        spaced = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", str(name))
+        tokens: list[str] = []
+        for token in re.split(r"[^A-Za-z0-9]+", spaced.lower()):
+            if not token:
+                continue
+            tokens.append(token)
+            for prefix in ("in", "out", "non", "not"):
+                rest = token[len(prefix):]
+                if token.startswith(prefix) and rest in ("city", "center", "centre", "cc"):
+                    tokens += [prefix, rest]
+        return tokens
+
+    @classmethod
+    def _group_of(
+        cls, candidate: dict[str, Any], center_words: set[str], outside_words: set[str]
+    ) -> tuple[str | None, int]:
+        """Which group a value belongs to, and how strongly its name says so.
+
+        Any outside/negation word decides it: `not_center_city_pct_change` is the
+        rest of the city even though it says "center", which a longest-substring
+        score used to get backwards.
         """
-        center = outside = None
+        if candidate.get("group"):
+            return candidate["group"], 3
+        tokens = cls._name_tokens(candidate["name"])
+        if any(t in outside_words for t in tokens):
+            return "outside", 2
+        strong = [t for t in tokens if t in center_words and t != "in"]
+        if strong:
+            return "center", 2
+        if "in" in tokens:
+            return "center", 1
+        return None, 0
+
+    @classmethod
+    def _classify(
+        cls,
+        candidates: list[dict[str, Any]],
+        center_words: set[str],
+        outside_words: set[str],
+    ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+        """Pick one value per group: clearest name first, then most direct source."""
+        best: dict[str, tuple[tuple[int, int], dict[str, Any]]] = {}
         for candidate in candidates:
-            name = candidate["name"].lower()
-            center_score = sum(len(h) for h in center_hints if h in name)
-            outside_score = sum(len(h) for h in outside_hints if h in name)
-            if outside_score > center_score:
-                margin = outside_score - center_score
-                if outside is None or margin > outside["_margin"]:
-                    outside = {**candidate, "_margin": margin}
-            elif center_score > outside_score:
-                margin = center_score - outside_score
-                if center is None or margin > center["_margin"]:
-                    center = {**candidate, "_margin": margin}
+            group, strength = cls._group_of(candidate, center_words, outside_words)
+            if group is None:
+                continue
+            key = (strength, -int(candidate.get("rank", 0)))
+            if group not in best or key > best[group][0]:
+                best[group] = (key, candidate)
+        center = best.get("center", (None, None))[1]
+        outside = best.get("outside", (None, None))[1]
         return center, outside

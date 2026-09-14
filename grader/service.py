@@ -282,6 +282,7 @@ class GradingService:
             analysis = analyze_notebook(candidate.notebook_path)
             _stage(progress, progress_callback, "structural", "done")
 
+            prefer_student_files = bool(self.rubric.data.get("prefer_student_files", False))
             prepare_workdir(
                 candidate,
                 workdir,
@@ -292,11 +293,19 @@ class GradingService:
                     if literal not in analysis.referenced_files
                 ],
                 fallback_dirs=self.rubric.data.get("fallback_locations", ["data", ""]),
+                prefer_student_files=prefer_student_files,
             )
+            result.discovery_warnings.extend(
+                self._data_notes(candidate, prefer_student_files)
+            )
+
+            probe_config = dict(self.grader.probe_config())
+            probe_config["url_redirects"] = self._url_redirects(candidate, analysis)
 
             _stage(progress, progress_callback, "execution", "running")
             execution, probe = execute_submission(
-                workdir, self.grader.probe_config(), self.settings.execution_config()
+                workdir, probe_config, self.settings.execution_config(),
+                run_subdir=candidate.run_subdir,
             )
             result.execution = execution
             _stage(progress, progress_callback, "execution",
@@ -351,6 +360,35 @@ class GradingService:
             result.review_reasons.append(f"Grader error: {result.error}")
 
         return result
+
+    def _data_notes(self, candidate: SubmissionCandidate, prefer_student_files: bool) -> list[str]:
+        """Say so when a student handed in data of their own.
+
+        It matters for reading the result: their notebook may expect their copy
+        (say, dates Excel re-saved as 3/31/2020) rather than the uploaded file.
+        """
+        if not self.settings.shared_data_paths or not candidate.data_files:
+            return []
+        names = ", ".join(sorted({p.name for p in candidate.data_files})[:3])
+        if prefer_student_files:
+            return [f"student submitted their own data ({names}); graded on their file"]
+        return [
+            f"student also submitted data ({names}); graded on the uploaded file, "
+            "so check any failure that depends on how their copy differs"
+        ]
+
+    def _url_redirects(self, candidate: SubmissionCandidate, analysis: Any) -> dict[str, str]:
+        """URL filename -> local path, for notebooks that read data from the web."""
+        urls = [
+            literal for literal in analysis.data_path_literals + analysis.referenced_files
+            if str(literal).lower().startswith(("http://", "https://"))
+        ]
+        if not urls:
+            return {}
+        placed: dict[str, str] = {}
+        for entry in (candidate.data_placement or {}).get("placed", []):
+            placed.setdefault(entry["source"], entry["path"])
+        return {name: path for name, path in placed.items()}
 
     # -- regrading (design.md §31) ----------------------------------------
     def regrade(
