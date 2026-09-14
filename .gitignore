@@ -225,4 +225,5 @@ submissions/
 # doubling as a scratch area for real student notebooks.
 hw2_submissions/
 
-.DS_Store.musa_grader_data/
+.DS_Store
+.musa_grader_data/

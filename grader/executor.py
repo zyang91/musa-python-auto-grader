@@ -86,10 +86,79 @@ def build_probe_cells(probe_config: dict[str, Any]) -> list[Any]:
     return [setup, invoke]
 
 
+URL_REDIRECT_TEMPLATE = r'''# --- MUSA Grader: the grading run is offline; URLs of supplied data files read the local copy ---
+def _musa_install_url_redirects(redirects):
+    import functools
+    import os
+    import urllib.parse
+
+    path_keywords = ("filepath_or_buffer", "path_or_buf", "io", "path", "filename")
+
+    def resolve(target):
+        if isinstance(target, str) and target.lower().startswith(("http://", "https://")):
+            name = os.path.basename(urllib.parse.urlparse(target).path)
+            return redirects.get(name, target)
+        return target
+
+    def wrap(module, attribute):
+        original = getattr(module, attribute, None)
+        if original is None or getattr(original, "_musa_redirect", False):
+            return
+
+        @functools.wraps(original)
+        def patched(*args, **kwargs):
+            if args:
+                args = (resolve(args[0]),) + tuple(args[1:])
+            else:
+                for key in path_keywords:
+                    if key in kwargs:
+                        kwargs[key] = resolve(kwargs[key])
+                        break
+            return original(*args, **kwargs)
+
+        patched._musa_redirect = True
+        setattr(module, attribute, patched)
+
+    try:
+        import pandas
+        for attribute in ("read_csv", "read_table", "read_json", "read_excel", "read_parquet"):
+            wrap(pandas, attribute)
+    except Exception:
+        pass
+    try:
+        import geopandas
+        wrap(geopandas, "read_file")
+    except Exception:
+        pass
+
+
+_musa_install_url_redirects(__REDIRECTS__)
+del _musa_install_url_redirects
+'''
+
+
+def build_url_redirect_cell(redirects: dict[str, str]) -> Any:
+    """A first cell that points data URLs at the supplied local file.
+
+    The container has no network, by design. A student who loads the data
+    straight from Zillow's URL is following a reasonable pattern, so a URL whose
+    filename matches a file the instructor supplied is read from that local copy;
+    any other URL still fails exactly as it would offline.
+    """
+    source = URL_REDIRECT_TEMPLATE.replace("__REDIRECTS__", repr(dict(redirects)))
+    cell = new_code_cell(source)
+    cell.metadata["musa_probe"] = True
+    cell.metadata["tags"] = ["musa-probe"]
+    return cell
+
+
 def instrument_notebook(
-    notebook_path: str | Path, probe_config: dict[str, Any], output_path: str | Path
+    notebook_path: str | Path,
+    probe_config: dict[str, Any],
+    output_path: str | Path,
+    url_redirects: dict[str, str] | None = None,
 ) -> Path:
-    """Append probe cells to a copy of the student notebook."""
+    """Append probe cells (and, if needed, prepend URL redirects) to a copy."""
     notebook_path, output_path = Path(notebook_path), Path(output_path)
     nb = nbformat.read(str(notebook_path), as_version=4)
     # Clear stale outputs so what we grade is what this run produced.
@@ -97,6 +166,8 @@ def instrument_notebook(
         if cell.get("cell_type") == "code":
             cell["outputs"] = []
             cell["execution_count"] = None
+    if url_redirects:
+        nb.cells.insert(0, build_url_redirect_cell(url_redirects))
     nb.cells.extend(build_probe_cells(probe_config))
     nbformat.write(nb, str(output_path))
     return output_path
@@ -134,10 +205,16 @@ def execute_submission(
     workdir: str | Path,
     probe_config: dict[str, Any],
     config: ExecutionConfig,
+    run_subdir: str = "",
 ) -> tuple[ExecutionRecord, dict[str, Any] | None]:
-    """Execute one prepared submission. Returns (execution record, probe payload)."""
+    """Execute one prepared submission. Returns (execution record, probe payload).
+
+    ``run_subdir`` is where inside ``workdir`` the notebook runs from (see
+    ``prepare_workdir``); artifacts always go to ``workdir/_musa_artifacts``.
+    """
     workdir = Path(workdir)
-    notebook = workdir / "notebook.ipynb"
+    run_dir = workdir / run_subdir if run_subdir else workdir
+    notebook = run_dir / "notebook.ipynb"
     if not notebook.exists():
         return (
             ExecutionRecord(mode=config.mode, attempted=False,
@@ -148,12 +225,15 @@ def execute_submission(
     artifacts = workdir / ARTIFACTS_DIRNAME
     artifacts.mkdir(parents=True, exist_ok=True)
     probe_config = dict(probe_config)
+    url_redirects = probe_config.pop("url_redirects", None) or {}
     probe_config["out_dir"] = _container_path(artifacts, workdir, config)
 
-    instrument_notebook(notebook, probe_config, workdir / INSTRUMENTED_NAME)
-    shutil.copy2(RUNNER_SOURCE, workdir / RUNNER_NAME)
+    instrument_notebook(
+        notebook, probe_config, run_dir / INSTRUMENTED_NAME, url_redirects=url_redirects
+    )
+    shutil.copy2(RUNNER_SOURCE, run_dir / RUNNER_NAME)
 
-    command = _build_command(workdir, config)
+    command = _build_command(workdir, config, run_subdir)
     record = ExecutionRecord(mode=config.mode, attempted=True)
 
     try:
@@ -235,8 +315,9 @@ def _container_path(artifacts: Path, workdir: Path, config: ExecutionConfig) -> 
     return str(artifacts)
 
 
-def _build_command(workdir: Path, config: ExecutionConfig) -> list[str]:
+def _build_command(workdir: Path, config: ExecutionConfig, run_subdir: str = "") -> list[str]:
     if config.mode == MODE_DOCKER:
+        run = f"/grading/{run_subdir}" if run_subdir else "/grading"
         return [
             "docker", "run", "--rm",
             "--name", f"musa-grader-{workdir.name}"[:60],
@@ -253,18 +334,19 @@ def _build_command(workdir: Path, config: ExecutionConfig) -> list[str]:
             # student drew leaves no image in the notebook to grade.
             "--env", "MPLBACKEND=module://matplotlib_inline.backend_inline",
             "--env", "MPLCONFIGDIR=/tmp/mpl",
-            "--workdir", "/grading",
+            "--workdir", run,
             "-v", f"{workdir}:/grading:rw",
             config.docker_image,
-            "python", f"/grading/{RUNNER_NAME}",
-            f"/grading/{INSTRUMENTED_NAME}",
+            "python", f"{run}/{RUNNER_NAME}",
+            f"{run}/{INSTRUMENTED_NAME}",
             f"/grading/{ARTIFACTS_DIRNAME}",
             str(config.cell_timeout_seconds),
         ]
+    run_dir = workdir / run_subdir if run_subdir else workdir
     return [
         sys.executable,
-        str(workdir / RUNNER_NAME),
-        str(workdir / INSTRUMENTED_NAME),
+        str(run_dir / RUNNER_NAME),
+        str(run_dir / INSTRUMENTED_NAME),
         str(workdir / ARTIFACTS_DIRNAME),
         str(config.cell_timeout_seconds),
     ]

@@ -46,6 +46,10 @@ data:
     Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv from
     https://www.zillow.com/research/data/
   fallback_locations: ["data", ""]
+  # A student who also uploads a data file is still graded on the file supplied
+  # here, so the whole class runs on the same data. Set true to grade each
+  # student on their own file instead (their review note says which was used).
+  prefer_student_files: false
 
 probe:
   # Deliberately excludes a bare "region": RegionID values are five digits too,
@@ -130,6 +134,9 @@ rubric:
       # Below this overlap with the expected ZIP set, a frame is reported as
       # "not found" rather than as a wrong answer.
       min_match_similarity: 0.25
+      # A True/False Center City column plus groupby("flag") is a working split,
+      # even though the instructions describe two dataframes.
+      flag_column_credit_ratio: 1.0
 
   - id: percent_increase_function
     name: Percent increase function works
@@ -147,6 +154,7 @@ rubric:
       start_date: "2020-03-31"
       end_date: "2022-03-31"
       frame:
+        id_column_hints: ["regionname", "zipcode", "zip_code", "zip"]
         date_column_hints: ["date", "month", "period", "variable", "time"]
         value_column_hints: ["zhvi", "value", "home_value", "price"]
         default_id_column: "RegionName"
@@ -171,6 +179,11 @@ rubric:
       # Using the first and last rows instead of the two named dates.
       first_last_credit_ratio: 0.5
       stub_credit_ratio: 0.0
+      # The percent increase is right but comes back inside a one-row table.
+      tabular_return_credit_ratio: 1.0
+      # Right numbers, but only when called on the whole split frame (several
+      # ZIP codes) rather than on each groupby() group.
+      whole_frame_credit_ratio: 1.0
 
   - id: donut_effect_comparison
     name: Center City vs. rest of Philadelphia compared
@@ -184,6 +197,8 @@ rubric:
       # depend on the vintage of the student's Zillow download.
       plausible_range: [-100, 1000]
       expect_outside_greater: true
-      center_hints: ["center", "cc", "downtown", "inside", "in_"]
-      outside_hints: ["outside", "non", "not", "rest", "other", "out", "remaining", "beyond"]
-      percent_hints: ["percent", "pct", "increase", "change", "growth", "appreciation"]
+      # Whole words in a variable name (split on _ and camelCase). Any outside
+      # word wins, so `not_center_city_avg` counts as outside Center City.
+      center_words: ["center", "centre", "cc", "inner", "inside", "in", "within", "downtown", "core", "central"]
+      outside_words: ["outside", "outer", "out", "non", "not", "rest", "other", "others", "remaining", "suburb", "suburbs", "beyond", "excluding"]
+      percent_hints: ["percent", "pct", "increase", "change", "growth", "appreciation", "donut"]

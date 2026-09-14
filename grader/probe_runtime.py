@@ -202,13 +202,19 @@ def _musa_profile_functions(namespace):
 
 
 def _musa_select_function(namespace, functions, selector):
-    """Rank student functions against name hints and arity (design.md §21)."""
+    """Rank student functions against name hints and arity (design.md §21).
+
+    A function must match at least one name hint. Arity alone is not evidence:
+    a notebook with no percent-increase function but a one-argument helper such
+    as ``looks_like_a_date`` used to have that helper graded as the answer.
+    """
     hints = [h.lower() for h in selector.get("name_hints", [])]
     want_arity = selector.get("arity")
     scored = []
     for entry in functions:
         lowered = entry["name"].lower()
-        score = sum(2.0 for hint in hints if hint in lowered)
+        hits = sum(1 for hint in hints if hint in lowered)
+        score = 2.0 * hits
         if want_arity is not None:
             if entry["arity"] == want_arity:
                 score += 3.0
@@ -218,14 +224,15 @@ def _musa_select_function(namespace, functions, selector):
                 score -= 2.0
         if entry.get("doc"):
             score += 0.1
-        scored.append((score, entry["name"]))
-    scored.sort(key=lambda pair: (-pair[0], pair[1]))
-    positive = [pair for pair in scored if pair[0] > 0]
-    if not positive:
-        return None, scored[:5], False
-    best = positive[0]
-    ambiguous = len(positive) > 1 and abs(positive[1][0] - best[0]) < 0.5
-    return namespace.get(best[1]), scored[:5], ambiguous
+        scored.append((score, entry["name"], hits))
+    scored.sort(key=lambda triple: (-triple[0], triple[1]))
+    ranking = [(score, name) for score, name, _ in scored[:5]]
+    eligible = [t for t in scored if t[0] > 0 and (t[2] > 0 or not hints)]
+    if not eligible:
+        return None, ranking, False
+    best = eligible[0]
+    ambiguous = len(eligible) > 1 and abs(eligible[1][0] - best[0]) < 0.5
+    return namespace.get(best[1]), ranking, ambiguous
 
 
 def _musa_find_frame_schema(namespace, config, pd):
@@ -246,9 +253,12 @@ def _musa_find_frame_schema(namespace, config, pd):
             continue
         if len(obj) < min_rows or len(obj.columns) > 40:
             continue
-        date_col = value_col = None
+        date_col = value_col = id_col = None
+        id_hints = [h.lower() for h in config.get("id_column_hints", ["regionname", "zip"])]
         for column in obj.columns:
             label = str(column).lower()
+            if id_col is None and any(h in label for h in id_hints):
+                id_col = column
             if date_col is None and (
                 any(h in label for h in date_hints)
                 or "datetime" in str(obj[column].dtype)
@@ -273,6 +283,7 @@ def _musa_find_frame_schema(namespace, config, pd):
                 "columns": [str(c) for c in obj.columns],
                 "date_column": str(date_col),
                 "value_column": str(value_col),
+                "id_column": str(id_col) if id_col is not None else None,
                 "date_is_datetime": "datetime" in str(obj[date_col].dtype),
                 "fill": {
                     str(c): obj[c].iloc[0]
@@ -334,6 +345,7 @@ def _musa_default_schema(config):
         "columns": columns,
         "date_column": date_column,
         "value_column": value_column,
+        "id_column": id_column,
         "date_is_datetime": True,
         "fill": {id_column: "19102"},
         "date_aliases": [c for c in date_aliases if c != date_column],
@@ -341,8 +353,55 @@ def _musa_default_schema(config):
     }
 
 
+def _musa_table_numbers(value, pd):
+    """Numbers inside a returned DataFrame/Series, so a table answer can be read."""
+    if pd is None or not isinstance(value, (pd.DataFrame, pd.Series)):
+        return None
+    try:
+        frame = value.to_frame() if isinstance(value, pd.Series) else value
+        if frame.size > 400:
+            return {"shape": list(frame.shape), "numbers": [], "truncated": True}
+        numbers = []
+        for column in frame.columns:
+            if not pd.api.types.is_numeric_dtype(frame[column]) or str(frame[column].dtype) == "bool":
+                continue
+            for item in frame[column].tolist():
+                number = _musa_safe(item)
+                if isinstance(number, (int, float)) and not isinstance(number, bool):
+                    numbers.append(number)
+        return {"shape": list(frame.shape), "columns": [str(c) for c in frame.columns][:20],
+                "numbers": numbers[:60]}
+    except Exception:
+        return None
+
+
+def _musa_multi_group_frame(anchors, schema, pd):
+    """The same series for two ZIP codes, for functions written for a whole frame."""
+    id_column = schema.get("id_column")
+    if not id_column:
+        return None
+    base = schema["fill"].get(id_column)
+    try:
+        first = int(base)
+        ids = (first, first + 1) if not isinstance(base, str) else (str(first), str(first + 1))
+    except (TypeError, ValueError):
+        ids = ("19102", "19103")
+    frames = []
+    for identifier in ids:
+        frame = _musa_build_group_frame(anchors, schema, pd)
+        frame[id_column] = identifier
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True)
+
+
 def _musa_run_group_frame_test(func, spec, namespace, pd):
-    """Call a function that takes a per-group DataFrame (design.md §22)."""
+    """Call a function that takes a per-group DataFrame (design.md §22).
+
+    Tried in order, stopping at the first call that does not raise: the student's
+    own schema, the multi-spelling default schema, and each of those again with
+    two ZIP codes in one frame — some students write the function for the whole
+    split frame rather than one group, and it still computes the right numbers.
+    """
     config = spec.get("frame", {})
     discovered = _musa_find_frame_schema(namespace, config, pd)
     schemas = []
@@ -350,31 +409,71 @@ def _musa_run_group_frame_test(func, spec, namespace, pd):
         schemas.append(("student_schema", discovered))
     schemas.append(("default_schema", _musa_default_schema(config)))
 
+    attempts = [(name, schema, False) for name, schema in schemas]
+    attempts += [(name + "_multi_group", schema, True) for name, schema in schemas]
+
     calls = []
     for case in spec.get("cases", []):
         anchors = case.get("anchors", [])
         call = {"label": case.get("label"), "anchors": anchors}
-        for schema_name, schema in schemas:
+        for attempt_name, schema, multi in attempts:
             try:
-                frame = _musa_build_group_frame(anchors, schema, pd)
+                frame = (_musa_multi_group_frame(anchors, schema, pd) if multi
+                         else _musa_build_group_frame(anchors, schema, pd))
             except Exception as exc:
                 call["build_error"] = "{}: {}".format(type(exc).__name__, exc)[:300]
                 continue
+            if frame is None:
+                continue
             try:
                 value = func(frame)
-                call["ok"] = True
-                call["value"] = _musa_safe(value)
-                call["value_type"] = type(value).__name__
-                call["schema_used"] = schema_name
-                call["columns"] = schema["columns"]
-                break
             except Exception as exc:
                 call["ok"] = False
-                call["error"] = "{}: {}".format(type(exc).__name__, exc)[:400]
-                call["schema_used"] = schema_name
+                call.setdefault("error", "{}: {}".format(type(exc).__name__, exc)[:400])
+                call["schema_used"] = attempt_name
                 call["columns"] = schema["columns"]
+                continue
+            call["ok"] = True
+            call.pop("error", None)
+            call["value"] = _musa_safe(value)
+            call["value_type"] = type(value).__name__
+            call["table"] = _musa_table_numbers(value, pd)
+            call["schema_used"] = attempt_name
+            call["columns"] = schema["columns"]
+            break
         calls.append(call)
     return calls, (discovered or {}).get("source")
+
+
+def _musa_select_by_behaviour(namespace, functions, spec, entry, pd):
+    """When no function name matches, find the answer by what it does.
+
+    A correct `percInc(group_df)` names nothing the hints know. Each function
+    with the right arity is called on the test frames; the first that returns a
+    number (or a table of numbers) is graded. A helper such as
+    `looks_like_a_date(column_name)` raises on a DataFrame and is passed over.
+    """
+    selector = spec.get("selector", {})
+    want = selector.get("arity")
+    for candidate in functions:
+        if want is not None and candidate["arity"] != want and len(candidate["params"]) != want:
+            continue
+        func = namespace.get(candidate["name"])
+        if not callable(func):
+            continue
+        calls, source = _musa_run_group_frame_test(func, spec, namespace, pd)
+        answered = [
+            call for call in calls
+            if call.get("ok") and (
+                (isinstance(call.get("value"), (int, float)) and not isinstance(call.get("value"), bool))
+                or (call.get("table") or {}).get("numbers")
+            )
+        ]
+        if answered:
+            entry.update(function_name=candidate["name"], found=True, selected_by="behaviour",
+                         calls=calls, schema_source=source)
+            return func
+    return None
 
 
 def _musa_run_hidden_tests(namespace, functions, tests, pd=None):
@@ -398,6 +497,9 @@ def _musa_run_hidden_tests(namespace, functions, tests, pd=None):
             "candidates": [{"name": n, "score": s} for s, n in ranking],
             "calls": [],
         }
+        if func is None and entry["type"] == "group_frame" and pd is not None:
+            func = _musa_select_by_behaviour(namespace, functions, spec, entry, pd)
+
         if func is None:
             results.append(entry)
             continue
@@ -412,7 +514,7 @@ def _musa_run_hidden_tests(namespace, functions, tests, pd=None):
         if entry["type"] == "group_frame":
             if pd is None:
                 entry["error"] = "pandas is unavailable, so the function could not be tested"
-            else:
+            elif not entry["calls"]:
                 entry["calls"], entry["schema_source"] = _musa_run_group_frame_test(
                     func, spec, namespace, pd
                 )
@@ -468,6 +570,16 @@ def _musa_probe_main(namespace, config):
             type_name = type(obj).__name__
             if pd is not None and isinstance(obj, pd.DataFrame):
                 payload["dataframes"].append(_musa_profile_dataframe(name, obj, config, pd))
+            elif (
+                pd is not None
+                and type_name.endswith("GroupBy")
+                and isinstance(getattr(obj, "obj", None), pd.DataFrame)
+            ):
+                # A frame that only survives as `df.groupby(...)` is still the
+                # student's split; profile the frame the GroupBy wraps.
+                profile = _musa_profile_dataframe(name, obj.obj, config, pd)
+                profile["from_groupby"] = True
+                payload["dataframes"].append(profile)
             elif pd is not None and isinstance(obj, pd.Series):
                 entry = {
                     "name": name,
@@ -484,6 +596,19 @@ def _musa_probe_main(namespace, config):
                     if int(obj.nunique(dropna=True)) <= max_unique
                     else None,
                 }
+                try:
+                    if pd.api.types.is_numeric_dtype(obj) and str(obj.dtype) != "bool":
+                        for level_number in range(obj.index.nlevels):
+                            level = obj.index.get_level_values(level_number)
+                            if pd.api.types.is_bool_dtype(level):
+                                means = obj.groupby(level=level_number).mean()
+                                entry["bool_level_means"] = {
+                                    str(bool(key)): _musa_safe(value)
+                                    for key, value in means.items()
+                                }
+                                break
+                except Exception:
+                    pass
                 try:
                     if pd.api.types.is_numeric_dtype(obj) and str(obj.dtype) != "bool":
                         clean = obj.dropna()

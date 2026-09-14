@@ -123,3 +123,61 @@ def test_preflight_clears_once_a_file_is_supplied(tmp_path):
     assert GradingService(rubric, GraderSettings()).preflight()
     supplied = GraderSettings(shared_data_paths=[str(data)])
     assert GradingService(rubric, supplied).preflight() == []
+
+
+# ---------------------------------------------------------------------------
+# Submission ZIP upload: loads on arrival, once, and explains a disabled Run
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def upload_state(monkeypatch):
+    """ui.state with a dict standing in for st.session_state."""
+    import ui.state as module
+
+    session = {"loaded": None, "last_error": None, "grading_thread": None}
+
+    class SessionState(dict):
+        __getattr__ = dict.get
+
+        def __setattr__(self, key, value):
+            self[key] = value
+
+    fake = SessionState(session)
+    monkeypatch.setattr(module.st, "session_state", fake)
+    calls = []
+    monkeypatch.setattr(module, "load_from_upload", lambda upload: calls.append(upload.name))
+    return module, fake, calls
+
+
+def test_an_uploaded_zip_loads_without_a_second_click(upload_state):
+    module, _, calls = upload_state
+    assert module.load_upload_once(StubUpload("canvas.zip", b"PK")) is True
+    assert calls == ["canvas.zip"]
+
+
+def test_the_same_upload_is_not_reextracted_on_every_rerun(upload_state):
+    module, _, calls = upload_state
+    upload = StubUpload("canvas.zip", b"PK")
+    module.load_upload_once(upload)
+    assert module.load_upload_once(upload) is False
+    assert calls == ["canvas.zip"]
+
+
+def test_a_different_upload_loads_again(upload_state):
+    module, _, calls = upload_state
+    module.load_upload_once(StubUpload("week1.zip", b"PK"))
+    module.load_upload_once(StubUpload("week2.zip", b"PK12"))
+    assert calls == ["week1.zip", "week2.zip"]
+
+
+def test_run_blockers_explain_why_run_is_disabled(upload_state):
+    from grader.service import LoadedSubmissions
+
+    module, session, _ = upload_state
+    assert any("Load submissions first" in r for r in module.run_blockers())
+
+    session["loaded"] = LoadedSubmissions(source="empty.zip", candidates=[])
+    assert any("No submissions were found" in r for r in module.run_blockers())
+
+    session["loaded"] = LoadedSubmissions(source="canvas.zip", candidates=[object()])
+    assert module.run_blockers() == []
