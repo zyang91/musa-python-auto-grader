@@ -1,15 +1,12 @@
 # MUSA Grader
 
 Semi-automatic grading for Jupyter Notebook assignments in **MUSA 5500: Geospatial
-Data Science in Python**. Built to the prototype specification in [design.md](design.md),
-and graded against the real student template in
-[assignment_template/assignment-1.ipynb](assignment_template/assignment-1.ipynb).
-
+Data Science in Python**. 
 The guiding principle: **automate what is objectively testable, surface ambiguity,
 and make human review fast.** Every deduction traces back to a deterministic test,
 a structural check, a notebook result, or an explicit human judgement. 
 
-Grading principle. The grader is a screening tool, not a scoring tool. It can only clear a submission, never mark one down: any submission that does not come back at full marks is read by a person, and the deduction stands or falls on that reading. Efficiency comes from the submissions the grader clears, not from trusting it where it is uncertain.
+**Grading principle**: The grader is a screening tool, not a scoring tool. It can only clear a submission, never mark one down: any submission that does not come back at full marks is read by a person, and the deduction stands or falls on that reading. Efficiency comes from the submissions the grader clears, not from trusting it where it is uncertain.
 
 ## Note on student data 
 - Grading runs entirely on the instructor's or TA's machine; submissions are never uploaded anywhere.
@@ -332,33 +329,6 @@ words make a discussion, and the ceiling on an unreviewed aesthetics score.
 only to exercise the pipeline. Neither is an answer key: no check compares against
 them.
 
----
-
-## Optional LLM grading
-
-Off by default. Assignment 1 asks for no written answer, so it has no qualitative
-rubric item; Assignment 2 has four of them, and is where this earns its keep. When
-enabled (Settings → Qualitative grading, plus `ANTHROPIC_API_KEY` in the
-environment) it grades only free-text responses — the rationales and the chart
-conclusions. The matplotlib **aesthetics** item is never sent: it is a question
-about a picture, and no text answers it.
-
-The interface is provider-independent: `LLMQualitativeGrader` takes any
-`complete(system, user) -> str` callable. Two rules are enforced in code rather
-than left to the caller — student names, emails and ids are redacted before the
-text is sent, and any low-confidence judgement is routed to a human instead of
-being applied silently.
-
-With LLM grading off, written responses are scored structurally (does a real
-response exist, is it substantial, is it in the right place) and always sent to
-the review queue. With it on, a judgement the model is confident enough to defend
-replaces the provisional score; anything less falls back to the structural score
-and the human.
-
-There is deliberately **no AI-writing detection, no plagiarism scoring and no
-writing-style classification**. The grader evaluates assignment performance.
-
----
 
 ## Project structure
 
