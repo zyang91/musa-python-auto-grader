@@ -1,0 +1,620 @@
+# ---------------------------------------------------------------------------
+# MUSA 5500 — Assignment 3: Evictions, code violations and the NDVI.
+#
+# Graded against assignment_template/assignment-3.ipynb.
+#
+# DESIGN NOTE — why this rubric is full of exact numbers, and the other two
+# are not:
+#
+#   Assignment 1  the class downloads its own Zillow extract, revised monthly  -> no answer key
+#   Assignment 2  the class picks its own dataset and never hands it in        -> no answer key
+#   Assignment 3  the class is handed ONE zip file, and everyone uses it       -> an answer key
+#
+# assignment3-data.zip is fixed and distributed with the assignment, so every
+# submission runs the same five files. Philadelphia has 384 census tracts in
+# PA-tracts.geojson whoever loads it; the fifteen listed violation types cover
+# 34,108 rows of li_violations.csv whoever filters it; the median NDVI inside the
+# city limits is 0.2025 whoever masks the raster. These are facts about the data,
+# not opinions about a solution, so they are checked as facts.
+#
+# Every expected value below was computed by running the reference solution
+# against the shipped zip, and each one was re-computed under the variations
+# students legitimately produce — crop=True and crop=False, filled and masked
+# arrays, `sjoin(how="inner")` and `how="left"`, the optional unstack/stack
+# fill — and only survives here if it came back the same. Where a step has two
+# defensible answers, both are listed (`allowed_row_counts` below) rather than
+# one being called wrong.
+#
+# DESIGN NOTE — why nothing here depends on the notebook running:
+# five data files read from five student-chosen paths is the fragile part of this
+# assignment, and when a path cannot be resolved the notebook dies at the first
+# read_file and every step after it is invisible. So every item is graded on two
+# independent readings — the answers the submitted notebook shows, and the
+# objects this grading run produced — combined by taking the better of them. The
+# numbers below are what makes the first reading possible: "384" in a student's
+# output means something only because this file has 384 Philadelphia tracts.
+# Supplying the data is therefore optional; it buys confirmation, not the grade.
+#
+# DESIGN NOTE — why the plots are graded on the objects, not the source:
+# an hvplot call returns a holoviews object, and that object knows what it is. A
+# widget-driven choropleth is a HoloMap whose key dimension is the year and which
+# holds one frame per year; a side-by-side comparison is a Layout of shape
+# (1, 2). The probe reads those structures out of the kernel — including from
+# `Out`, since `df.hvplot(...)` on the last line of a cell is never bound to a
+# name — so `groupby=` and `dynamic=False` are graded by their effect rather than
+# by a search for the keywords. `dynamic=False` in particular is visible as a
+# fact: leave it out and the object is a DynamicMap that holds no frames at all.
+# The same structure survives into the submitted file as the object's own repr
+# (":HoloMap   [year]"), so this is checkable with or without a re-run.
+#
+# The review policy is unchanged: this rubric can clear a submission, never mark
+# one down. Anything short of full marks reaches a person.
+# ---------------------------------------------------------------------------
+
+assignment:
+  id: hw3
+  name: "Assignment 3: Evictions, Code Violations and the NDVI"
+  version: HW3-v1
+  total_points: 100
+  description: >
+    Part 1: load Eviction Lab tract data for Pennsylvania, trim to Philadelphia,
+    melt the 2003-2016 eviction counts to tidy format, plot the yearly trend and
+    a year-by-year choropleth, then load L+I code violations, trim to fifteen
+    maintenance types, map them as hex bins, spatially join them to tracts, count
+    them per tract and type, and compare evictions and violations side by side.
+    Part 2: mask a Landsat 8 scene to the city limits and to the surrounding
+    suburbs, compare the median NDVI of each, then sample the NDVI at the
+    locations of 2,480 street trees and plot the result.
+
+settings:
+  confidence_review_threshold: 0.80
+  # Part 1 reads a 24 MB GeoJSON and spatially joins 34,108 points; Part 2 masks
+  # a 10-band raster twice. A correct submission takes several minutes.
+  execution_timeout_seconds: 1800
+  score_rounding: 0.5
+
+discovery:
+  notebook_name_hints: ["assignment-3", "assignment3", "assignment_3", "hw3", "hw-3", "homework3", "musa"]
+  ignore_name_patterns: ["checkpoint", "untitled", "scratch", "practice", "lecture", "solution", "draft", "copy of"]
+
+data:
+  # One zip, distributed with the instructions, used by everyone — which is why
+  # this assignment has an answer key at all.
+  #
+  # Supplying it is optional, and that is deliberate. Five files read from
+  # whatever relative path each student happened to use is the fragile part of
+  # this assignment, and when the placement misses, the notebook dies at the
+  # first read_file. So the grader reads the answers out of the outputs the
+  # student saved instead, and treats a successful re-run as corroboration. Set
+  # the files here and both readings happen; leave them out and the grade comes
+  # from the submitted notebook alone, one confidence step lower.
+  required: false
+  optional: true
+  description: >
+    Optional. The five files from assignment3-data.zip: PA-tracts.geojson,
+    li_violations.csv, landsat8_philly.tif, City_Limits.geojson and
+    ppr_tree_canopy_points_2015.geojson. Supplying all five lets the grader
+    re-run each notebook and confirm what it shows; without them the grade comes
+    from the outputs each student saved.
+  expected_files:
+    - PA-tracts.geojson
+    - li_violations.csv
+    - landsat8_philly.tif
+    - City_Limits.geojson
+    - ppr_tree_canopy_points_2015.geojson
+  fallback_locations: ["data", ""]
+  # Five files across two fallback directories plus the paths each notebook
+  # actually names; the default cap of 12 is not enough for this assignment.
+  max_placements: 40
+  # Everyone is graded on the instructor's copy of the zip, so a student who also
+  # submitted the data is still graded against the same bytes as everyone else.
+  prefer_student_files: false
+
+probe:
+  id_column_hints: ["geoid", "fips", "tract", "objectid", "violationdescription"]
+  date_column_hints: ["year", "variable", "date"]
+  value_column_hints: ["evictions", "eviction", "value", "n", "count", "ndvi"]
+  max_head_rows: 3
+  # The fifteen violation types and the fourteen year labels must both fit; the
+  # 384 GEOIDs deliberately do not — they are summarised by `prefix_profiles`
+  # instead, which answers "is every row in Philadelphia County?" in a few bytes.
+  max_unique_values: 60
+  # An Eviction Lab extract carries 399 columns per frame and three of them are
+  # usually in memory at once. Nothing below is graded on a wide column name.
+  max_columns: 120
+  prefix_profiles:
+    - hints: ["geoid", "fips"]
+      length: 5
+      max_keys: 25
+
+rubric:
+
+  - id: notebook_execution
+    name: Notebook executes successfully
+    points: 10
+    type: execution
+    description: >
+      The notebook runs top to bottom against the supplied data. Unlike
+      Assignment 2, the grader has the data here, so this is a real execution and
+      not a reading of saved outputs — but when the data is not supplied, or a
+      notebook reads from a path the grader could not resolve, the submitted
+      notebook's own saved run is read instead, the way Assignment 2 does it.
+    config:
+      partial_credit_ratio: 0.4
+      # Only consulted when this grading run could not reproduce the notebook.
+      # Each cell that errored in the student's own run, up to the cap.
+      error_penalty_each: 3
+      max_error_penalty: 7
+      # Below this share of code cells carrying a result, the notebook reads as
+      # partly run rather than run through.
+      min_output_coverage: 0.5
+      low_coverage_penalty: 3
+
+  # =====================================================================
+  # Part 1.1 — Eviction Lab data
+  # =====================================================================
+
+  - id: eviction_data_loading
+    name: "1.1.1 Eviction data loaded with geopandas"
+    points: 3
+    type: structural
+    description: PA-tracts.geojson is read with geopandas from a relative path.
+    config:
+      required_imports: ["geopandas"]
+      missing_read_penalty: 2
+      absolute_path_penalty: 2
+      # Every tract in Pennsylvania, before any trimming.
+      expected_rows: 3217
+      row_tolerance: 0
+      wrong_size_penalty: 1
+      not_geodataframe_penalty: 2
+
+  - id: philadelphia_tracts
+    name: "1.1.2 Data trimmed to Philadelphia"
+    points: 5
+    type: deterministic
+    description: >
+      The Pennsylvania tracts are trimmed to the 384 tracts of Philadelphia
+      County. The file has no city column — the county lives in `pl`
+      ("Philadelphia County, Pennsylvania") and in the 42101 prefix of GEOID.
+    config:
+      expected_rows: 384
+      geoid_prefix: "42101"
+      # A subset that is pure Philadelphia but has lost tracts is a different
+      # mistake from one that still contains Pittsburgh.
+      impure_credit_ratio: 0.4
+      incomplete_credit_ratio: 0.7
+      min_purity: 0.95
+
+  - id: tidy_evictions
+    name: "1.1.3 Melted to tidy format"
+    points: 6
+    type: deterministic
+    description: >
+      pd.melt() over the fourteen eviction columns e-03 to e-16, keeping GEOID
+      and geometry as id_vars — 384 tracts x 14 years = 5,376 rows.
+    config:
+      expected_rows: 5376
+      expected_year_labels:
+        ["e-03", "e-04", "e-05", "e-06", "e-07", "e-08", "e-09", "e-10",
+         "e-11", "e-12", "e-13", "e-14", "e-15", "e-16"]
+      # The sum of every eviction count in the tidy frame, which pins down both
+      # the year range and the column that was melted.
+      expected_value_sum: 149472
+      value_sum_rel_tol: 0.001
+      required_id_columns: ["GEOID", "geometry"]
+      # Melting the wrong span (e-00 to e-16, or e-03 to e-15) is a range slip,
+      # not a failure to melt.
+      wrong_year_span_credit_ratio: 0.6
+      missing_geometry_credit_ratio: 0.7
+      value_column_hints: ["eviction", "value", "n"]
+
+  - id: evictions_by_year_plot
+    name: "1.1.4 Yearly eviction trend plotted with hvplot"
+    points: 5
+    type: deterministic
+    description: >
+      A groupby over the year column, summed, plotted with hvplot — any chart
+      type. Graded on the numbers actually plotted.
+    config:
+      # The fourteen yearly totals, from the shipped data.
+      expected_points: 14
+      expected_total: 149472
+      expected_max: 11182
+      total_rel_tol: 0.001
+      # The chart is there and is an hvplot chart, but the values plotted are not
+      # the yearly totals (a mean instead of a sum, or the ungrouped rows).
+      wrong_values_credit_ratio: 0.5
+      # Drawn with matplotlib rather than hvplot, as the instructions ask.
+      wrong_library_credit_ratio: 0.5
+      accepted_elements: ["Curve", "Bars", "Scatter", "Area", "Points", "Spikes", "Step", "Histogram"]
+
+  - id: evictions_choropleth
+    name: "1.1.5 Year-by-year eviction choropleth with a widget"
+    points: 5
+    type: deterministic
+    description: >
+      An hvplot choropleth of the tidy frame with `groupby=` on the year column
+      and `dynamic=False`, producing a HoloMap with one frame per year.
+    config:
+      expected_frames: 14
+      key_dimension_hints: ["year", "variable"]
+      expected_keys:
+        ["e-03", "e-04", "e-05", "e-06", "e-07", "e-08", "e-09", "e-10",
+         "e-11", "e-12", "e-13", "e-14", "e-15", "e-16"]
+      polygon_elements: ["Polygons", "Path", "Shape", "Image", "QuadMesh"]
+      # `dynamic=False` is not a style preference: without it hvplot returns a
+      # DynamicMap that holds no frames, so nothing renders in the submitted
+      # notebook and there is nothing for a reader to page through.
+      dynamic_map_credit_ratio: 0.6
+      # A map per year drawn some other way (a loop of static maps, a facet grid)
+      # answers the question without the widget the instructions ask for.
+      no_widget_credit_ratio: 0.5
+      # A widget-driven map whose frames are not the year.
+      wrong_dimension_credit_ratio: 0.5
+
+  # =====================================================================
+  # Part 1.2 — L+I code violations
+  # =====================================================================
+
+  - id: violations_loading
+    name: "1.2.1 Violations loaded and converted to a GeoDataFrame"
+    points: 4
+    type: deterministic
+    description: >
+      li_violations.csv read with pandas and converted to a GeoDataFrame of
+      434,052 points built from the lng/lat columns, with a CRS set.
+    config:
+      expected_rows: 434052
+      row_tolerance: 0
+      expected_geometry: "Point"
+      expected_crs_epsg: 4326
+      # A DataFrame that was read but never given geometry.
+      not_geodataframe_credit_ratio: 0.4
+      # Points built the right way but with no CRS declared — everything
+      # downstream then depends on geopandas guessing.
+      missing_crs_credit_ratio: 0.75
+      # lat and lng passed to points_from_xy the wrong way round lands the whole
+      # city in the Indian Ocean, and the spatial join silently returns nothing.
+      swapped_coordinates_credit_ratio: 0.3
+      expected_bounds: [-75.274275, 39.875131, -74.959341, 40.137402]
+      bounds_tolerance: 0.5
+
+  - id: violations_subset
+    name: "1.2.2 Trimmed to the fifteen maintenance violation types"
+    points: 4
+    type: deterministic
+    description: >
+      The listed fifteen violation types, which cover 34,108 of the 434,052 rows.
+    config:
+      expected_rows: 34108
+      expected_type_count: 15
+      # Fixed by the assignment: this list is printed in the student template.
+      violation_types:
+        - "INT-PLMBG MAINT FIXTURES-RES"
+        - "INT S-CEILING REPAIR/MAINT SAN"
+        - "PLUMBING SYSTEMS-GENERAL"
+        - "CO DETECTOR NEEDED"
+        - "INTERIOR SURFACES"
+        - "EXT S-ROOF REPAIR"
+        - "ELEC-RECEPTABLE DEFECTIVE-RES"
+        - "INT S-FLOOR REPAIR"
+        - "DRAINAGE-MAIN DRAIN REPAIR-RES"
+        - "DRAINAGE-DOWNSPOUT REPR/REPLC"
+        - "LIGHT FIXTURE DEFECTIVE-RES"
+        - "LICENSE-RES SFD/2FD"
+        - "ELECTRICAL -HAZARD"
+        - "VACANT PROPERTIES-GENERAL"
+        - "INT-PLMBG FIXTURES-RES"
+      # Some of the fifteen kept, but not all — usually a typo in a pasted list.
+      partial_types_credit_ratio: 0.6
+
+  - id: hexbin_map
+    name: "1.2.3 Hex bin map with census tracts overlaid"
+    points: 4
+    type: deterministic
+    description: >
+      matplotlib's hexbin() over the violation points with the tract boundaries
+      drawn on top, in a projected CRS rather than EPSG:4326.
+    config:
+      hexbin_patterns: ["hexbin("]
+      overlay_patterns: ["boundary.plot", ".plot(ax=", "plot(ax =", "facecolor=\"none\"", "facecolor='none'"]
+      reprojection_patterns: ["to_crs", "estimate_utm_crs"]
+      missing_overlay_credit_ratio: 0.6
+      unprojected_credit_ratio: 0.75
+      # A hexbin that is in the source but produced no image did not render.
+      not_rendered_credit_ratio: 0.5
+
+  - id: spatial_join
+    name: "1.2.4 Violations spatially joined to census tracts"
+    points: 5
+    type: deterministic
+    description: >
+      geopandas.sjoin() attaches a GEOID to each of the 34,108 violations. Every
+      one of them falls inside a Philadelphia tract, so a correct join loses no
+      rows and leaves no GEOID missing.
+    config:
+      expected_rows: 34108
+      row_tolerance: 0
+      requires_columns: ["GEOID"]
+      geoid_prefix: "42101"
+      # The join ran but dropped rows, which in practice means the two frames
+      # were in different CRSs or the points were built lng/lat-swapped.
+      lossy_join_credit_ratio: 0.5
+      # Joined before trimming to the fifteen types: the right operation in the
+      # wrong order, and the counts downstream are still recoverable.
+      unfiltered_join_credit_ratio: 0.7
+      unfiltered_expected_rows: 434052
+
+  - id: violations_by_tract
+    name: "1.2.5 Violations counted per type and tract"
+    points: 5
+    type: deterministic
+    description: >
+      A groupby over violation type and GEOID giving a three-column frame
+      (violationdescription, GEOID, N) whose counts sum to 34,108.
+    config:
+      # 4,000 observed (type, tract) pairs; 5,535 once the optional
+      # unstack(fill_value=0).stack() fills in the tracts with no violations of a
+      # given type. The assignment marks that step optional, so both are correct.
+      allowed_row_counts: [4000, 5535]
+      expected_count_sum: 34108
+      expected_type_count: 15
+      required_columns: ["GEOID"]
+      count_column_hints: ["n", "count", "size", "violations"]
+      # Grouped by only one of the two keys.
+      partial_grouping_credit_ratio: 0.5
+
+  - id: merge_geometries
+    name: "1.2.6 Counts merged back onto tract geometries"
+    points: 3
+    type: deterministic
+    description: >
+      pandas.merge() with the tract geometries first, so the result is a
+      GeoDataFrame and not a plain DataFrame.
+    config:
+      allowed_row_counts: [4000, 5535]
+      require_geodataframe: true
+      # Merged the right way round but the result came back as a DataFrame,
+      # usually because the counts frame was the left argument.
+      not_geodataframe_credit_ratio: 0.5
+
+  - id: violations_choropleth
+    name: "1.2.7 Choropleth per violation type with a widget"
+    points: 5
+    type: deterministic
+    description: >
+      An hvplot choropleth with `groupby=` on the violation type and
+      `dynamic=False` — a HoloMap with one frame per type.
+    config:
+      expected_frames: 15
+      key_dimension_hints: ["violationdescription", "violation", "description", "type"]
+      polygon_elements: ["Polygons", "Path", "Shape", "Image", "QuadMesh"]
+      dynamic_map_credit_ratio: 0.6
+      no_widget_credit_ratio: 0.5
+      wrong_dimension_credit_ratio: 0.5
+
+  - id: side_by_side
+    name: "1.3 Evictions and violations side by side"
+    points: 4
+    type: deterministic
+    description: >
+      2016 evictions and a single violation type, drawn as two choropleths and
+      composed into one row of two columns.
+    config:
+      expected_columns: 2
+      # The 2016 eviction total, which is what identifies the left-hand map as
+      # the single year the instructions ask for.
+      expected_eviction_year_total: 10264
+      eviction_total_rel_tol: 0.001
+      polygon_elements: ["Polygons", "Path", "Shape", "Image", "QuadMesh"]
+      # Two maps that exist but were never composed into one layout.
+      not_composed_credit_ratio: 0.5
+      # Composed, but one or both panels still carry the widget — the
+      # instructions say to select one year and one violation type first.
+      still_grouped_credit_ratio: 0.75
+      # Stacked in a column rather than a row.
+      wrong_orientation_credit_ratio: 0.85
+      # Composed correctly, but no frame in memory holds the single year the
+      # left-hand map is supposed to show.
+      wrong_subset_credit_ratio: 0.75
+
+  # =====================================================================
+  # Part 2.1 — NDVI in the city and the suburbs
+  # =====================================================================
+
+  - id: landsat_loading
+    name: "2.1.1 Landsat scene opened with rasterio"
+    points: 3
+    type: deterministic
+    description: The ten-band Landsat 8 scene is opened with rasterio.
+    config:
+      expected_band_count: 10
+      expected_crs_epsg: 32618
+      expected_width: 923
+      expected_height: 999
+      # A `with rasterio.open(...) as src:` block leaves no open dataset behind,
+      # so the band stack read out of it stands in as evidence.
+      expected_array_shape: [10, 999, 923]
+      # Opened, but not the scene that ships with the assignment.
+      wrong_raster_credit_ratio: 0.4
+
+  - id: city_suburb_polygons
+    name: "2.1.2 City and suburb polygons built"
+    points: 5
+    type: deterministic
+    description: >
+      The city limits polygon, and a suburbs polygon made by subtracting it from
+      its own envelope. Both must be in the raster's CRS for the mask to work.
+    config:
+      # Square metres in EPSG:32618, from City_Limits.geojson.
+      expected_city_area: 368606317.0
+      expected_suburb_area: 462551418.7
+      area_rel_tol: 0.02
+      # The envelope minus the city is a ring, so it is a MultiPolygon with
+      # several parts, and it is larger than the city itself.
+      expected_suburb_geom_types: ["MultiPolygon", "Polygon", "GeometryCollection"]
+      # A city polygon in degrees rather than metres: the mask then silently
+      # selects nothing, and every NDVI downstream is empty.
+      unprojected_credit_ratio: 0.4
+      # The city polygon is right but the suburbs were taken as the whole
+      # envelope rather than the envelope minus the city.
+      envelope_not_differenced_credit_ratio: 0.5
+      missing_suburbs_credit_ratio: 0.5
+
+  - id: ndvi_masking
+    name: "2.1.3 Raster masked and NDVI computed for each area"
+    points: 6
+    type: deterministic
+    description: >
+      rasterio.mask.mask() applied with each polygon, and NDVI computed from the
+      red and near-infrared bands of the masked array.
+    config:
+      # Landsat 8 band 4 is red and band 5 is near-infrared; in a ten-band stack
+      # read into an array those are index 3 and index 4.
+      expected_city_pixels: 409576
+      expected_suburb_pixels: 512501
+      pixel_rel_tol: 0.05
+      # NDVI is bounded by definition; anything outside this is not an NDVI.
+      valid_range: [-1.0, 1.0]
+      expected_city_median: 0.2025
+      expected_suburb_median: 0.3748
+      median_abs_tol: 0.02
+      # Band indexing off by one — the single most common mistake here, and it is
+      # identifiable rather than merely wrong: NDVI computed from bands 3 and 4
+      # comes back at -0.02 and from bands 5 and 6 at -0.08, both far outside the
+      # range a vegetation index over Philadelphia can take.
+      wrong_bands_credit_ratio: 0.5
+      # One of the two areas computed but not the other.
+      one_area_credit_ratio: 0.5
+      mask_patterns: ["mask.mask(", "rasterio.mask", "mask("]
+
+  - id: ndvi_medians
+    name: "2.1.4 Median NDVI compared between city and suburbs"
+    points: 4
+    type: deterministic
+    description: >
+      np.nanmedian() over each NDVI array, printed, with the suburbs coming out
+      greener than the city.
+    config:
+      expected_city_median: 0.2025
+      expected_suburb_median: 0.3748
+      median_abs_tol: 0.02
+      expect_suburbs_greater: true
+      # Both medians exist and the comparison goes the right way, but the values
+      # do not match the shipped data.
+      right_direction_credit_ratio: 0.5
+      # np.median() instead of np.nanmedian() over an array that is mostly NaN
+      # returns NaN, which is a named mistake rather than a missing answer.
+      nan_result_credit_ratio: 0.4
+      print_patterns: ["print(", "display(", "f\"", "f'"]
+
+  # =====================================================================
+  # Part 2.2 — NDVI at street tree locations
+  # =====================================================================
+
+  - id: tree_data_loading
+    name: "2.2.1 Street tree data loaded"
+    points: 3
+    type: deterministic
+    description: The 2,480 street tree points are loaded with geopandas.
+    config:
+      expected_rows: 2480
+      row_tolerance: 0
+      expected_geometry: "Point"
+      # Loaded but left in EPSG:4326, so sampling the raster by coordinate
+      # cannot line up with it.
+      unprojected_credit_ratio: 0.6
+      raster_crs_epsg: 32618
+
+  - id: tree_ndvi
+    name: "2.2.2 NDVI sampled at the tree locations"
+    points: 4
+    type: deterministic
+    description: >
+      rasterstats used to read the NDVI at each of the 2,480 points, giving one
+      value per tree.
+    config:
+      expected_count: 2480
+      count_tolerance: 5
+      # Stable across point_query and zonal_stats, and across nearest and
+      # bilinear interpolation.
+      expected_median: 0.178
+      expected_mean: 0.196
+      median_abs_tol: 0.03
+      valid_range: [-1.0, 1.0]
+      max_nan_fraction: 0.05
+      # Values were produced but they are not the NDVI at those points — usually
+      # the raw band values, or a raster that was never turned into an NDVI.
+      wrong_values_credit_ratio: 0.4
+      rasterstats_patterns: ["point_query", "zonal_stats", "rasterstats"]
+      # Sampling done by hand with rasterio's sample() is a correct answer to the
+      # question, even though the instructions name rasterstats.
+      alternative_patterns: ["\\.sample(", "rowcol(", "index("]
+
+  - id: tree_plots
+    name: "2.2.3 Histogram and mapped tree points"
+    points: 4
+    type: deterministic
+    description: >
+      A matplotlib histogram of the NDVI values with a vertical line at zero, and
+      a geopandas plot of the tree points coloured by NDVI with the city limits
+      drawn on it.
+    config:
+      histogram_patterns: ["\\.hist(", "hist("]
+      zero_line_patterns: ["axvline", "vlines", "axline"]
+      point_plot_patterns: ["column=", "\\.plot("]
+      boundary_patterns: ["boundary.plot", "boundary\\.", "facecolor=\"none\"", "facecolor='none'"]
+      # Each of the two plots is worth half the item.
+      histogram_share: 0.5
+      # Within each plot, the required extra (the zero line, the city outline).
+      detail_share: 0.35
+      not_rendered_credit_ratio: 0.5
+
+  - id: tree_plot_styling
+    name: "2.2.3 Figure styling (labels, legend, colour choices)"
+    points: 3
+    type: qualitative
+    description: >
+      The assignment asks for figures that are clear and well styled. Labelling,
+      legend and colour calls are extracted from the source automatically; the
+      picture itself is judged by a person.
+    config:
+      # Signals from grader/charts.py::AESTHETIC_PATTERNS. Weights are relative.
+      weighted_signals:
+        title: 2.0
+        x_label: 1.5
+        y_label: 1.5
+        explicit_colors: 2.0
+        legend: 1.5
+        figure_size: 1.0
+        tick_control: 0.5
+        grid_or_style: 0.5
+        annotation: 0.25
+      # Signals cannot prove a figure is legible, so an unreviewed provisional
+      # score never reaches full marks on its own.
+      provisional_ceiling_ratio: 0.8
+
+  # =====================================================================
+  # Extra credit
+  # =====================================================================
+
+  - id: common_violations_extra_credit
+    name: "Extra credit: the twenty most common violation types"
+    points: 0
+    type: deterministic
+    description: >
+      The twenty most common violation types over 2012-2016 mapped as a second
+      set of interactive choropleths, with three types named as having little
+      spatial overlap with evictions. Worth no points in the rubric total; when
+      it is found, the item is flagged so a TA can award the bonus by hand.
+    config:
+      # A rubric's items must sum to its total, so extra credit cannot carry
+      # points here. It is reported instead, and a manual override on this item
+      # adds to the student's total without changing the maximum.
+      suggested_points: 5
+      expected_frames: 20
+      # The twenty most common types cover 235,542 of the 434,052 rows.
+      expected_count_sum: 235542
+      # Naming the three types is a written answer, so it is left to the TA.
+      min_discussion_words: 25

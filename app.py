@@ -135,7 +135,7 @@ def sidebar() -> None:
                 )
 
         rubric = state.current_rubric()
-        if rubric is not None and rubric.requires_data:
+        if rubric is not None and rubric.offers_data:
             st.divider()
             data_section(config, rubric)
 

@@ -61,11 +61,22 @@ class GraderSettings:
     llm_model: str = "claude-sonnet-5"
     keep_workdirs: bool = False
 
-    def execution_config(self) -> ExecutionConfig:
+    def execution_config(self, rubric: "Rubric | None" = None) -> ExecutionConfig:
+        """Execution limits, raised if the assignment declares it needs longer.
+
+        A rubric's ``execution_timeout_seconds`` is assignment knowledge, not a
+        preference: Assignment 3 reads a 24 MB GeoJSON, joins 34,108 points and
+        masks a ten-band raster twice, and cutting it short times out the whole
+        class at once. So it acts as a floor on the configured timeout, never as
+        a cap — a TA who raises the limit keeps their value.
+        """
+        timeout = int(self.timeout_seconds)
+        if rubric is not None:
+            timeout = max(timeout, int(rubric.settings.get("execution_timeout_seconds", 0) or 0))
         return ExecutionConfig(
             mode=self.execution_mode,
             docker_image=self.docker_image,
-            timeout_seconds=int(self.timeout_seconds),
+            timeout_seconds=timeout,
             cell_timeout_seconds=int(self.cell_timeout_seconds),
             memory_limit=self.memory_limit,
             cpu_limit=str(self.cpu_limit),
@@ -141,6 +152,20 @@ class GradingService:
         for path in self.settings.shared_data_paths:
             if not Path(path).is_file():
                 problems.append(f"Assignment data file not found: {path}")
+
+        # An assignment may need several files (Assignment 3 needs five), and
+        # supplying four of them fails the whole class on the step that reads the
+        # fifth — with a traceback that looks like the student's fault. Say which
+        # ones are missing before the run rather than after it.
+        expected = [str(name) for name in self.rubric.data.get("expected_files", [])]
+        if expected and self.settings.shared_data_paths:
+            present = {Path(path).name.lower() for path in self.settings.shared_data_paths}
+            missing = [name for name in expected if name.lower() not in present]
+            if missing:
+                problems.append(
+                    "This assignment also expects " + ", ".join(missing)
+                    + ". Every submission that reads one of them will fail."
+                )
         return problems
 
     # -- step 1: find submissions -----------------------------------------
@@ -294,6 +319,9 @@ class GradingService:
                 ],
                 fallback_dirs=self.rubric.data.get("fallback_locations", ["data", ""]),
                 prefer_student_files=prefer_student_files,
+                # Assignment 3 supplies five files, not one, and each is placed at
+                # several candidate paths; the default cap is a one-file cap.
+                max_placements=int(self.rubric.data.get("max_placements", 12)),
             )
             result.discovery_warnings.extend(
                 self._data_notes(candidate, prefer_student_files)
@@ -304,7 +332,7 @@ class GradingService:
 
             _stage(progress, progress_callback, "execution", "running")
             execution, probe = execute_submission(
-                workdir, probe_config, self.settings.execution_config(),
+                workdir, probe_config, self.settings.execution_config(self.rubric),
                 run_subdir=candidate.run_subdir,
             )
             result.execution = execution

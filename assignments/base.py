@@ -270,14 +270,14 @@ def register(cls: type[AssignmentGrader]) -> type[AssignmentGrader]:
 
 def get_grader(rubric: Rubric) -> AssignmentGrader:
     """Return the grader for a rubric, falling back to the generic base."""
-    from . import hw1, hw2  # noqa: F401  (importing registers the graders)
+    from . import hw1, hw2, hw3  # noqa: F401  (importing registers the graders)
 
     cls = _REGISTRY.get(rubric.id, AssignmentGrader)
     return cls(rubric)
 
 
 def registered_assignments() -> list[str]:
-    from . import hw1, hw2  # noqa: F401
+    from . import hw1, hw2, hw3  # noqa: F401
 
     return sorted(_REGISTRY)
 

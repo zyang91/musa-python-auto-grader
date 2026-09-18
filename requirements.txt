@@ -13,3 +13,9 @@ altair>=5.0
 
 # Dev / tests
 pytest>=7.4
+
+# Assignment 3, local execution mode only. The grading host does not need these
+# — student notebooks run inside the Docker image, which pins them (see
+# docker/Dockerfile). Install them only to run `--mode local`, which executes
+# student code without isolation.
+#   geopandas rasterio rasterstats hvplot holoviews bokeh geoviews mapclassify

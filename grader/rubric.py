@@ -64,6 +64,16 @@ class Rubric:
         return bool(self.data.get("required"))
 
     @property
+    def offers_data(self) -> bool:
+        """Whether the sidebar should let a TA supply data for this assignment.
+
+        Assignment 3 does not *require* its zip — it is graded from the outputs
+        each student saved — but supplying it lets the grader re-run every
+        notebook and confirm them, so the option has to be there.
+        """
+        return bool(self.data.get("required") or self.data.get("optional"))
+
+    @property
     def declared_points(self) -> float:
         return round(sum(i.points for i in self.items), 2)
 
