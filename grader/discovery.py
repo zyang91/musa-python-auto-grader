@@ -548,6 +548,7 @@ def prepare_workdir(
     referenced_paths: Iterable[str] = (),
     fallback_dirs: Iterable[str] = ("data", ""),
     prefer_student_files: bool = False,
+    max_placements: int = 12,
 ) -> Path:
     """Copy one submission into an isolated working directory (design.md §17).
 
@@ -596,6 +597,7 @@ def prepare_workdir(
     if shared:
         candidate.data_placement = place_shared_data(
             workdir, shared, references, fallback_dirs,
+            max_placements=max_placements,
             run_dir=run_dir, prefer_student_files=prefer_student_files,
         )
     return run_dir

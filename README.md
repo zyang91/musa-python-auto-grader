@@ -15,14 +15,17 @@ a structural check, a notebook result, or an explicit human judgement.
 - We only used LLM to assist build this tool, but no student assignments were upload to LLM.
 
 
-## Two assignments, two ways of not having an answer key
+## Three assignments, three different things to grade against
 
-| | Assignment 1 — The Donut Effect | Assignment 2 — Exploratory Visualization |
-|---|---|---|
-| Dataset | One Zillow file, **supplied by the grader** | The student's own choice, **never handed in** |
-| Why there is no answer key | Zillow revises the file monthly, so counts and percentages differ legitimately | Every student explores a different dataset |
-| What is graded | Whether each step *worked*, against the student's own data | Whether the student can *produce the required elements* |
-| Where the evidence comes from | The grading run's own execution | The outputs the student saved in the notebook |
+The dataset decides what can be checked, and the three assignments hand the
+grader three different situations:
+
+| | Assignment 1 — The Donut Effect | Assignment 2 — Exploratory Visualization | Assignment 3 — Evictions and the NDVI |
+|---|---|---|---|
+| Dataset | One Zillow file, **downloaded by each student** | The student's own choice, **never handed in** | **One zip, distributed with the assignment** |
+| Is there an answer key? | No — Zillow revises the file monthly, so counts and percentages differ legitimately | No — every student explores a different dataset | **Yes** — everyone runs the same five files |
+| What is graded | Whether each step *worked*, against the student's own data | Whether the student can *produce the required elements* | Whether each result *is the right one* |
+| Where the evidence comes from | The grading run's own execution | The outputs the student saved in the notebook | **Both** — the answers the notebook shows, confirmed by a re-run when one is possible |
 
 ---
 
@@ -97,6 +100,170 @@ graded out of.
 
 ---
 
+## Assignment 3 — grading answers, for once
+
+Assignment 3 hands out `assignment3-data.zip` and everyone works from it. That
+one difference changes the whole design: for the first time the right answers
+exist, so the grader checks results rather than inferring intent.
+
+Philadelphia has **384** census tracts in `PA-tracts.geojson`. The fifteen listed
+violation types cover **34,108** of the 434,052 rows of `li_violations.csv`. The
+tidy eviction frame is **5,376** rows holding **149,472** evictions. The median
+NDVI is **0.2025** inside the city limits and **0.3748** in the suburbs, and
+**2,480** street trees sample to a median of **0.178**. None of those is an
+opinion about a solution — they are facts about the shipped files, and every one
+of them was re-computed under the variations students legitimately produce
+(`crop=True` and `crop=False`, masked and filled arrays, `sjoin(how="inner")` and
+`how="left"`) before it was written into `rubrics/hw3.yaml`. Where a step has two
+defensible answers — the `unstack(fill_value=0).stack()` fill the instructions
+mark *optional* gives 5,535 groups instead of 4,000 — both are listed rather than
+one being called wrong.
+
+That also changes what confidence means. In Assignment 1 several frames may
+plausibly be "the Philadelphia subset", and the ambiguity is itself the finding.
+Here a frame either holds 384 Philadelphia tracts or it does not; if one does,
+the step demonstrably happened, and which variable holds it does not matter. So a
+matched expected value scores at confidence 1.0, and confidence drops only where
+the grader is choosing between readings of a partial answer.
+
+### The answers come out of the notebook, not out of a re-run
+
+Assignment 1 supplies one data file. Assignment 3 supplies five, and each has to
+land at whatever relative path that student happened to write — sometimes built
+with `os.path.join`, sometimes from a variable, sometimes `../data/`. When the
+placement misses, the notebook dies at the first `read_file` and every step after
+it is invisible: a submission that was entirely correct grades as a column of
+zeros, for a reason that is nobody's fault.
+
+The student's own run did not have that problem. They ran it with their data in
+place and handed in the file with its outputs:
+
+```
+In  [3]: len(phl)
+Out [3]: 384
+```
+
+That `384` is the answer to 1.1.2, sitting in the file. So is `34108`, and
+`(368606317.0763259, 462551418.69179374)`, and `Median NDVI, city: 0.2025`. So is
+`:HoloMap [year]` — the repr of the chart in 1.1.5, which states whether
+`dynamic=False` was passed. Even the numbers a chart plots survive: bokeh writes
+each column into the notebook as a base64 buffer, so the fourteen yearly totals
+are still there to be summed.
+
+So `grader/answers.py` reads them, and every item is graded on **two independent
+readings**: what the submitted notebook shows, and what this grading run
+produced. Neither is reliably better — a re-run can die on a path, a saved output
+can be stale or hand-edited — so they are not ranked, they are combined: **a step
+counts as done if either source shows the right answer.** Execution stops being
+load-bearing and becomes corroboration.
+
+| | The correct demo submission scores |
+|---|---|
+| with all five data files supplied | 99.5 / 100 |
+| with no data supplied at all | 99.5 / 100 |
+
+The data is therefore **optional** in the sidebar. Supply it and 19 of the 22
+items come back confirmed by both readings independently; leave it out and the
+grade comes from the submitted notebook alone, one confidence step lower (0.9
+rather than 1.0), which is what a claim about someone else's run is worth.
+
+Two rules keep this honest. A number must be *shown* to count — the cell values
+inside a `head()` repr are not answers, and harvesting them would invent matches
+against a rubric full of exact numbers. And source code alone is never full
+marks: writing `gpd.sjoin(...)` is not evidence that it returned the right thing,
+so a step the source plainly performs but never displays earns 70% and a look
+from a person.
+
+### The plots are graded on the objects, not the source
+
+Two thirds of Part 1 is `hvplot`, and an hvplot call returns a holoviews object
+that knows what it is. The probe reads those objects out of the kernel — from
+`Out` as well as from named variables, because `df.hvplot(...)` on the last line
+of a cell is never bound to a name — and the same structure is in the submitted
+notebook as the object's saved repr. Either way the plotting requirements are
+graded by their effect:
+
+| The instructions ask for | What the object says (in the kernel, or in the saved repr) | Verdict |
+|---|---|---|
+| `groupby="year"`, `dynamic=False` | `HoloMap`, kdims `[year]`, 14 frames of `Polygons` | widget choropleth ✓ |
+| the same, `dynamic=False` omitted | `DynamicMap`, **0 frames** | nothing renders — named, 60% credit |
+| one map per violation type | `HoloMap`, kdims `[violationdescription]`, 15 frames | ✓ |
+| two maps side by side | `Layout`, shape `(1, 2)`, children `[Polygons, Polygons]` | ✓ |
+| the same, panels never trimmed | `Layout` whose children are `HoloMap` | still carries its widget — 75% |
+| the yearly eviction trend | `Curve`, 14 points **summing to 149,472** | graded on the numbers plotted |
+
+The last row is the point: a chart is not checked for existing, it is checked for
+plotting the right numbers.
+
+### Named mistakes, not just wrong answers
+
+The rubric spends most of its configuration on telling the common near-misses
+apart, because "wrong" is not useful feedback and a deduction a TA cannot explain
+is a deduction they have to re-derive:
+
+| What the student did | How it is recognised | Result |
+|---|---|---|
+| `points_from_xy(lat, lng)` | the data spans 39.8–40.1 east, not −75.2 | named as a coordinate swap, 30% |
+| joined before trimming | the join carries 434,052 rows, not 34,108 | right step, wrong order — 70% |
+| joined across two CRSs | the join lost rows, and none should be lost | named, 50% |
+| NDVI from bands 3 and 4 | medians come back at −0.02, not 0.20 | off-by-one band index, named, 50% |
+| `np.median` on a masked array | the medians are NaN | named as the NaN trap, 40% |
+| suburbs = the envelope | its area is city + suburbs | `difference()` never applied, 50% |
+| tracts left in EPSG:4326 | the polygon's area is 0.037, not 369 km² | named as degrees vs metres, 40% |
+
+### What still goes to a person
+
+One item, worth 3 points. The assignment marks the two street-tree figures on
+being "clear and well-styled", and that is a statement about a picture. Labelling
+and colour calls are extracted automatically and a provisional score is attached,
+capped below full marks, but the item always returns as `manual_review`. The 1.4
+extra credit carries 0 points and is flagged with a suggested bonus, the same way
+Assignment 2's dashboard is.
+
+And the standing rule is unchanged: **anything short of full marks reaches a
+person**, whatever the rubric decided. The exact numbers above are what lets the
+grader *clear* a submission with confidence — not what lets it mark one down
+unattended.
+
+### Where the 100 points go
+
+| | Item | Points |
+|---|---|---|
+| | Notebook executes | 10 |
+| 1.1.1 | Eviction data loaded with geopandas | 3 |
+| 1.1.2 | Trimmed to Philadelphia (384 tracts) | 5 |
+| 1.1.3 | Melted to tidy format (5,376 rows) | 6 |
+| 1.1.4 | Yearly eviction trend with hvplot | 5 |
+| 1.1.5 | Year-by-year choropleth with a widget | 5 |
+| 1.2.1 | Violations loaded as a point GeoDataFrame | 4 |
+| 1.2.2 | Trimmed to the fifteen types (34,108 rows) | 4 |
+| 1.2.3 | Hex bin map with tracts overlaid | 4 |
+| 1.2.4 | Spatial join to census tracts | 5 |
+| 1.2.5 | Counted per type and tract | 5 |
+| 1.2.6 | Merged back onto tract geometries | 3 |
+| 1.2.7 | Choropleth per violation type with a widget | 5 |
+| 1.3 | Evictions and violations side by side | 4 |
+| 2.1.1 | Landsat scene opened with rasterio | 3 |
+| 2.1.2 | City and suburb polygons | 5 |
+| 2.1.3 | Masked, and the NDVI computed | 6 |
+| 2.1.4 | Median NDVI compared | 4 |
+| 2.2.1 | Street tree data loaded | 3 |
+| 2.2.2 | NDVI sampled at the tree locations | 4 |
+| 2.2.3 | Histogram and mapped tree points | 4 |
+| 2.2.3 | Figure styling — *judged by a person* | 3 |
+| 1.4 | Extra credit — *0 points, flagged, suggested 5* | 0 |
+| | **Total** | **100** |
+
+Execution is 10, Part 1 is 58 across thirteen steps, Part 2 is 32 across eight.
+Part 1 carries more because it is more of the work — thirteen of the twenty steps
+— and Part 2's items are individually larger because each one is a bigger piece
+of reasoning. Within each part the weight follows what the step is worth getting
+right: the melt, the spatial join and the NDVI masking are where the assignment
+is actually taught, and the loading steps are worth 3 or 4 because they are hard
+to get wrong and cheap to fix.
+
+---
+
 ## Quickstart
 
 ```bash
@@ -145,6 +312,52 @@ choose an execution mode, and press **Run Grader**.
 Assignment 2 needs no data file at all: pick **Assignment 2**, load
 `examples/hw2_submissions`, and run. Every notebook will fail to execute, and that
 is expected — the rubric grades the outputs the students saved.
+
+For Assignment 3:
+
+```bash
+python examples/make_hw3_submissions.py
+```
+
+That builds four submissions — one that does everything including the extra
+credit, one that makes the near-misses students really make, one that swaps
+latitude and longitude and crashes partway, and the untouched template — and
+**runs them against the assignment zip so their outputs are saved**, which is how
+the class hands this one in. It needs the geospatial stack installed; without it
+the notebooks are written empty and it says so.
+
+Then pick **Assignment 3**, load `examples/hw3_submissions`, and run. **No data
+file is needed**: the answers are in the outputs each student saved.
+
+```bash
+python cli.py grade examples/hw3_submissions --rubric rubrics/hw3.yaml
+```
+
+Scores: 99.5, 68.5, 34.5 and 10 out of 100. The 0.5 the correct one does not get
+is the styling item's ceiling — no submission reaches full marks on a judgement
+item without a person.
+
+To have the grader re-run each notebook and confirm what it shows, unzip the data
+and supply all five files:
+
+```bash
+unzip assignment_template/assignment3-data.zip -d /tmp/hw3
+```
+
+```bash
+python cli.py grade examples/hw3_submissions --rubric rubrics/hw3.yaml \
+  --data /tmp/hw3/assignment3-data/PA-tracts.geojson \
+  --data /tmp/hw3/assignment3-data/li_violations.csv \
+  --data /tmp/hw3/assignment3-data/landsat8_philly.tif \
+  --data /tmp/hw3/assignment3-data/City_Limits.geojson \
+  --data /tmp/hw3/assignment3-data/ppr_tree_canopy_points_2015.geojson
+```
+
+The correct submission still scores 99.5 — with 19 of its items now confirmed by
+both readings independently — and the two that only partly worked score higher,
+because a re-run sees steps whose results they never displayed. The sidebar names
+any of the five files that are missing, since supplying four of them silently
+weakens every step that reads the fifth.
 
 For a real class, download the ZHVI extract from
 [Zillow research data](https://www.zillow.com/research/data/) — *ZHVI All Homes,
@@ -195,8 +408,8 @@ renders what comes back.
 ### 0. The data comes from you, not the students
 
 Students hand in **a notebook and nothing else**, so the grader supplies the data.
-Upload the Zillow extract once (sidebar, or `--data` on the CLI) and before each
-submission runs it places that file at:
+Upload the file (or, for Assignment 3, all five files) once — sidebar, or `--data`
+on the CLI — and before each submission runs it places them at:
 
 * every relative path the notebook actually reads from — parsed out of the
   notebook, including paths held in a variable rather than passed inline, and
@@ -205,7 +418,9 @@ submission runs it places that file at:
 
 So a notebook reading `data/zillow.csv` and one reading
 `data/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv` both find their file,
-with no naming convention imposed on the class. The file is **hard-linked**, not
+with no naming convention imposed on the class. With several supplied files each
+target path takes the one whose name is closest to it, so Assignment 3's five
+files land where the notebook asks for each of them. The file is **hard-linked**, not
 copied, so fifty submissions cost one copy of a 117 MB extract rather than fifty.
 A student's own file is never overwritten, and paths that escape the working
 directory (`../`, absolute, Windows drive letters) are refused.
@@ -241,6 +456,18 @@ Students do not use the solution's variable names, so the probe describes the
 kernel's namespace rather than looking anything up by name: for every DataFrame it
 records shape, columns, dtypes, a head sample, numeric summaries, low-cardinality
 value samples, and — for boolean flag columns — which identifiers they mark.
+
+Assignment 3 put four more object kinds in the namespace, so the probe describes
+those too: a GeoDataFrame's CRS, geometry types and total area; a numpy array's
+NaN-aware statistics, which is the only way to describe an NDVI array that is
+mostly NaN outside the polygon that produced it; shapely geometries and open
+rasterio datasets in place; and holoviews objects — their key dimensions, frame
+count, layout shape and the values actually plotted — read from `Out` as well as
+from named variables, since a chart on the last line of a cell is never bound to
+a name. One summary is deliberately compact: 384 GEOIDs are far past the
+value-sample cap, so instead of the list the probe sends a histogram of their
+first five characters, which answers "is every row in Philadelphia County?" in a
+handful of bytes.
 
 The assignment grader then looks for objects that *look like* the expected result
 (right ZIP prefix, right row count, right roles) and reports how many plausible
@@ -278,7 +505,7 @@ cells are stripped before the notebook is stored. A test asserts this.
 
 | Signal | Result |
 |---|---|
-| deterministic test | confidence 1.0 |
+| deterministic test, or a matched expected value | confidence 1.0 |
 | one uniquely matching object | 0.98 |
 | two plausible objects | 0.75 → review |
 | high ambiguity | 0.40 → review |
@@ -325,6 +552,14 @@ expected values exist. What `rubrics/hw2.yaml` holds instead is policy: how much
 chart that never rendered is worth, what counts as a transformation, how many
 words make a discussion, and the ceiling on an unreviewed aesthetics score.
 
+`rubrics/hw3.yaml` is the opposite extreme, and it is the one file to check when
+the assignment's data changes. Every expected count and median in it was computed
+from `assignment_template/assignment3-data.zip`; hand out a different zip and
+they all move together. Re-run the reference solution and update the numbers, or
+widen the tolerances — no Python changes either way. Those numbers are also what
+makes grading from saved outputs possible at all: `384` in a notebook means
+something only because the rubric knows Philadelphia has 384 tracts in this file.
+
 `examples/data/` holds a synthetic ZHVI file and a synthetic 311 extract, used
 only to exercise the pipeline. Neither is an answer key: no check compares against
 them.
@@ -344,6 +579,7 @@ grader/
   notebook_runner.py    standalone runner executed in the subprocess/container
   notebook.py           static analysis and read-only rendering
   charts.py             chart evidence: library attribution, Vega-Lite specs
+  answers.py            the answers a notebook's own saved outputs state
   inspection.py         candidate matching over the probe payload
   scoring.py            review policy, class summary
   feedback.py           student markdown feedback
@@ -353,12 +589,14 @@ assignments/
   base.py               rubric dispatch, shared execution check
   hw1.py                Assignment 1 checks
   hw2.py                Assignment 2 checks
-rubrics/hw1.yaml        the answer key, as configuration
+  hw3.py                Assignment 3 checks
+rubrics/hw1.yaml        the grading policy, as configuration
 rubrics/hw2.yaml        the grading policy, as configuration
+rubrics/hw3.yaml        the answer key, as configuration
 docker/                 grading image
-tests/                  197 tests
-examples/               synthetic data, six demo notebooks, eleven submissions
-assignment_template/    the notebooks handed to students
+tests/                  301 tests
+examples/               synthetic data, nine demo notebooks, fifteen submissions
+assignment_template/    the notebooks handed to students, and HW3's data zip
 ```
 
 ---
@@ -382,7 +620,7 @@ results/<session_id>/
 ## Tests
 
 ```bash
-python -m pytest              # 197 tests, ~33s
+python -m pytest              # 301 tests, ~40s
 python -m pytest -m "not slow"  # skip the ones that execute real kernels
 ```
 
@@ -390,11 +628,11 @@ python -m pytest -m "not slow"  # skip the ones that execute real kernels
 
 ## Scope
 
-Implemented: Assignments 1 and 2, Streamlit UI, Docker isolation, rubric engine,
-review queue, manual overrides, regrading, exports, optional LLM grading.
+Implemented: Assignments 1, 2 and 3, Streamlit UI, Docker isolation, rubric
+engine, review queue, manual overrides, regrading, exports, optional LLM grading.
 
 Not built (per design.md §37): Canvas API integration, authentication, cloud
-deployment, student accounts, a database, live scraping, Assignments 3–6. Their
+deployment, student accounts, a database, live scraping, Assignments 4–6. Their
 templates are in `assignment_template/` and the architecture is ready for them —
 each needs a rubric YAML and a grader class.
 

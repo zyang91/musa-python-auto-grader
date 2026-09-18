@@ -17,7 +17,7 @@ ENV PYTHONUNBUFFERED=1 \
     MPLCONFIGDIR=/tmp/mpl \
     HOME=/tmp
 
-# Wheels for geopandas/shapely need these; keep the layer small.
+# Wheels for geopandas/shapely/rasterio need these; keep the layer small.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libexpat1 libgomp1 \
     && rm -rf /var/lib/apt/lists/*
@@ -40,6 +40,23 @@ RUN pip install --no-cache-dir \
     "pyproj==3.6.1" \
     "requests==2.32.3" \
     "openpyxl==3.1.5"
+
+# Assignment 3 only. It is the first assignment to touch rasters and the first to
+# plot with hvplot, and the notebooks are executed here against the supplied
+# zip — so a missing package is not a student's mistake, it is a zero for a
+# correct submission. geoviews is included because `hvplot.polygons` on a
+# GeoDataFrame raises without it, which is the ordinary way to draw the two
+# choropleths the assignment asks for.
+RUN pip install --no-cache-dir \
+    "rasterio==1.4.4" \
+    "rasterstats==0.21.0" \
+    "hvplot==0.11.2" \
+    "holoviews==1.20.0" \
+    "bokeh==3.6.2" \
+    "panel==1.5.5" \
+    "geoviews==1.14.0" \
+    "cartopy==0.26.0" \
+    "mapclassify==2.8.1"
 
 # A non-root user with no home directory of its own; /grading is bind-mounted.
 RUN useradd --create-home --uid 10001 grader

@@ -221,9 +221,17 @@ __marimo__/
 results/
 .musa_grader_workdir/
 submissions/
-# Assignment 2's demo tree, rebuilt by examples/make_hw2_submissions.py and
-# doubling as a scratch area for real student notebooks.
+# Assignment 2's and 3's demo trees, rebuilt by examples/make_hw*_submissions.py
+# and doubling as a scratch area for real student notebooks.
 hw2_submissions/
+hw3_submissions/
+# Assignment 3's demo notebooks are built by examples/make_hw3_submissions.py,
+# which runs them against the assignment zip and saves their outputs. An hvplot
+# widget embeds every frame it draws, so the good one is ~18 MB — a build
+# artefact, not source.
+examples/hw3_good_submission.ipynb
+examples/hw3_partial_submission.ipynb
+examples/hw3_broken_submission.ipynb
 
 .DS_Store
 .musa_grader_data/
