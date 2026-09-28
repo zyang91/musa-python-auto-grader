@@ -6,7 +6,7 @@
 # Kernel and notebook execution
 nbformat==5.10.4
 nbclient==0.10.0
-ipykernel==6.29.5
+ipykernel==7.3.0
 
 # Assignments 1 and 2
 pandas==2.2.2
