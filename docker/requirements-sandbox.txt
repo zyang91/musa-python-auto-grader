@@ -31,11 +31,13 @@ openpyxl==3.1.5
 # rasterio must stay >= 1.4.4 and rasterstats >= 0.21.0: older releases have no
 # linux/arm64 wheel (or need fiona, which has none), so the build breaks on
 # Apple Silicon only. See docker/README.md.
+#
+# bokeh is held below 3.10 because panel 1.9.x requires bokeh<3.10.
 rasterio==1.5.1
 rasterstats==0.21.0
 hvplot==0.12.2
 holoviews==1.23.2
-bokeh==3.10.0
+bokeh==3.9.2
 panel==1.9.4
 geoviews==1.15.1
 cartopy==0.26.0

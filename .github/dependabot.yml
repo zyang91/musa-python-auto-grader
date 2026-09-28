@@ -21,6 +21,10 @@ updates:
     directory: /docker
     schedule:
       interval: weekly
+    ignore:
+      # panel 1.9.x requires bokeh<3.10; drop this once panel allows it.
+      - dependency-name: bokeh
+        versions: [">=3.10"]
     groups:
       sandbox-minor:
         update-types: [minor, patch]
