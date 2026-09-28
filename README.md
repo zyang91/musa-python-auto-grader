@@ -376,6 +376,24 @@ A terminal equivalent exists for scripted runs:
 python cli.py grade examples/submissions --mode docker --data examples/data/zillow_zhvi.csv
 ```
 
+### Running the whole grader in Docker
+
+To move the grader to a new machine without setting up Python, build the sandbox
+image and start the app with Compose — the only requirement is Docker:
+
+```bash
+docker build -t musa-grader:latest -f docker/Dockerfile .
+```
+
+```bash
+docker compose up -d --build
+```
+
+Then open <http://localhost:8501>. Sessions land in `results/`, uploads in
+`.musa_grader_data/`, and anything placed in `submissions/` can be loaded from the
+UI as `submissions`. See [docker/README.md](docker/README.md) for how the app
+container starts the sandbox containers.
+
 ---
 
 ## The TA workflow
@@ -593,8 +611,10 @@ assignments/
 rubrics/hw1.yaml        the grading policy, as configuration
 rubrics/hw2.yaml        the grading policy, as configuration
 rubrics/hw3.yaml        the answer key, as configuration
-docker/                 grading image
-tests/                  301 tests
+docker/                 sandbox image, app image, pinned sandbox packages
+docker-compose.yml      runs the app image
+.github/                CI workflow and Dependabot
+tests/                  302 tests
 examples/               synthetic data, nine demo notebooks, fifteen submissions
 assignment_template/    the notebooks handed to students, and HW3's data zip
 ```
@@ -620,9 +640,17 @@ results/<session_id>/
 ## Tests
 
 ```bash
-python -m pytest              # 301 tests, ~40s
+python -m pytest              # 302 tests, ~40s
 python -m pytest -m "not slow"  # skip the ones that execute real kernels
+python -m pytest -m docker    # grade a notebook in the sandbox image (needs it built)
+ruff check .                  # syntax errors and undefined names
 ```
+
+CI (`.github/workflows/ci.yml`) runs the suite on Python 3.10–3.13 for every push
+and pull request, then builds both images, grades a notebook inside the sandbox,
+grades the demo class from inside the app container, and checks the UI answers.
+Dependabot opens weekly update PRs for the grader's packages, the sandbox's
+pinned packages, the base images and the Actions; each goes through the same CI.
 
 ---
 

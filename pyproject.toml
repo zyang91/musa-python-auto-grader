@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.4"]
+dev = ["pytest>=7.4", "ruff>=0.6"]
 
 [tool.setuptools]
 packages = ["grader", "assignments", "ui"]
@@ -30,4 +30,13 @@ testpaths = ["tests"]
 filterwarnings = ["ignore::DeprecationWarning"]
 markers = [
     "slow: executes a real notebook kernel (a few seconds each)",
+    "docker: executes in the sandbox image; skipped unless musa-grader:latest is built",
 ]
+
+[tool.ruff]
+# Only the checks that mean the grader will crash: syntax errors and undefined
+# names. The assignment templates are deliberately unfinished code.
+extend-exclude = ["assignment_template", "*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82"]

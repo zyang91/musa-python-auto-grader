@@ -1,0 +1,40 @@
+# Weekly dependency update PRs. CI runs on each one, and the Docker job rebuilds
+# the sandbox and grades a real notebook in it, so a bump that breaks grading
+# fails before it can merge.
+version: 2
+updates:
+  # The grader: requirements.txt and pyproject.toml.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      grader:
+        patterns: ["*"]
+
+  # The pinned packages inside the sandbox that runs student notebooks.
+  # Minor and patch bumps are grouped into one PR; majors arrive one at a time,
+  # since a major pandas or numpy bump can change what a student notebook
+  # produces. Avoid merging these mid-assignment — a regrade should run on the
+  # same packages as the first grading pass.
+  - package-ecosystem: pip
+    directory: /docker
+    schedule:
+      interval: weekly
+    groups:
+      sandbox-minor:
+        update-types: [minor, patch]
+
+  # Base images in docker/Dockerfile and docker/app.Dockerfile.
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
