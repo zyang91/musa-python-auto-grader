@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint (syntax errors and undefined names only)
+        run: ruff check .
+      - name: Check every rubric loads
+        run: python cli.py rubrics
+      - name: Tests, including real kernels in local mode
+        run: python -m pytest -q
+
+  docker:
+    name: Docker images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build sandbox image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          tags: musa-grader:latest
+          load: true
+          cache-from: type=gha,scope=sandbox
+          cache-to: type=gha,mode=max,scope=sandbox
+      - name: Import every package the assignments use
+        run: |
+          docker run --rm musa-grader:latest python -c "
+          import nbclient, ipykernel, pandas, numpy, matplotlib, seaborn, altair, sklearn
+          import geopandas, shapely, pyproj, rasterio, rasterstats, mapclassify
+          import hvplot.pandas, holoviews, bokeh, panel, geoviews, cartopy
+          print('sandbox imports ok')"
+      - name: Build app image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/app.Dockerfile
+          tags: musa-grader-app:latest
+          load: true
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,mode=max,scope=app
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Grade a real notebook inside the sandbox
+        run: |
+          pip install -e ".[dev]"
+          python -m pytest -q -m docker
+      - name: Grade the demo class from inside the app container
+        run: |
+          python -c "
+          import importlib.util
+          spec = importlib.util.spec_from_file_location('m', 'examples/make_example_submissions.py')
+          m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          m.build_submissions('submissions')"
+          mkdir -p results
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v /tmp/musa-grader:/tmp/musa-grader \
+            -v "$PWD/submissions:/app/submissions" \
+            -v "$PWD/results:/app/results" \
+            musa-grader-app:latest \
+            python cli.py grade submissions --mode docker --data examples/data/zillow_zhvi.csv
+          grep -q '^student_001,.*,100,100,' results/*/grades.csv
+      - name: App serves its health check
+        run: |
+          docker compose up -d
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8501/_stcore/health && exit 0
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - if: always()
+        run: docker compose down

@@ -9,6 +9,7 @@ machines without Docker and is labelled unsafe everywhere it appears.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -315,6 +316,20 @@ def _container_path(artifacts: Path, workdir: Path, config: ExecutionConfig) -> 
     return str(artifacts)
 
 
+def _user_flags() -> list[str]:
+    """Run the container as the grading user, so it can read the work directory.
+
+    The work directory comes from ``tempfile.mkdtemp`` and is mode 0700. Docker
+    Desktop hides that, but on a Linux host the image's own ``grader`` user
+    (uid 10001) cannot open it. Running as root on the host is the one case left
+    to the image's default user, so student code never runs as uid 0.
+    """
+    getuid = getattr(os, "getuid", None)
+    if getuid is None or getuid() == 0:
+        return []
+    return ["--user", f"{getuid()}:{os.getgid()}"]
+
+
 def _build_command(workdir: Path, config: ExecutionConfig, run_subdir: str = "") -> list[str]:
     if config.mode == MODE_DOCKER:
         run = f"/grading/{run_subdir}" if run_subdir else "/grading"
@@ -334,6 +349,7 @@ def _build_command(workdir: Path, config: ExecutionConfig, run_subdir: str = "")
             # student drew leaves no image in the notebook to grade.
             "--env", "MPLBACKEND=module://matplotlib_inline.backend_inline",
             "--env", "MPLCONFIGDIR=/tmp/mpl",
+            *_user_flags(),
             "--workdir", run,
             "-v", f"{workdir}:/grading:rw",
             config.docker_image,

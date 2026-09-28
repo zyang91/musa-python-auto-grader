@@ -1,0 +1,19 @@
+.git
+.github
+.claude
+**/__pycache__
+**/.pytest_cache
+**/.ipynb_checkpoints
+**/.DS_Store
+.venv
+venv
+.ruff_cache
+# Student work and grading output never goes into an image.
+results
+submissions
+.musa_grader_data
+.musa_grader_workdir
+hw2_submissions
+hw3_submissions
+examples/submissions
+examples/hw3_*_submission.ipynb

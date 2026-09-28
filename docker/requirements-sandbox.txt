@@ -1,0 +1,42 @@
+# Packages inside the sandbox image that executes student notebooks
+# (docker/Dockerfile). Pinned so a grading run is reproducible across the
+# semester; Dependabot proposes bumps, and CI rebuilds the image and grades a
+# real notebook in it before any bump can merge.
+
+# Kernel and notebook execution
+nbformat==5.10.4
+nbclient==0.10.0
+ipykernel==6.29.5
+
+# Assignments 1 and 2
+pandas==2.2.2
+numpy==1.26.4
+matplotlib==3.9.2
+seaborn==0.13.2
+altair==5.4.1
+vega_datasets==0.9.0
+vl-convert-python==1.6.1
+scikit-learn==1.5.2
+geopandas==1.0.1
+shapely==2.0.6
+pyproj==3.6.1
+requests==2.32.3
+openpyxl==3.1.5
+
+# Assignment 3 — the first to touch rasters and the first to plot with hvplot.
+# A missing package here is not a student's mistake, it is a zero for a correct
+# submission. geoviews is included because `hvplot.polygons` on a GeoDataFrame
+# raises without it.
+#
+# rasterio must stay >= 1.4.4 and rasterstats >= 0.21.0: older releases have no
+# linux/arm64 wheel (or need fiona, which has none), so the build breaks on
+# Apple Silicon only. See docker/README.md.
+rasterio==1.4.4
+rasterstats==0.21.0
+hvplot==0.11.2
+holoviews==1.20.0
+bokeh==3.6.2
+panel==1.5.5
+geoviews==1.14.0
+cartopy==0.26.0
+mapclassify==2.8.1
