@@ -4,23 +4,23 @@
 # real notebook in it before any bump can merge.
 
 # Kernel and notebook execution
-nbformat==5.10.4
-nbclient==0.10.0
-ipykernel==6.29.5
+nbformat==5.11.1
+nbclient==0.11.0
+ipykernel==7.3.0
 
 # Assignments 1 and 2
-pandas==2.2.2
-numpy==1.26.4
-matplotlib==3.9.2
+pandas==2.3.3
+numpy==2.2.6
+matplotlib==3.10.9
 seaborn==0.13.2
-altair==5.4.1
+altair==6.2.2
 vega_datasets==0.9.0
-vl-convert-python==1.6.1
-scikit-learn==1.5.2
-geopandas==1.0.1
-shapely==2.0.6
-pyproj==3.6.1
-requests==2.32.3
+vl-convert-python==1.9.0.post1
+scikit-learn==1.7.2
+geopandas==1.1.4
+shapely==2.1.2
+pyproj==3.7.1
+requests==2.34.2
 openpyxl==3.1.5
 
 # Assignment 3 — the first to touch rasters and the first to plot with hvplot.
@@ -33,10 +33,10 @@ openpyxl==3.1.5
 # Apple Silicon only. See docker/README.md.
 rasterio==1.4.4
 rasterstats==0.21.0
-hvplot==0.11.2
-holoviews==1.20.0
-bokeh==3.6.2
-panel==1.5.5
-geoviews==1.14.0
+hvplot==0.12.2
+holoviews==1.23.2
+bokeh==3.9.2
+panel==1.9.4
+geoviews==1.15.1
 cartopy==0.26.0
 mapclassify==2.8.1
