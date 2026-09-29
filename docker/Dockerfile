@@ -5,7 +5,7 @@
 # The container is started by grader/executor.py with --network none, memory and
 # CPU limits, a read-only root filesystem and a tmpfs /tmp. Nothing in here
 # should ever need network access or host credentials.
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # MPLBACKEND is the *inline* backend, not Agg. Under Agg, `plt.show()` draws
 # nothing and the notebook keeps no image — which is fine for Assignment 1 but

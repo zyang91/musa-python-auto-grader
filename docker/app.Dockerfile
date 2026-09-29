@@ -10,7 +10,7 @@
 # Only the docker CLI is taken from this image; the daemon is the host's.
 FROM docker:29-cli AS docker-cli
 
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
