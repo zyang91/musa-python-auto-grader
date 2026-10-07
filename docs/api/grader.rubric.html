@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>grader.rubric · MUSA Grader</title>
+<meta name="description" content="YAML rubric loading (design.md section 20).">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)" id="hljs-dark">
+<script>
+  (function () {
+    try { var t = localStorage.getItem("musa-docs-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  })();
+</script>
+</head>
+<body data-root="../">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="icon-button menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg viewBox="0 0 32 32" aria-hidden="true" class="logo"><rect x="3" y="3" width="26" height="26" rx="7" class="logo-bg"/><path d="M9.5 16.5l4.2 4.2 8.8-9.4" class="logo-check"/></svg><span>MUSA Grader</span><span class="version">v0.1.0</span></a>
+  <button class="search-trigger" type="button" aria-label="Search the documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search docs</span><kbd>/</kbd></button>
+  <div class="topbar-actions">
+    <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <a class="icon-button" href="https://github.com/zyang91/musa-python-auto-grader" aria-label="GitHub repository"><svg viewBox="0 0 16 16" aria-hidden="true" class="filled"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation">
+    <nav><p class="nav-section">Introduction</p><ul class="nav-list">
+<li><a href="../index.html">Overview</a></li>
+<li><a href="../getting-started.html">Getting started</a></li>
+</ul>
+<p class="nav-section">User guide</p><ul class="nav-list">
+<li><a href="../ta-workflow.html">TA workflow</a></li>
+<li><a href="../cli.html">CLI reference</a></li>
+<li><a href="../how-it-works.html">How grading works</a></li>
+<li><a href="../assignments.html">Assignments</a></li>
+<li><a href="../rubrics.html">Rubrics</a></li>
+<li><a href="../docker.html">Docker sandbox</a></li>
+<li><a href="../results.html">Results and exports</a></li>
+</ul>
+<p class="nav-section">Developer guide</p><ul class="nav-list">
+<li><a href="../extending.html">Adding an assignment</a></li>
+<li><a href="../testing.html">Testing and CI</a></li>
+</ul>
+<p class="nav-section">API reference</p><ul class="nav-list">
+<li><a href="../api/index.html">Overview</a></li>
+<li class="nav-group"><span class="nav-group-label">Package</span><ul>
+<li><a href="../api/grader.html"><code>grader</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Engine</span><ul>
+<li><a href="../api/grader.service.html"><code>grader.service</code></a></li>
+<li><a href="../api/grader.rubric.html" class="active" aria-current="page"><code>grader.rubric</code></a></li>
+<li><a href="../api/grader.models.html"><code>grader.models</code></a></li>
+<li><a href="../api/grader.results.html"><code>grader.results</code></a></li>
+<li><a href="../api/grader.scoring.html"><code>grader.scoring</code></a></li>
+<li><a href="../api/grader.feedback.html"><code>grader.feedback</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Execution</span><ul>
+<li><a href="../api/grader.discovery.html"><code>grader.discovery</code></a></li>
+<li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
+<li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
+<li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
+<li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
+<li><a href="../api/grader.inspection.html"><code>grader.inspection</code></a></li>
+<li><a href="../api/grader.answers.html"><code>grader.answers</code></a></li>
+<li><a href="../api/grader.charts.html"><code>grader.charts</code></a></li>
+<li><a href="../api/grader.llm.html"><code>grader.llm</code></a></li>
+<li><a href="../api/grader.utils.html"><code>grader.utils</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Assignments</span><ul>
+<li><a href="../api/assignments.html"><code>assignments</code></a></li>
+<li><a href="../api/assignments.base.html"><code>assignments.base</code></a></li>
+<li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
+<li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
+<li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+</ul></li></ul></nav>
+  </aside>
+  <div class="sidebar-scrim" hidden></div>
+  <main id="content" class="content content-api">
+    <article class="prose">
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py">grader/rubric.py</a> · 164 lines</p>
+<h1 class="module-title"><code>grader.rubric</code></h1>
+<div class="module-doc"><p>YAML rubric loading (design.md section 20).</p>
+<p>A rubric file declares the assignment, its point breakdown, and per-item <code>config</code> blocks. Expected values (Center City ZIPs, tolerances, the final answer) live here rather than in code so a TA can correct them against the official solution without touching Python.</p></div>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap"><table class="summary-table"><thead><tr><th>Name</th><th>Kind</th><th>Description</th></tr></thead><tbody><tr><td><a href="#grader.rubric.RubricItem"><code>RubricItem</code></a></td><td><span class="kind">class</span></td><td>One graded line of a rubric, as declared in the YAML <code>rubric:</code> list.</td></tr><tr><td><a href="#grader.rubric.Rubric"><code>Rubric</code></a></td><td><span class="kind">class</span></td><td>A parsed rubric file. Every top-level YAML block is kept as-is, so assignment graders can read their own configuration from <code>settings</code>, <code>probe</code>, <code>discovery</code> and <code>data</code>.</td></tr><tr><td><a href="#grader.rubric.RubricError"><code>RubricError</code></a></td><td><span class="kind">class</span></td><td>Raised when a rubric file is missing or structurally invalid.</td></tr><tr><td><a href="#grader.rubric.load_rubric"><code>load_rubric()</code></a></td><td><span class="kind">function</span></td><td>Parse and validate a rubric YAML file.</td></tr><tr><td><a href="#grader.rubric.available_rubrics"><code>available_rubrics()</code></a></td><td><span class="kind">function</span></td><td>Map assignment id -&gt; rubric path for every parsable rubric on disk.</td></tr></tbody></table></div>
+<h2 id="constants">Constants</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr id="grader.rubric.RUBRIC_DIR"><td><code class="field-name">RUBRIC_DIR</code></td><td><code>Path(__file__).resolve().parent.parent / &#x27;rubrics&#x27;</code></td><td></td></tr><tr id="grader.rubric.VALID_TYPES"><td><code class="field-name">VALID_TYPES</code></td><td><code>{&#x27;execution&#x27;, &#x27;structural&#x27;, &#x27;deterministic&#x27;, &#x27;hidden_test&#x27;, &#x27;qualitative&#x27;}</code></td><td></td></tr></tbody></table></div>
+<h2 id="classes">Classes</h2>
+
+<section class="api-class" id="grader.rubric.RubricItem">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">RubricItem</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.rubric.RubricItem" aria-label="Link to RubricItem">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L29" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>One graded line of a rubric, as declared in the YAML <code>rubric:</code> list.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">id</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">name</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">points</code></td><td><code>float</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">type</code></td><td><code>str</code></td><td><code>&#x27;deterministic&#x27;</code></td><td></td></tr><tr><td><code class="field-name">description</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">config</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.rubric.RubricItem.is_qualitative">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">is_qualitative</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.rubric.RubricItem.is_qualitative" aria-label="Link to is_qualitative">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L38" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.rubric.Rubric">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">Rubric</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.rubric.Rubric" aria-label="Link to Rubric">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L43" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>A parsed rubric file. Every top-level YAML block is kept as-is, so assignment graders can read their own configuration from <code>settings</code>, <code>probe</code>, <code>discovery</code> and <code>data</code>.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">id</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">name</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">version</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">total_points</code></td><td><code>float</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">items</code></td><td><code>list[<a class="xref" href="#grader.rubric.RubricItem">RubricItem</a>]</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">settings</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">probe</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">discovery</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">data</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td>Data the instructor supplies for every submission (design.md §16-17).</td></tr><tr><td><code class="field-name">source_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.rubric.Rubric.requires_data">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">requires_data</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.rubric.Rubric.requires_data" aria-label="Link to requires_data">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L63" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.rubric.Rubric.offers_data">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">offers_data</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.rubric.Rubric.offers_data" aria-label="Link to offers_data">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L67" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Whether the sidebar should let a TA supply data for this assignment.</p>
+<p>Assignment 3 does not <em>require</em> its zip — it is graded from the outputs each student saved — but supplying it lets the grader re-run every notebook and confirm them, so the option has to be there.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.rubric.Rubric.declared_points">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">declared_points</span><span class="sig-params">: float</span>
+    <a class="headerlink" href="#grader.rubric.Rubric.declared_points" aria-label="Link to declared_points">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L77" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.rubric.Rubric.item">
+  <dt class="sig"><span class="sig-name">item</span><span class="sig-params">(rubric_id: str) -&gt; <a class="xref" href="#grader.rubric.RubricItem">RubricItem</a> | None</span>
+    <a class="headerlink" href="#grader.rubric.Rubric.item" aria-label="Link to item">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L56" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.rubric.Rubric.label">
+  <dt class="sig"><span class="sig-name">label</span><span class="sig-params">() -&gt; str</span>
+    <a class="headerlink" href="#grader.rubric.Rubric.label" aria-label="Link to label">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L80" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.rubric.RubricError">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">RubricError</span><span class="sig-params">(ValueError)</span>
+    <a class="headerlink" href="#grader.rubric.RubricError" aria-label="Link to RubricError">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L84" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"></p>
+    <p>Raised when a rubric file is missing or structurally invalid.</p>
+    
+    
+  </div>
+</section>
+<h2 id="functions">Functions</h2>
+
+<dl class="api-object api-function" id="grader.rubric.load_rubric">
+  <dt class="sig"><span class="sig-name">load_rubric</span><span class="sig-params">(path: str | Path) -&gt; <a class="xref" href="#grader.rubric.Rubric">Rubric</a></span>
+    <a class="headerlink" href="#grader.rubric.load_rubric" aria-label="Link to load_rubric">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L88" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Parse and validate a rubric YAML file.</p>
+<p>Raises <code>RubricError</code> when the file is missing or unparsable, <code>assignment.id</code> is absent, the rubric is empty, an item id is missing or duplicated, an item type is unknown, or the item points do not add up to <code>total_points</code>.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.rubric.available_rubrics">
+  <dt class="sig"><span class="sig-name">available_rubrics</span><span class="sig-params">(directory: str | Path = RUBRIC_DIR) -&gt; dict[str, Path]</span>
+    <a class="headerlink" href="#grader.rubric.available_rubrics" aria-label="Link to available_rubrics">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L152" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Map assignment id -&gt; rubric path for every parsable rubric on disk.</p></dd>
+</dl>
+    </article>
+    <footer class="page-footer">
+      <nav class="pager" aria-label="Pages"><a class="pager-prev" href="../api/grader.service.html"><small>Previous</small><span>grader.service</span></a><a class="pager-next" href="../api/grader.models.html"><small>Next</small><span>grader.models</span></a></nav>
+      <div class="footer-meta"><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
+    </footer>
+  </main>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#summary">Summary</a></li><li class="toc-l2"><a href="#constants">Constants</a></li><li class="toc-l2"><a href="#classes">Classes</a></li><li class="toc-l3"><a href="#grader.rubric.RubricItem">RubricItem</a></li><li class="toc-l3"><a href="#grader.rubric.Rubric">Rubric</a></li><li class="toc-l3"><a href="#grader.rubric.RubricError">RubricError</a></li><li class="toc-l2"><a href="#functions">Functions</a></li><li class="toc-l3"><a href="#grader.rubric.load_rubric">load_rubric()</a></li><li class="toc-l3"><a href="#grader.rubric.available_rubrics">available_rubrics()</a></li></ul></nav></aside>
+</div>
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
+  <div class="search-panel">
+    <div class="search-input-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Search guides and API…" aria-label="Search" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+    <ul class="search-results" role="listbox"></ul>
+    <p class="search-hint">Type to search pages, sections, classes and functions.</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/main.js"></script>
+</body>
+</html>

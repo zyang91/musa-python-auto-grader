@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>grader.charts · MUSA Grader</title>
+<meta name="description" content="Chart evidence for visualization assignments (design.md §23, §25).">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)" id="hljs-dark">
+<script>
+  (function () {
+    try { var t = localStorage.getItem("musa-docs-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  })();
+</script>
+</head>
+<body data-root="../">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="icon-button menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg viewBox="0 0 32 32" aria-hidden="true" class="logo"><rect x="3" y="3" width="26" height="26" rx="7" class="logo-bg"/><path d="M9.5 16.5l4.2 4.2 8.8-9.4" class="logo-check"/></svg><span>MUSA Grader</span><span class="version">v0.1.0</span></a>
+  <button class="search-trigger" type="button" aria-label="Search the documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search docs</span><kbd>/</kbd></button>
+  <div class="topbar-actions">
+    <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <a class="icon-button" href="https://github.com/zyang91/musa-python-auto-grader" aria-label="GitHub repository"><svg viewBox="0 0 16 16" aria-hidden="true" class="filled"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation">
+    <nav><p class="nav-section">Introduction</p><ul class="nav-list">
+<li><a href="../index.html">Overview</a></li>
+<li><a href="../getting-started.html">Getting started</a></li>
+</ul>
+<p class="nav-section">User guide</p><ul class="nav-list">
+<li><a href="../ta-workflow.html">TA workflow</a></li>
+<li><a href="../cli.html">CLI reference</a></li>
+<li><a href="../how-it-works.html">How grading works</a></li>
+<li><a href="../assignments.html">Assignments</a></li>
+<li><a href="../rubrics.html">Rubrics</a></li>
+<li><a href="../docker.html">Docker sandbox</a></li>
+<li><a href="../results.html">Results and exports</a></li>
+</ul>
+<p class="nav-section">Developer guide</p><ul class="nav-list">
+<li><a href="../extending.html">Adding an assignment</a></li>
+<li><a href="../testing.html">Testing and CI</a></li>
+</ul>
+<p class="nav-section">API reference</p><ul class="nav-list">
+<li><a href="../api/index.html">Overview</a></li>
+<li class="nav-group"><span class="nav-group-label">Package</span><ul>
+<li><a href="../api/grader.html"><code>grader</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Engine</span><ul>
+<li><a href="../api/grader.service.html"><code>grader.service</code></a></li>
+<li><a href="../api/grader.rubric.html"><code>grader.rubric</code></a></li>
+<li><a href="../api/grader.models.html"><code>grader.models</code></a></li>
+<li><a href="../api/grader.results.html"><code>grader.results</code></a></li>
+<li><a href="../api/grader.scoring.html"><code>grader.scoring</code></a></li>
+<li><a href="../api/grader.feedback.html"><code>grader.feedback</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Execution</span><ul>
+<li><a href="../api/grader.discovery.html"><code>grader.discovery</code></a></li>
+<li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
+<li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
+<li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
+<li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
+<li><a href="../api/grader.inspection.html"><code>grader.inspection</code></a></li>
+<li><a href="../api/grader.answers.html"><code>grader.answers</code></a></li>
+<li><a href="../api/grader.charts.html" class="active" aria-current="page"><code>grader.charts</code></a></li>
+<li><a href="../api/grader.llm.html"><code>grader.llm</code></a></li>
+<li><a href="../api/grader.utils.html"><code>grader.utils</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Assignments</span><ul>
+<li><a href="../api/assignments.html"><code>assignments</code></a></li>
+<li><a href="../api/assignments.base.html"><code>assignments.base</code></a></li>
+<li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
+<li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
+<li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+</ul></li></ul></nav>
+  </aside>
+  <div class="sidebar-scrim" hidden></div>
+  <main id="content" class="content content-api">
+    <article class="prose">
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py">grader/charts.py</a> · 741 lines</p>
+<h1 class="module-title"><code>grader.charts</code></h1>
+<div class="module-doc"><p>Chart evidence for visualization assignments (design.md §23, §25).</p>
+<p>Assignment 2 grades charts, so the gradeable facts are not variable values but <em>what was drawn</em>: which library drew it, whether it actually rendered, and — for Altair — what the chart specification says it does.</p>
+<h3 class="doc-heading">Where the evidence comes from</h3>
+<p>An Altair chart compiles to a Vega-Lite specification, and that specification is in the notebook&#x27;s own output. So a transformation, a brush selection and a cross-filter are not guessed from source text: they are read out of the spec the student&#x27;s code actually produced. Three output shapes are handled, because the mime type depends on the Altair version the student happens to have:</p>
+<ul><li><code>application/vnd.vegalite.v4+json</code> … <code>v6+json</code> — the spec, directly,</li><li><code>text/html</code> carrying a <code>vegaEmbed(...)</code> call — the spec is the first argument of the embedded script (Altair 6&#x27;s default renderer),</li><li><code>text/plain</code> reading <code>alt.Chart(...)</code> — the chart rendered, but this notebook was saved without the rich output, so only its presence is known.</li></ul>
+<p>Matplotlib and seaborn have no specification, only a picture. For those the evidence is the rendered image plus what the source says about labelling and colour — enough to tell a TA where to look, never enough to score aesthetics automatically.</p>
+<h3 class="doc-heading">Which notebook the evidence comes from</h3>
+<p>Two notebooks may hold the same chart: the one this grading run executed, and the one the student handed in with its outputs already saved. Neither is reliably the better source.</p>
+<p>For Assignment 2 the students choose their own dataset and do not hand it in, so the grading run has nothing to read and every cell after <code>read_csv</code> fails — the <em>submitted</em> outputs are usually the only place a chart exists. But when an instructor does supply data, a freshly executed chart is the stronger evidence, because a saved output can be stale or hand-edited.</p>
+<p>So the two are merged cell by cell rather than ranked: for each chart, whichever notebook actually produced it wins, and the record says which one that was. <code>ChartRecord.output_source</code> and <code>ChartEvidence.source</code> carry that through to the rubric evidence, and the checks lower their confidence for a chart only seen in the student&#x27;s own file.</p></div>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap"><table class="summary-table"><thead><tr><th>Name</th><th>Kind</th><th>Description</th></tr></thead><tbody><tr><td><a href="#grader.charts.SpecFacts"><code>SpecFacts</code></a></td><td><span class="kind">class</span></td><td>What one Vega-Lite specification says the chart does.</td></tr><tr><td><a href="#grader.charts.ChartRecord"><code>ChartRecord</code></a></td><td><span class="kind">class</span></td><td>One chart, as drawn by one cell.</td></tr><tr><td><a href="#grader.charts.ChartEvidence"><code>ChartEvidence</code></a></td><td><span class="kind">class</span></td><td>Every chart found in a submission, in the order the cells appear.</td></tr><tr><td><a href="#grader.charts.libraries_in_source"><code>libraries_in_source()</code></a></td><td><span class="kind">function</span></td><td>Which plotting libraries this cell draws with, most specific first.</td></tr><tr><td><a href="#grader.charts.extract_specs"><code>extract_specs()</code></a></td><td><span class="kind">function</span></td><td>Vega-Lite specifications carried by one notebook output.</td></tr><tr><td><a href="#grader.charts.strip_spec_data"><code>strip_spec_data()</code></a></td><td><span class="kind">function</span></td><td>Drop inlined rows so a spec can be stored as rubric evidence.</td></tr><tr><td><a href="#grader.charts.analyze_spec"><code>analyze_spec()</code></a></td><td><span class="kind">function</span></td><td>Read one Vega-Lite spec, at any level of composition.</td></tr><tr><td><a href="#grader.charts.merge_facts"><code>merge_facts()</code></a></td><td><span class="kind">function</span></td><td>One view of a cell that displayed more than one chart.</td></tr><tr><td><a href="#grader.charts.aesthetic_signals"><code>aesthetic_signals()</code></a></td><td><span class="kind">function</span></td><td>Presence of the labelling and colour choices a TA would look for.</td></tr><tr><td><a href="#grader.charts.collect_charts"><code>collect_charts()</code></a></td><td><span class="kind">function</span></td><td>Chart evidence, taking each chart from whichever notebook drew it.</td></tr><tr><td><a href="#grader.charts.prose_word_count"><code>prose_word_count()</code></a></td><td><span class="kind">function</span></td><td>Words of actual discussion — headings and placeholders do not count.</td></tr></tbody></table></div>
+<h2 id="constants">Constants</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr id="grader.charts.MATPLOTLIB"><td><code class="field-name">MATPLOTLIB</code></td><td><code>&#x27;matplotlib&#x27;</code></td><td></td></tr><tr id="grader.charts.SEABORN"><td><code class="field-name">SEABORN</code></td><td><code>&#x27;seaborn&#x27;</code></td><td></td></tr><tr id="grader.charts.ALTAIR"><td><code class="field-name">ALTAIR</code></td><td><code>&#x27;altair&#x27;</code></td><td></td></tr><tr id="grader.charts.SOURCE_EXECUTED"><td><code class="field-name">SOURCE_EXECUTED</code></td><td><code>&#x27;executed&#x27;</code></td><td></td></tr><tr id="grader.charts.SOURCE_SUBMITTED"><td><code class="field-name">SOURCE_SUBMITTED</code></td><td><code>&#x27;submitted&#x27;</code></td><td></td></tr><tr id="grader.charts.SOURCE_MERGED"><td><code class="field-name">SOURCE_MERGED</code></td><td><code>&#x27;merged&#x27;</code></td><td>Some charts from each: the usual case when students do not hand in their data.</td></tr><tr id="grader.charts.SOURCE_NONE"><td><code class="field-name">SOURCE_NONE</code></td><td><code>&#x27;none&#x27;</code></td><td></td></tr><tr id="grader.charts.SEABORN_NON_PLOTTING"><td><code class="field-name">SEABORN_NON_PLOTTING</code></td><td><code>(&#x27;set&#x27;, &#x27;set_theme&#x27;, &#x27;set_style&#x27;, &#x27;set_context&#x27;, &#x27;set_palette&#x27;, &#x27;color_palette&#x27;, &#x27;axes_style&#x27;, &#x27;plotting_context&#x27;, &#x27;despine&#x27;, &#x27;load_dataset…</code></td><td>Seaborn helpers that style a figure without drawing one; a cell holding only these is setup, not a chart.</td></tr><tr id="grader.charts.SEABORN_PLOT_RE"><td><code class="field-name">SEABORN_PLOT_RE</code></td><td><code>re.compile(&#x27;\\b(?:sns|seaborn)\\.(?!(?:&#x27; + &#x27;|&#x27;.join(SEABORN_NON_PLOTTING) + &#x27;)\\b)(\\w+)\\s*\\(&#x27;)</code></td><td></td></tr><tr id="grader.charts.MATPLOTLIB_PLOT_METHODS"><td><code class="field-name">MATPLOTLIB_PLOT_METHODS</code></td><td><code>(&#x27;plot&#x27;, &#x27;scatter&#x27;, &#x27;bar&#x27;, &#x27;barh&#x27;, &#x27;hist&#x27;, &#x27;hist2d&#x27;, &#x27;boxplot&#x27;, &#x27;pie&#x27;, &#x27;imshow&#x27;, &#x27;contour&#x27;, &#x27;contourf&#x27;, &#x27;fill_between&#x27;, &#x27;fill_betweenx&#x27;, &#x27;s…</code></td><td>Matplotlib Axes/pyplot methods that put marks on a canvas.</td></tr><tr id="grader.charts.MATPLOTLIB_PLOT_RE"><td><code class="field-name">MATPLOTLIB_PLOT_RE</code></td><td><code>re.compile(&#x27;\\b(?:plt|pyplot|ax|axs|axes|axis|ax\\d+|ax_\\w+|axs\\[[^\\]]*\\]|axes\\[[^\\]]*\\])\\.(?:&#x27; + &#x27;|&#x27;.join(MATPLOTLIB_PLOT_METHODS)…</code></td><td></td></tr><tr id="grader.charts.PANDAS_PLOT_RE"><td><code class="field-name">PANDAS_PLOT_RE</code></td><td><code>re.compile(&#x27;\\.plot\\s*\\(|\\.plot\\.\\w+\\s*\\(&#x27;)</code></td><td><code>df.plot(...)</code>, <code>df.plot.bar(...)</code>, <code>gdf.plot(column=...)</code> — pandas and geopandas draw through matplotlib, and students count these as matplotlib.</td></tr><tr id="grader.charts.ALTAIR_RE"><td><code class="field-name">ALTAIR_RE</code></td><td><code>re.compile(&#x27;\\balt\\.\\w+|\\baltair\\.\\w+|\\.mark_\\w+\\s*\\(&#x27;)</code></td><td></td></tr><tr id="grader.charts.ALTAIR_CHART_RE"><td><code class="field-name">ALTAIR_CHART_RE</code></td><td><code>re.compile(&#x27;\\b(?:alt|altair)\\.(?:Chart|layer|hconcat|vconcat|concat)\\s*\\(|\\.mark_\\w+\\s*\\(&#x27;)</code></td><td>Altair calls that only exist to draw, so a cell holding one is a chart cell even when the chart is assigned to a name and shown later.</td></tr><tr id="grader.charts.VEGALITE_MIME_RE"><td><code class="field-name">VEGALITE_MIME_RE</code></td><td><code>re.compile(&#x27;^application/vnd\\.vega(?:lite)?\\.v\\d+\\+json$&#x27;)</code></td><td></td></tr><tr id="grader.charts.VEGA_EMBED_MARKER"><td><code class="field-name">VEGA_EMBED_MARKER</code></td><td><code>&#x27;})(&#x27;</code></td><td>Altair&#x27;s HTML renderer ends with <code>})(&lt;spec&gt;, &lt;embedOpt&gt;);</code> inside a &lt;script&gt;.</td></tr><tr id="grader.charts.COMPOSITION_KEYS"><td><code class="field-name">COMPOSITION_KEYS</code></td><td><code>(&#x27;hconcat&#x27;, &#x27;vconcat&#x27;, &#x27;concat&#x27;, &#x27;layer&#x27;, &#x27;facet&#x27;, &#x27;repeat&#x27;, &#x27;spec&#x27;)</code></td><td></td></tr><tr id="grader.charts.TRANSFORM_OPS"><td><code class="field-name">TRANSFORM_OPS</code></td><td><code>{&#x27;aggregate&#x27;, &#x27;bin&#x27;, &#x27;calculate&#x27;, &#x27;density&#x27;, &#x27;flatten&#x27;, &#x27;fold&#x27;, &#x27;impute&#x27;, &#x27;joinaggregate&#x27;, &#x27;loess&#x27;, &#x27;lookup&#x27;, &#x27;pivot&#x27;, &#x27;quantile&#x27;, &#x27;regress…</code></td><td>&quot;A transformation (mean, count, binning, etc)&quot;. A bare filter is a subset, not a transformation of the values, so it is deliberately not in this set.</td></tr><tr id="grader.charts.ENCODING_TRANSFORM_KEYS"><td><code class="field-name">ENCODING_TRANSFORM_KEYS</code></td><td><code>(&#x27;aggregate&#x27;, &#x27;bin&#x27;, &#x27;timeUnit&#x27;)</code></td><td></td></tr><tr id="grader.charts.AESTHETIC_PATTERNS"><td><code class="field-name">AESTHETIC_PATTERNS</code></td><td><code>{&#x27;title&#x27;: re.compile(&#x27;\\.set_title\\s*\\(|\\bplt\\.title\\s*\\(|\\.suptitle\\s*\\(|\\btitle\\s*=&#x27;), &#x27;x_label&#x27;: re.compile(&#x27;\\.set_xlabel\\s…</code></td><td></td></tr><tr id="grader.charts.IMAGE_MIMES"><td><code class="field-name">IMAGE_MIMES</code></td><td><code>(&#x27;image/png&#x27;, &#x27;image/jpeg&#x27;, &#x27;image/svg+xml&#x27;)</code></td><td></td></tr><tr id="grader.charts.ALTAIR_REPR_RE"><td><code class="field-name">ALTAIR_REPR_RE</code></td><td><code>re.compile(&#x27;^\\s*alt\\.(?:Chart|LayerChart|HConcatChart|VConcatChart|ConcatChart|FacetChart|RepeatChart)&#x27;)</code></td><td>Altair&#x27;s plain-text fallback when a notebook was saved without rich output.</td></tr><tr id="grader.charts.HEADING_RE"><td><code class="field-name">HEADING_RE</code></td><td><code>re.compile(&#x27;^\\s{0,3}#{1,6}\\s&#x27;)</code></td><td></td></tr><tr id="grader.charts.PLACEHOLDER_RE"><td><code class="field-name">PLACEHOLDER_RE</code></td><td><code>re.compile(&#x27;^\\s*(?:\\*{0,2})(?:your (?:answer|discussion|conclusion|response) here|todo|tbd|write your|conclusion:?|discussion:?)(?:\\*{0,…</code></td><td></td></tr></tbody></table></div>
+<h2 id="classes">Classes</h2>
+
+<section class="api-class" id="grader.charts.SpecFacts">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">SpecFacts</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.charts.SpecFacts" aria-label="Link to SpecFacts">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L211" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>What one Vega-Lite specification says the chart does.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">marks</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">transform_ops</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">encoding_transforms</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">selections</code></td><td><code>list[dict[str, Any]]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">filter_params</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">condition_params</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">composition</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">view_count</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">channels</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">fields</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">titles</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">color_schemes</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">has_tooltip</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.charts.SpecFacts.brushes">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">brushes</span><span class="sig-params">: list[dict[str, Any]]</span>
+    <a class="headerlink" href="#grader.charts.SpecFacts.brushes" aria-label="Link to brushes">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L229" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Interval selections a viewer can drag — pan/zoom bindings excluded.</p>
+<p><code>.interactive()</code> also compiles to an interval selection, but with <code>bind: &quot;scales&quot;</code>: it zooms the axes rather than selecting data. Counting it as a brush would give the mark to every student who added pan/zoom.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.charts.SpecFacts.has_brush">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">has_brush</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.charts.SpecFacts.has_brush" aria-label="Link to has_brush">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L240" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.charts.SpecFacts.has_transformation">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">has_transformation</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.charts.SpecFacts.has_transformation" aria-label="Link to has_transformation">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L244" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.charts.SpecFacts.is_multi_view">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">is_multi_view</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.charts.SpecFacts.is_multi_view" aria-label="Link to is_multi_view">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L248" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.charts.SpecFacts.cross_filter_params">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">cross_filter_params</span><span class="sig-params">: list[str]</span>
+    <a class="headerlink" href="#grader.charts.SpecFacts.cross_filter_params" aria-label="Link to cross_filter_params">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L252" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Selections that a <em>different</em> view filters on — a real cross-filter.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.charts.SpecFacts.has_cross_filter">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">has_cross_filter</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.charts.SpecFacts.has_cross_filter" aria-label="Link to has_cross_filter">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L258" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.charts.SpecFacts.to_dict">
+  <dt class="sig"><span class="sig-name">to_dict</span><span class="sig-params">() -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#grader.charts.SpecFacts.to_dict" aria-label="Link to to_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L261" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.charts.ChartRecord">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">ChartRecord</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.charts.ChartRecord" aria-label="Link to ChartRecord">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L478" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>One chart, as drawn by one cell.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">library</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">code_cell</code></td><td><code>int</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">cell_index</code></td><td><code>int</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">source</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">rendered</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr><tr><td><code class="field-name">errored</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr><tr><td><code class="field-name">error</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">output_mimes</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">specs</code></td><td><code>list[dict[str, Any]]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">facts</code></td><td><code><a class="xref" href="#grader.charts.SpecFacts">SpecFacts</a></code></td><td><code>field(default_factory=SpecFacts)</code></td><td></td></tr><tr><td><code class="field-name">discussion</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">discussion_words</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">preamble</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">preamble_words</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">aesthetics</code></td><td><code>dict[str, bool]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">output_source</code></td><td><code>str</code></td><td><code>SOURCE_NONE</code></td><td>Which notebook these outputs were read from.</td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.charts.ChartRecord.ok">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">ok</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.charts.ChartRecord.ok" aria-label="Link to ok">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L500" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Drew something, and the cell that drew it did not fail.</p>
+<p>These are separate facts on purpose. The inline backend flushes any figure a cell created even when that cell then raised, so a seaborn call that died on a NameError still leaves an empty PNG in the notebook — <code>rendered</code> records that an image exists, <code>ok</code> records that it is a chart rather than the wreckage of one.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.charts.ChartRecord.has_discussion">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">has_discussion</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.charts.ChartRecord.has_discussion" aria-label="Link to has_discussion">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L512" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.charts.ChartRecord.summary">
+  <dt class="sig"><span class="sig-name">summary</span><span class="sig-params">(max_source: int = 700) -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#grader.charts.ChartRecord.summary" aria-label="Link to summary">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L515" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Compact, TA-readable evidence (design.md §12).</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.charts.ChartEvidence">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">ChartEvidence</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.charts.ChartEvidence" aria-label="Link to ChartEvidence">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L538" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>Every chart found in a submission, in the order the cells appear.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">source</code></td><td><code>str</code></td><td><code>SOURCE_NONE</code></td><td></td></tr><tr><td><code class="field-name">notebook_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">charts</code></td><td><code>list[<a class="xref" href="#grader.charts.ChartRecord">ChartRecord</a>]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">n_code_cells</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">error</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.charts.ChartEvidence.from_execution">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">from_execution</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.charts.ChartEvidence.from_execution" aria-label="Link to from_execution">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L548" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Every chart that came out was produced by this grading run.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.charts.ChartEvidence.verified">
+  <dt class="sig"><span class="sig-name">verified</span><span class="sig-params">(records: list[&#x27;<a class="xref" href="#grader.charts.ChartRecord">ChartRecord</a>&#x27;]) -&gt; bool</span>
+    <a class="headerlink" href="#grader.charts.ChartEvidence.verified" aria-label="Link to verified">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L553" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Were these particular charts produced here, rather than by the student?</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.charts.ChartEvidence.by_library">
+  <dt class="sig"><span class="sig-name">by_library</span><span class="sig-params">(library: str) -&gt; list[<a class="xref" href="#grader.charts.ChartRecord">ChartRecord</a>]</span>
+    <a class="headerlink" href="#grader.charts.ChartEvidence.by_library" aria-label="Link to by_library">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L558" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.charts.ChartEvidence.rendered">
+  <dt class="sig"><span class="sig-name">rendered</span><span class="sig-params">(library: str) -&gt; list[<a class="xref" href="#grader.charts.ChartRecord">ChartRecord</a>]</span>
+    <a class="headerlink" href="#grader.charts.ChartEvidence.rendered" aria-label="Link to rendered">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L561" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.charts.ChartEvidence.summary">
+  <dt class="sig"><span class="sig-name">summary</span><span class="sig-params">() -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#grader.charts.ChartEvidence.summary" aria-label="Link to summary">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L564" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+<h2 id="functions">Functions</h2>
+
+<dl class="api-object api-function" id="grader.charts.libraries_in_source">
+  <dt class="sig"><span class="sig-name">libraries_in_source</span><span class="sig-params">(source: str) -&gt; list[str]</span>
+    <a class="headerlink" href="#grader.charts.libraries_in_source" aria-label="Link to libraries_in_source">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L103" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Which plotting libraries this cell draws with, most specific first.</p>
+<p>Seaborn shadows matplotlib deliberately: <code>sns.boxplot(...)</code> followed by <code>plt.title(...)</code> is one seaborn chart, not a seaborn chart plus a matplotlib chart. Grading the two requirements separately depends on it.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.charts.extract_specs">
+  <dt class="sig"><span class="sig-name">extract_specs</span><span class="sig-params">(output: dict[str, Any]) -&gt; list[dict[str, Any]]</span>
+    <a class="headerlink" href="#grader.charts.extract_specs" aria-label="Link to extract_specs">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L137" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Vega-Lite specifications carried by one notebook output.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.charts.strip_spec_data">
+  <dt class="sig"><span class="sig-name">strip_spec_data</span><span class="sig-params">(node: Any, depth: int = 0) -&gt; Any</span>
+    <a class="headerlink" href="#grader.charts.strip_spec_data" aria-label="Link to strip_spec_data">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L172" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Drop inlined rows so a spec can be stored as rubric evidence.</p>
+<p>A student&#x27;s chart embeds their whole dataset in the spec; keeping it would put megabytes of their data into every results file.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.charts.analyze_spec">
+  <dt class="sig"><span class="sig-name">analyze_spec</span><span class="sig-params">(spec: dict[str, Any]) -&gt; <a class="xref" href="#grader.charts.SpecFacts">SpecFacts</a></span>
+    <a class="headerlink" href="#grader.charts.analyze_spec" aria-label="Link to analyze_spec">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L290" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Read one Vega-Lite spec, at any level of composition.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.charts.merge_facts">
+  <dt class="sig"><span class="sig-name">merge_facts</span><span class="sig-params">(specs: Iterable[dict[str, Any]]) -&gt; <a class="xref" href="#grader.charts.SpecFacts">SpecFacts</a></span>
+    <a class="headerlink" href="#grader.charts.merge_facts" aria-label="Link to merge_facts">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L421" title="View source on GitHub">[source]</a></dt>
+  <dd><p>One view of a cell that displayed more than one chart.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.charts.aesthetic_signals">
+  <dt class="sig"><span class="sig-name">aesthetic_signals</span><span class="sig-params">(source: str) -&gt; dict[str, bool]</span>
+    <a class="headerlink" href="#grader.charts.aesthetic_signals" aria-label="Link to aesthetic_signals">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L458" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Presence of the labelling and colour choices a TA would look for.</p>
+<p>These are signals, never a score: a chart can set every label and still be unreadable, and the assignment says a person grades the aesthetics.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.charts.collect_charts">
+  <dt class="sig"><span class="sig-name">collect_charts</span><span class="sig-params">(executed_path: str | Path | None, submitted_path: str | Path | None = None) -&gt; <a class="xref" href="#grader.charts.ChartEvidence">ChartEvidence</a></span>
+    <a class="headerlink" href="#grader.charts.collect_charts" aria-label="Link to collect_charts">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L572" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Chart evidence, taking each chart from whichever notebook drew it.</p>
+<p>The executed notebook is the instrumented copy of the submitted one, so their code cells line up one to one and a chart can be matched across the two by its cell number and library. Where both drew it, the executed run wins; where only the student&#x27;s saved output has it, that is used and recorded as such.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.charts.prose_word_count">
+  <dt class="sig"><span class="sig-name">prose_word_count</span><span class="sig-params">(text: str) -&gt; int</span>
+    <a class="headerlink" href="#grader.charts.prose_word_count" aria-label="Link to prose_word_count">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/charts.py#L734" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Words of actual discussion — headings and placeholders do not count.</p></dd>
+</dl>
+    </article>
+    <footer class="page-footer">
+      <nav class="pager" aria-label="Pages"><a class="pager-prev" href="../api/grader.answers.html"><small>Previous</small><span>grader.answers</span></a><a class="pager-next" href="../api/grader.llm.html"><small>Next</small><span>grader.llm</span></a></nav>
+      <div class="footer-meta"><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
+    </footer>
+  </main>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#summary">Summary</a></li><li class="toc-l2"><a href="#constants">Constants</a></li><li class="toc-l2"><a href="#classes">Classes</a></li><li class="toc-l3"><a href="#grader.charts.SpecFacts">SpecFacts</a></li><li class="toc-l3"><a href="#grader.charts.ChartRecord">ChartRecord</a></li><li class="toc-l3"><a href="#grader.charts.ChartEvidence">ChartEvidence</a></li><li class="toc-l2"><a href="#functions">Functions</a></li><li class="toc-l3"><a href="#grader.charts.libraries_in_source">libraries_in_source()</a></li><li class="toc-l3"><a href="#grader.charts.extract_specs">extract_specs()</a></li><li class="toc-l3"><a href="#grader.charts.strip_spec_data">strip_spec_data()</a></li><li class="toc-l3"><a href="#grader.charts.analyze_spec">analyze_spec()</a></li><li class="toc-l3"><a href="#grader.charts.merge_facts">merge_facts()</a></li><li class="toc-l3"><a href="#grader.charts.aesthetic_signals">aesthetic_signals()</a></li><li class="toc-l3"><a href="#grader.charts.collect_charts">collect_charts()</a></li><li class="toc-l3"><a href="#grader.charts.prose_word_count">prose_word_count()</a></li></ul></nav></aside>
+</div>
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
+  <div class="search-panel">
+    <div class="search-input-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Search guides and API…" aria-label="Search" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+    <ul class="search-results" role="listbox"></ul>
+    <p class="search-hint">Type to search pages, sections, classes and functions.</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/main.js"></script>
+</body>
+</html>

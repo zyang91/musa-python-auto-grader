@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How grading works · MUSA Grader</title>
+<meta name="description" content="The grading pipeline: data supply, discovery, sandboxed execution, inspection, hidden tests, confidence and review.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)" id="hljs-dark">
+<script>
+  (function () {
+    try { var t = localStorage.getItem("musa-docs-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  })();
+</script>
+</head>
+<body data-root="">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="icon-button menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true" class="logo"><rect x="3" y="3" width="26" height="26" rx="7" class="logo-bg"/><path d="M9.5 16.5l4.2 4.2 8.8-9.4" class="logo-check"/></svg><span>MUSA Grader</span><span class="version">v0.1.0</span></a>
+  <button class="search-trigger" type="button" aria-label="Search the documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search docs</span><kbd>/</kbd></button>
+  <div class="topbar-actions">
+    <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <a class="icon-button" href="https://github.com/zyang91/musa-python-auto-grader" aria-label="GitHub repository"><svg viewBox="0 0 16 16" aria-hidden="true" class="filled"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation">
+    <nav><p class="nav-section">Introduction</p><ul class="nav-list">
+<li><a href="index.html">Overview</a></li>
+<li><a href="getting-started.html">Getting started</a></li>
+</ul>
+<p class="nav-section">User guide</p><ul class="nav-list">
+<li><a href="ta-workflow.html">TA workflow</a></li>
+<li><a href="cli.html">CLI reference</a></li>
+<li><a href="how-it-works.html" class="active" aria-current="page">How grading works</a></li>
+<li><a href="assignments.html">Assignments</a></li>
+<li><a href="rubrics.html">Rubrics</a></li>
+<li><a href="docker.html">Docker sandbox</a></li>
+<li><a href="results.html">Results and exports</a></li>
+</ul>
+<p class="nav-section">Developer guide</p><ul class="nav-list">
+<li><a href="extending.html">Adding an assignment</a></li>
+<li><a href="testing.html">Testing and CI</a></li>
+</ul>
+<p class="nav-section">API reference</p><ul class="nav-list">
+<li><a href="api/index.html">Overview</a></li>
+<li class="nav-group"><span class="nav-group-label">Package</span><ul>
+<li><a href="api/grader.html"><code>grader</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Engine</span><ul>
+<li><a href="api/grader.service.html"><code>grader.service</code></a></li>
+<li><a href="api/grader.rubric.html"><code>grader.rubric</code></a></li>
+<li><a href="api/grader.models.html"><code>grader.models</code></a></li>
+<li><a href="api/grader.results.html"><code>grader.results</code></a></li>
+<li><a href="api/grader.scoring.html"><code>grader.scoring</code></a></li>
+<li><a href="api/grader.feedback.html"><code>grader.feedback</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Execution</span><ul>
+<li><a href="api/grader.discovery.html"><code>grader.discovery</code></a></li>
+<li><a href="api/grader.executor.html"><code>grader.executor</code></a></li>
+<li><a href="api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
+<li><a href="api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
+<li><a href="api/grader.notebook.html"><code>grader.notebook</code></a></li>
+<li><a href="api/grader.inspection.html"><code>grader.inspection</code></a></li>
+<li><a href="api/grader.answers.html"><code>grader.answers</code></a></li>
+<li><a href="api/grader.charts.html"><code>grader.charts</code></a></li>
+<li><a href="api/grader.llm.html"><code>grader.llm</code></a></li>
+<li><a href="api/grader.utils.html"><code>grader.utils</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Assignments</span><ul>
+<li><a href="api/assignments.html"><code>assignments</code></a></li>
+<li><a href="api/assignments.base.html"><code>assignments.base</code></a></li>
+<li><a href="api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
+<li><a href="api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
+<li><a href="api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+</ul></li></ul></nav>
+  </aside>
+  <div class="sidebar-scrim" hidden></div>
+  <main id="content" class="content">
+    <article class="prose">
+<p class="eyebrow">User guide</p>
+<h1>How grading works</h1>
+<p class="lead">Every submission goes through the same pipeline. Each stage is built so that a failure produces a flag for a person rather than a silent zero.</p>
+
+<div class="pipeline">
+  <span>0 · Data supply</span><i>→</i><span>1 · Discovery</span><i>→</i><span>2 · Execution</span><i>→</i><span>3 · Inspection</span><i>→</i><span>4 · Hidden tests</span><i>→</i><span>5 · Review policy</span>
+</div>
+
+<h2 id="data-supply">0. The data comes from you, not the students<a class="headerlink" href="#data-supply" aria-label="Link to this section">#</a></h2>
+
+<p>Students hand in <strong>a notebook and nothing else</strong>, so the grader supplies the data. You upload the file once (for Assignment 3, all five files) in the sidebar or with <code>--data</code> on the CLI. Before each submission runs, the grader places the files at:</p>
+
+<ul>
+  <li>every relative path the notebook actually reads from, parsed out of the notebook, including paths held in a variable rather than passed inline, and</li>
+  <li>the conventional <code>data/&lt;name&gt;</code> and <code>&lt;name&gt;</code> locations, for notebooks that build the path dynamically.</li>
+</ul>
+
+<p>So a notebook reading <code>data/zillow.csv</code> and one reading <code>data/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv</code> both find their file, and the class doesn't have to follow a naming convention. When several files are supplied, each target path gets the file whose name is closest to it.</p>
+
+<ul>
+  <li>Files are <strong>hard-linked</strong>, not copied, so fifty submissions use one copy of a 117 MB extract rather than fifty.</li>
+  <li>A student's own file is never overwritten. Set <code>data.prefer_student_files: true</code> in the rubric to grade each student on their own copy instead.</li>
+  <li>Paths that escape the working directory (<code>../</code>, absolute paths, Windows drive letters) are refused.</li>
+  <li>A notebook that reads from a URL is redirected to the supplied local file.</li>
+</ul>
+
+<p>Everyone is then graded against the <em>same</em> data, which makes results comparable across the class. A notebook that hardcodes <code>/Users/me/Desktop/...</code> still fails, as it should, because that path cannot be supplied.</p>
+
+<h2 id="discovery">1. Discovery<a class="headerlink" href="#discovery" aria-label="Link to this section">#</a></h2>
+
+<p>Notebook filenames are not standardised, so the grader scores each candidate notebook on <strong>name hints</strong> (from the rubric's <code>discovery.notebook_name_hints</code>), <strong>directory depth</strong> and <strong>size</strong>. Names matching <code>ignore_name_patterns</code> (<code>checkpoint</code>, <code>untitled</code>, <code>scratch</code>, <code>solution</code> and so on) are ruled out. When two files look equally plausible, the submission is <strong>flagged, not guessed</strong>: it goes to the review queue as <code>multiple_notebooks</code>.</p>
+
+<p>Both submission layouts are supported:</p>
+
+<pre><code class="language-text">submissions/                         canvas_export.zip
+├── student_001/                     ├── doejane_12345_67890_assignment1.ipynb
+│   └── assignment-1.ipynb           ├── smithj_late_23456_78901_hw1.ipynb
+├── student_002/                     └── ...
+│   ├── assignment-1.ipynb
+│   └── scratch.ipynb
+└── ...</code></pre>
+
+<p>Nested archives inside a submission are expanded, and a single wrapping directory is unwrapped. The code is in <a href="api/grader.discovery.html"><code>grader.discovery</code></a>.</p>
+
+<h2 id="execution">2. Execution<a class="headerlink" href="#execution" aria-label="Link to this section">#</a></h2>
+
+<p>Each submission is copied into its own working directory. The notebook is <em>instrumented</em> with probe cells, and a subprocess runs it. By default that subprocess runs inside a container with no network, capped memory and CPU, a read-only root filesystem and no host environment variables. See <a href="docker.html">Docker sandbox</a>.</p>
+
+<p>Errors do not stop grading. <code>allow_errors</code> is on, so the notebook runs to the end, the first failing cell and its traceback are recorded, and every check that can still run does. <strong>A failed notebook never becomes an automatic zero.</strong> The execution item itself awards partial credit for how far the notebook got: failing at the last cell is worth more than failing at the first.</p>
+
+<h2 id="inspection-without-variable-names">3. Inspection without variable names<a class="headerlink" href="#inspection-without-variable-names" aria-label="Link to this section">#</a></h2>
+
+<p>Students don't use the solution's variable names, so the probe describes the kernel's namespace rather than looking anything up by name. For every object it records:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Object</th><th>What the probe records</th></tr></thead>
+  <tbody>
+    <tr><td>DataFrame</td><td>Shape, columns, dtypes, a head sample, numeric summaries, low-cardinality value samples, and which identifiers each boolean flag column marks</td></tr>
+    <tr><td>GeoDataFrame</td><td>All of the above plus CRS, geometry types and total area</td></tr>
+    <tr><td>numpy array</td><td>NaN-aware statistics. This is the only way to describe an NDVI array that is mostly NaN outside its polygon.</td></tr>
+    <tr><td>shapely geometry, rasterio dataset</td><td>Type, bounds, area, band count and CRS, read in place</td></tr>
+    <tr><td>holoviews object</td><td>Key dimensions, frame count, layout shape and the values actually plotted, read from <code>Out</code> as well as from named variables</td></tr>
+  </tbody>
+</table></div>
+
+<p>Some summaries are deliberately compact. 384 GEOIDs are far more than the value-sample cap, so instead of the list the probe sends a histogram of their first five characters. That answers "is every row in Philadelphia County?" in a few bytes.</p>
+
+<p>The assignment grader then looks for objects that <em>look like</em> the expected result (right ZIP prefix, right row count, right roles) and reports how many plausible candidates it saw. One unique match gives high confidence, two give 0.75, and more give 0.40.</p>
+
+<p>The probe source is in <a href="api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a>. It runs only inside the student's kernel, never on the host, and everything it returns is a JSON summary.</p>
+
+<h2 id="hidden-tests">4. Hidden tests<a class="headerlink" href="#hidden-tests" aria-label="Link to this section">#</a></h2>
+
+<p><code>calculate_percent_increase(group_df)</code> takes a DataFrame, so it can't be tested with literal arguments. Instead the probe reads the column names and date dtype of the student's own tidy frame, builds a synthetic group frame from interpolated anchor points using those names, and calls the function with it. The expected answer follows from the anchors, so it is known whatever data the student loaded.</p>
+
+<p>The anchors deliberately imply a <em>different</em> answer for the first and last rows than for the two dates named in the assignment. That lets the grader identify the most common wrong implementation by name instead of just marking it wrong:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>What the function does</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Uses 2020-03-31 and 2022-03-31</td><td><span class="badge badge-ok">pass</span></td></tr>
+    <tr><td>Uses the first and last rows</td><td>50% credit, named in the feedback</td></tr>
+    <tr><td>Returns <code>0.5</code> instead of <code>50</code></td><td>60% credit, named as a units slip</td></tr>
+    <tr><td>Left as the unfilled template</td><td>0, detected by parsing the function body rather than searching for the template comment</td></tr>
+  </tbody>
+</table></div>
+
+<div class="callout">
+  <p class="callout-title">The answer key never enters the container</p>
+  <p>Hidden test <em>calls</em> run inside the student's kernel, but the credit ratios and expected values stay on the grading host. The container is told what to call the function with, never what it should return. The probe cells are removed from the executed notebook before it is saved to <code>results/</code>, and a test checks this.</p>
+</div>
+
+<h2 id="two-readings">Two readings: saved outputs and the re-run<a class="headerlink" href="#two-readings" aria-label="Link to this section">#</a></h2>
+
+<p>Assignments 2 and 3 can't rely on a re-run alone. Assignment 2's data is never handed in, and Assignment 3 reads five files from student-chosen paths. If placement misses, the notebook dies at the first <code>read_file</code>. The students' own runs didn't have that problem, and the notebooks they handed in carry what those runs printed:</p>
+
+<pre><code class="language-text">In  [3]: len(phl)
+Out [3]: 384</code></pre>
+
+<p><a href="api/grader.answers.html"><code>grader.answers</code></a> reads those saved answers, and <a href="api/grader.charts.html"><code>grader.charts</code></a> reads the Vega-Lite specs and bokeh buffers saved with each chart. Each Assignment 3 item is graded on <strong>two independent readings</strong>: what the submitted notebook shows and what this run produced. A step counts as done if either source shows the right answer. Two rules keep this honest:</p>
+
+<ul>
+  <li><strong>A number must be shown to count.</strong> Cell values inside a <code>head()</code> repr are not answers.</li>
+  <li><strong>Source code alone is never full marks.</strong> A step the source clearly performs but never displays earns 70% and gets a look from a person.</li>
+</ul>
+
+<h2 id="confidence-and-review">5. Confidence and review<a class="headerlink" href="#confidence-and-review" aria-label="Link to this section">#</a></h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Signal</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Deterministic test, or a matched expected value</td><td>confidence 1.0</td></tr>
+    <tr><td>One uniquely matching object</td><td>0.98</td></tr>
+    <tr><td>Two plausible objects</td><td>0.75 → <span class="badge badge-warn">review</span></td></tr>
+    <tr><td>High ambiguity</td><td>0.40 → <span class="badge badge-warn">review</span></td></tr>
+    <tr><td>Execution failure, multiple notebooks, missing objects</td><td><span class="badge badge-warn">review</span></td></tr>
+    <tr><td>Qualitative item without LLM grading</td><td><span class="badge badge-warn">review</span></td></tr>
+    <tr><td><strong>Any deduction at all</strong></td><td><span class="badge badge-warn">review</span></td></tr>
+  </tbody>
+</table></div>
+
+<p>A submission's confidence is its <em>lowest</em> item confidence, because the weakest item decides how far the grade can be trusted. The policy is implemented in <a href="api/grader.scoring.html#grader.scoring.apply_review_policy"><code>grader.scoring.apply_review_policy</code></a>.</p>
+
+<h2 id="statuses">Item statuses<a class="headerlink" href="#statuses" aria-label="Link to this section">#</a></h2>
+
+<p>Every rubric item comes back with one of these statuses. The UI never uses colour alone: each status also has an icon and a word.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Status</th><th>Icon</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>pass</code></td><td>✓</td><td>Full credit</td></tr>
+    <tr><td><code>partial</code></td><td>⚠</td><td>Some credit, with a named reason</td></tr>
+    <tr><td><code>warning</code></td><td>⚠</td><td>Something worth a look, short of a failure</td></tr>
+    <tr><td><code>manual_review</code></td><td>⚠</td><td>A person must decide. Judgement items always come back this way.</td></tr>
+    <tr><td><code>fail</code></td><td>✕</td><td>The step was attempted and is wrong</td></tr>
+    <tr><td><code>execution_error</code></td><td>✕</td><td>The notebook did not run far enough to tell</td></tr>
+    <tr><td><code>not_found</code></td><td>—</td><td>Nothing resembling the step was found</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="scores">Scores and rounding<a class="headerlink" href="#scores" aria-label="Link to this section">#</a></h2>
+
+<p>Partial credit is rounded to the rubric's <code>settings.score_rounding</code> increment (0.5 by default), so a TA never has to explain a score of 14.28. Scores are clamped to <code>[0, points]</code>. A check that raises an exception never loses the submission: the item comes back as <code>manual_review</code> with confidence 0 and the error in its evidence.</p>
+
+    </article>
+    <footer class="page-footer">
+      <nav class="pager" aria-label="Pages"><a class="pager-prev" href="cli.html"><small>Previous</small><span>CLI reference</span></a><a class="pager-next" href="assignments.html"><small>Next</small><span>Assignments</span></a></nav>
+      <div class="footer-meta"><a class="edit-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/docs/_pages/how-it-works.html">Edit this page on GitHub</a><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
+    </footer>
+  </main>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#data-supply">0. The data comes from you, not the students</a></li><li class="toc-l2"><a href="#discovery">1. Discovery</a></li><li class="toc-l2"><a href="#execution">2. Execution</a></li><li class="toc-l2"><a href="#inspection-without-variable-names">3. Inspection without variable names</a></li><li class="toc-l2"><a href="#hidden-tests">4. Hidden tests</a></li><li class="toc-l2"><a href="#two-readings">Two readings: saved outputs and the re-run</a></li><li class="toc-l2"><a href="#confidence-and-review">5. Confidence and review</a></li><li class="toc-l2"><a href="#statuses">Item statuses</a></li><li class="toc-l2"><a href="#scores">Scores and rounding</a></li></ul></nav></aside>
+</div>
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
+  <div class="search-panel">
+    <div class="search-input-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Search guides and API…" aria-label="Search" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+    <ul class="search-results" role="listbox"></ul>
+    <p class="search-hint">Type to search pages, sections, classes and functions.</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="assets/search-index.js"></script>
+<script src="assets/main.js"></script>
+</body>
+</html>

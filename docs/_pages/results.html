@@ -1,0 +1,96 @@
+<!-- title: Results and exports -->
+<!-- description: What a grading session writes to disk, the result JSON schema, and how to reload, regrade and export. -->
+
+<p class="eyebrow">User guide</p>
+<h1>Results and exports</h1>
+<p class="lead">Each grading run is a <em>session</em>, saved under <code>results/&lt;session_id&gt;/</code>. The session id is the assignment id plus a timestamp, for example <code>hw1_20261006_142233</code>.</p>
+
+<h2>Session directory</h2>
+
+<pre><code class="language-text">results/&lt;session_id&gt;/
+├── grades.csv                 student_id, score, execution status, review flags
+├── grading_session.json       full state; reload it from the Overview page
+├── summary.json               class summary
+├── flagged_submissions.csv    the review queue
+├── class_report.md            the class overview as markdown
+├── feedback/&lt;student&gt;.md      student-facing feedback
+├── executed_notebooks/        probe cells stripped
+└── raw_results/&lt;student&gt;.json rubric-level detail with evidence</code></pre>
+
+<p>The probe cells are removed from executed notebooks before they are saved, so nothing in <code>results/</code> reveals the hidden tests.</p>
+
+<h2>Result schema</h2>
+
+<p>Each <code>raw_results/&lt;student&gt;.json</code> is a serialised <a href="api/grader.models.html#grader.models.SubmissionResult"><code>SubmissionResult</code></a>:</p>
+
+<pre><code class="language-json">{
+  "student_id": "student_003",
+  "status": "graded",              // pending | graded | error | skipped
+  "needs_review": true,
+  "total_score": 71.5,
+  "automatic_total": 71.5,
+  "max_score": 100.0,
+  "confidence": 0.75,              // lowest item confidence
+  "review_reasons": ["Center City split correctly: lost 7.5 of 15"],
+  "discovery_warnings": [],
+  "execution": {
+    "success": true, "attempted": true, "timeout": false,
+    "execution_time_seconds": 8.4, "mode": "docker",
+    "error_cell": null, "error_message": null
+  },
+  "items": [
+    {
+      "rubric_id": "center_city_split",
+      "name": "Center City split correctly",
+      "type": "deterministic",
+      "points_possible": 15.0,
+      "automatic_score": 7.5,
+      "final_score": 7.5,
+      "status": "partial",
+      "confidence": 0.75,
+      "feedback": "...",
+      "evidence": { "...": "..." },
+      "manual_override": false,
+      "manual_score": null,
+      "override_reason": ""
+    }
+  ]
+}</code></pre>
+
+<p>The values above are illustrative. Every item keeps both <code>automatic_score</code> and <code>final_score</code>, so a manual override never destroys the automated result.</p>
+
+<h2>Exports</h2>
+
+<p>The <strong>Export</strong> page offers these downloads, all built by <a href="api/grader.results.html#grader.results.GradingSession"><code>GradingSession</code></a>:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Download</th><th>Method</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td>Grades CSV</td><td><code>grades_csv()</code></td><td>One row per student: <code>student_id, display_name, total_score, max_score, percentage, letter, execution_status, manual_review, reviewed, manual_override, confidence</code></td></tr>
+    <tr><td>Rubric CSV</td><td><code>rubric_csv()</code></td><td>One row per student per rubric item</td></tr>
+    <tr><td>Flagged CSV</td><td><code>flagged_csv()</code></td><td>The review queue</td></tr>
+    <tr><td>Feedback ZIP</td><td><code>feedback_zip()</code></td><td>Every <code>feedback/&lt;student&gt;.md</code></td></tr>
+    <tr><td>Session archive</td><td><code>archive_zip()</code></td><td>The whole session directory</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Reloading and regrading</h2>
+
+<p>A saved session can be reloaded from the <strong>Overview</strong> page, or in Python:</p>
+
+<pre><code class="language-python">from grader.results import GradingSession, list_sessions
+
+for entry in list_sessions():
+    print(entry["session_id"], entry["assignment_name"], entry["submissions"])
+
+session = GradingSession.load("results/hw1_20261006_142233")
+session.set_override("student_003", "center_city_split", 15,
+                     reason="Alternative valid implementation.")
+session.mark_reviewed("student_003")
+session.save()</code></pre>
+
+<p>Regrading (after a rubric fix, for example) regenerates every automatic score. With overrides preserved, your decisions are put back on top:</p>
+
+<pre><code class="language-python">service.regrade(session, candidates, preserve_overrides=True)</code></pre>
+
+<p>See <a href="api/grader.service.html#grader.service.GradingService.regrade"><code>GradingService.regrade</code></a>.</p>

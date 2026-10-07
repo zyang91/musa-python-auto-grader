@@ -4,8 +4,29 @@
     {
       "name": "musa-grader",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "streamlit", "run", "app.py", "--server.port", "8555", "--server.headless", "true"],
+      "runtimeArgs": [
+        "-m",
+        "streamlit",
+        "run",
+        "app.py",
+        "--server.port",
+        "8555",
+        "--server.headless",
+        "true"
+      ],
       "port": 8555
+    },
+    {
+      "name": "docs",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "-d",
+        "docs",
+        "8556"
+      ],
+      "port": 8556
     }
   ]
 }

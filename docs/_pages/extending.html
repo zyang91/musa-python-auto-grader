@@ -1,0 +1,143 @@
+<!-- title: Adding an assignment -->
+<!-- description: Write a rubric YAML and a grader class with check methods to grade a new assignment. -->
+
+<p class="eyebrow">Developer guide</p>
+<h1>Adding an assignment</h1>
+<p class="lead">A new assignment needs two things: a rubric YAML in <code>rubrics/</code> and a grader class in <code>assignments/</code> that defines a <code>check_&lt;rubric_id&gt;</code> method for each item. <a href="api/assignments.base.html"><code>assignments.base</code></a> takes care of dispatch, the execution check and error handling.</p>
+
+<h2>1. Write the rubric</h2>
+
+<p>Start from the closest existing rubric. Decide first which situation the assignment is in, because that determines what the checks can compare against:</p>
+
+<ul>
+  <li><strong>Every student uses the same distributed data</strong> (like Assignment 3): write the expected values into the rubric and match against them.</li>
+  <li><strong>Students fetch their own data</strong> (like Assignment 1): check each step against the student's own data, never against a stored number.</li>
+  <li><strong>The data is never handed in</strong> (like Assignment 2): grade the outputs saved in the notebook.</li>
+</ul>
+
+<pre><code class="language-yaml"># rubrics/hw4.yaml
+assignment:
+  id: hw4
+  name: "Assignment 4: Street Networks"
+  version: HW4-v1
+  total_points: 100
+
+settings:
+  score_rounding: 0.5
+
+discovery:
+  notebook_name_hints: ["assignment-4", "assignment4", "hw4"]
+  ignore_name_patterns: ["checkpoint", "untitled", "scratch", "solution"]
+
+data:
+  required: true
+  description: The OSM extract distributed with the assignment.
+
+rubric:
+  - id: notebook_execution
+    name: Notebook executes successfully
+    points: 10
+    type: execution
+    config:
+      partial_credit_ratio: 0.4
+
+  - id: graph_loaded
+    name: Street graph loaded with osmnx
+    points: 90
+    type: deterministic
+    config:
+      min_nodes: 1000
+      wrong_crs_credit_ratio: 0.5</code></pre>
+
+<p>Until a check exists, its item is returned as <code>manual_review</code>, so the rubric loads and runs from the start.</p>
+
+<h2>2. Write the grader class</h2>
+
+<pre><code class="language-python"># assignments/hw4.py
+"""Assignment 4 autograder — street networks."""
+
+from __future__ import annotations
+
+from grader import inspection
+from grader.rubric import RubricItem
+from grader.models import RubricItemResult
+
+from .base import (
+    STATUS_FAIL, STATUS_NOT_FOUND, STATUS_PARTIAL, STATUS_PASS,
+    AssignmentGrader, GradingContext, register,
+)
+
+
+@register
+class HW4Grader(AssignmentGrader):
+    assignment_id = "hw4"          # must match assignment.id in the YAML
+
+    # notebook_execution is inherited from AssignmentGrader.
+
+    def check_graph_loaded(self, ctx: GradingContext, item: RubricItem) -> RubricItemResult:
+        if not ctx.probe_ok:
+            return self.no_probe_result(item, ctx)
+
+        min_nodes = int(item.config.get("min_nodes", 1000))
+        frames = [p for p in inspection.dataframes(ctx.probe)
+                  if p.get("rows", 0) >= min_nodes]
+        if not frames:
+            return self.result(item, 0, STATUS_NOT_FOUND, 1.0,
+                               "No node table of the expected size was found.")
+        if len(frames) > 1:
+            # Ambiguity lowers confidence, which sends the item to review.
+            return self.result(item, item.points, STATUS_PASS, 0.75,
+                               "Several plausible node tables were found.",
+                               {"candidates": len(frames)})
+        return self.result(item, item.points, STATUS_PASS, 0.98,
+                           "Street graph loaded.", {"rows": frames[0]["rows"]})</code></pre>
+
+<p>Then register the module so importing the package loads it. Add it to the imports in <code>assignments/__init__.py</code> and to the import inside <code>get_grader()</code> and <code>registered_assignments()</code> in <code>assignments/base.py</code>:</p>
+
+<pre><code class="language-python">from . import hw1, hw2, hw3, hw4  # noqa: F401  (registers the assignment graders)</code></pre>
+
+<h2>The check contract</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Rule</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td>Return exactly one <code>RubricItemResult</code>, built with <code>self.result(...)</code></td><td><code>result()</code> rounds to <code>score_rounding</code> and clamps to <code>[0, points]</code></td></tr>
+    <tr><td>Put the reason in <code>evidence</code></td><td>The TA sees it on the student page. A deduction a TA can't explain has to be worked out again by hand.</td></tr>
+    <tr><td>Name the mistake in <code>feedback</code></td><td>"Wrong" isn't useful feedback. "Latitude and longitude are swapped" is.</td></tr>
+    <tr><td>Lower <code>confidence</code> when choosing between readings</td><td>Anything below the threshold goes to review. 1.0 means the result was matched exactly.</td></tr>
+    <tr><td>Read thresholds and ratios from <code>item.config</code></td><td>Policy belongs in the YAML, so it can be fixed without touching Python</td></tr>
+    <tr><td>Don't worry about raising</td><td><code>grade()</code> turns an exception into a <code>manual_review</code> item, so a broken check never loses a submission</td></tr>
+    <tr><td>Never depend on variable names</td><td>Search the probe payload by shape and content using <a href="api/grader.inspection.html"><code>grader.inspection</code></a></td></tr>
+  </tbody>
+</table></div>
+
+<h2>What a check can see</h2>
+
+<p>Every check receives a <a href="api/assignments.base.html#assignments.base.GradingContext"><code>GradingContext</code></a>:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Attribute</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td><code>ctx.analysis</code></td><td><a href="api/grader.notebook.html"><code>NotebookAnalysis</code></a>: static analysis of the submitted source (imports, functions, read calls, paths, markdown cells)</td></tr>
+    <tr><td><code>ctx.execution</code></td><td><a href="api/grader.models.html#grader.models.ExecutionRecord"><code>ExecutionRecord</code></a>: success, timeout, error cell, traceback</td></tr>
+    <tr><td><code>ctx.probe</code></td><td>The probe's JSON description of the kernel namespace, or <code>None</code> if the kernel never reported</td></tr>
+    <tr><td><code>ctx.workdir</code></td><td>The submission's working directory, including the executed notebook</td></tr>
+    <tr><td><code>ctx.qualitative_grader</code></td><td>The LLM grader, or a disabled one. Call <code>.grade(question, response, rubric)</code>.</td></tr>
+    <tr><td><code>ctx.cache</code></td><td>Scratch space shared between checks on one submission</td></tr>
+  </tbody>
+</table></div>
+
+<p>To grade from saved outputs instead of (or as well as) the re-run, use <a href="api/grader.answers.html"><code>grader.answers</code></a> for printed values and <a href="api/grader.charts.html"><code>grader.charts</code></a> for chart specs.</p>
+
+<h2>Hidden tests</h2>
+
+<p>Declare the item as <code>type: hidden_test</code> with a <code>selector</code> and <code>cases</code> (see <a href="rubrics.html#hidden-test-config">Hidden-test config</a>). <code>AssignmentGrader.hidden_test_specs()</code> sends only the selector and the inputs to the probe. The probe calls the student's function in-kernel and reports what came back, and your check compares that against the expected values, which stay on the host.</p>
+
+<h2>3. Add tests and demo submissions</h2>
+
+<p>Follow the pattern in <code>tests/test_hw3.py</code> and <code>examples/make_hw3_submissions.py</code>: one synthetic submission that does everything right, one that makes the near-misses students really make, and one that crashes. Assert that the correct one scores full marks (or close, on judgement items) and that each near-miss is named in the feedback.</p>
+
+<div class="callout callout-tip">
+  <p class="callout-title">Never commit student work</p>
+  <p>Reproduce the failure patterns you see in synthetic fixtures. No student file, name or identifier belongs in the repository.</p>
+</div>

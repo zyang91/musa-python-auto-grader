@@ -1,0 +1,146 @@
+<!-- title: How grading works -->
+<!-- description: The grading pipeline: data supply, discovery, sandboxed execution, inspection, hidden tests, confidence and review. -->
+
+<p class="eyebrow">User guide</p>
+<h1>How grading works</h1>
+<p class="lead">Every submission goes through the same pipeline. Each stage is built so that a failure produces a flag for a person rather than a silent zero.</p>
+
+<div class="pipeline">
+  <span>0 · Data supply</span><i>→</i><span>1 · Discovery</span><i>→</i><span>2 · Execution</span><i>→</i><span>3 · Inspection</span><i>→</i><span>4 · Hidden tests</span><i>→</i><span>5 · Review policy</span>
+</div>
+
+<h2 id="data-supply">0. The data comes from you, not the students</h2>
+
+<p>Students hand in <strong>a notebook and nothing else</strong>, so the grader supplies the data. You upload the file once (for Assignment 3, all five files) in the sidebar or with <code>--data</code> on the CLI. Before each submission runs, the grader places the files at:</p>
+
+<ul>
+  <li>every relative path the notebook actually reads from, parsed out of the notebook, including paths held in a variable rather than passed inline, and</li>
+  <li>the conventional <code>data/&lt;name&gt;</code> and <code>&lt;name&gt;</code> locations, for notebooks that build the path dynamically.</li>
+</ul>
+
+<p>So a notebook reading <code>data/zillow.csv</code> and one reading <code>data/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv</code> both find their file, and the class doesn't have to follow a naming convention. When several files are supplied, each target path gets the file whose name is closest to it.</p>
+
+<ul>
+  <li>Files are <strong>hard-linked</strong>, not copied, so fifty submissions use one copy of a 117 MB extract rather than fifty.</li>
+  <li>A student's own file is never overwritten. Set <code>data.prefer_student_files: true</code> in the rubric to grade each student on their own copy instead.</li>
+  <li>Paths that escape the working directory (<code>../</code>, absolute paths, Windows drive letters) are refused.</li>
+  <li>A notebook that reads from a URL is redirected to the supplied local file.</li>
+</ul>
+
+<p>Everyone is then graded against the <em>same</em> data, which makes results comparable across the class. A notebook that hardcodes <code>/Users/me/Desktop/...</code> still fails, as it should, because that path cannot be supplied.</p>
+
+<h2 id="discovery">1. Discovery</h2>
+
+<p>Notebook filenames are not standardised, so the grader scores each candidate notebook on <strong>name hints</strong> (from the rubric's <code>discovery.notebook_name_hints</code>), <strong>directory depth</strong> and <strong>size</strong>. Names matching <code>ignore_name_patterns</code> (<code>checkpoint</code>, <code>untitled</code>, <code>scratch</code>, <code>solution</code> and so on) are ruled out. When two files look equally plausible, the submission is <strong>flagged, not guessed</strong>: it goes to the review queue as <code>multiple_notebooks</code>.</p>
+
+<p>Both submission layouts are supported:</p>
+
+<pre><code class="language-text">submissions/                         canvas_export.zip
+├── student_001/                     ├── doejane_12345_67890_assignment1.ipynb
+│   └── assignment-1.ipynb           ├── smithj_late_23456_78901_hw1.ipynb
+├── student_002/                     └── ...
+│   ├── assignment-1.ipynb
+│   └── scratch.ipynb
+└── ...</code></pre>
+
+<p>Nested archives inside a submission are expanded, and a single wrapping directory is unwrapped. The code is in <a href="api/grader.discovery.html"><code>grader.discovery</code></a>.</p>
+
+<h2 id="execution">2. Execution</h2>
+
+<p>Each submission is copied into its own working directory. The notebook is <em>instrumented</em> with probe cells, and a subprocess runs it. By default that subprocess runs inside a container with no network, capped memory and CPU, a read-only root filesystem and no host environment variables. See <a href="docker.html">Docker sandbox</a>.</p>
+
+<p>Errors do not stop grading. <code>allow_errors</code> is on, so the notebook runs to the end, the first failing cell and its traceback are recorded, and every check that can still run does. <strong>A failed notebook never becomes an automatic zero.</strong> The execution item itself awards partial credit for how far the notebook got: failing at the last cell is worth more than failing at the first.</p>
+
+<h2 id="inspection-without-variable-names">3. Inspection without variable names</h2>
+
+<p>Students don't use the solution's variable names, so the probe describes the kernel's namespace rather than looking anything up by name. For every object it records:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Object</th><th>What the probe records</th></tr></thead>
+  <tbody>
+    <tr><td>DataFrame</td><td>Shape, columns, dtypes, a head sample, numeric summaries, low-cardinality value samples, and which identifiers each boolean flag column marks</td></tr>
+    <tr><td>GeoDataFrame</td><td>All of the above plus CRS, geometry types and total area</td></tr>
+    <tr><td>numpy array</td><td>NaN-aware statistics. This is the only way to describe an NDVI array that is mostly NaN outside its polygon.</td></tr>
+    <tr><td>shapely geometry, rasterio dataset</td><td>Type, bounds, area, band count and CRS, read in place</td></tr>
+    <tr><td>holoviews object</td><td>Key dimensions, frame count, layout shape and the values actually plotted, read from <code>Out</code> as well as from named variables</td></tr>
+  </tbody>
+</table></div>
+
+<p>Some summaries are deliberately compact. 384 GEOIDs are far more than the value-sample cap, so instead of the list the probe sends a histogram of their first five characters. That answers "is every row in Philadelphia County?" in a few bytes.</p>
+
+<p>The assignment grader then looks for objects that <em>look like</em> the expected result (right ZIP prefix, right row count, right roles) and reports how many plausible candidates it saw. One unique match gives high confidence, two give 0.75, and more give 0.40.</p>
+
+<p>The probe source is in <a href="api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a>. It runs only inside the student's kernel, never on the host, and everything it returns is a JSON summary.</p>
+
+<h2 id="hidden-tests">4. Hidden tests</h2>
+
+<p><code>calculate_percent_increase(group_df)</code> takes a DataFrame, so it can't be tested with literal arguments. Instead the probe reads the column names and date dtype of the student's own tidy frame, builds a synthetic group frame from interpolated anchor points using those names, and calls the function with it. The expected answer follows from the anchors, so it is known whatever data the student loaded.</p>
+
+<p>The anchors deliberately imply a <em>different</em> answer for the first and last rows than for the two dates named in the assignment. That lets the grader identify the most common wrong implementation by name instead of just marking it wrong:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>What the function does</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Uses 2020-03-31 and 2022-03-31</td><td><span class="badge badge-ok">pass</span></td></tr>
+    <tr><td>Uses the first and last rows</td><td>50% credit, named in the feedback</td></tr>
+    <tr><td>Returns <code>0.5</code> instead of <code>50</code></td><td>60% credit, named as a units slip</td></tr>
+    <tr><td>Left as the unfilled template</td><td>0, detected by parsing the function body rather than searching for the template comment</td></tr>
+  </tbody>
+</table></div>
+
+<div class="callout">
+  <p class="callout-title">The answer key never enters the container</p>
+  <p>Hidden test <em>calls</em> run inside the student's kernel, but the credit ratios and expected values stay on the grading host. The container is told what to call the function with, never what it should return. The probe cells are removed from the executed notebook before it is saved to <code>results/</code>, and a test checks this.</p>
+</div>
+
+<h2 id="two-readings">Two readings: saved outputs and the re-run</h2>
+
+<p>Assignments 2 and 3 can't rely on a re-run alone. Assignment 2's data is never handed in, and Assignment 3 reads five files from student-chosen paths. If placement misses, the notebook dies at the first <code>read_file</code>. The students' own runs didn't have that problem, and the notebooks they handed in carry what those runs printed:</p>
+
+<pre><code class="language-text">In  [3]: len(phl)
+Out [3]: 384</code></pre>
+
+<p><a href="api/grader.answers.html"><code>grader.answers</code></a> reads those saved answers, and <a href="api/grader.charts.html"><code>grader.charts</code></a> reads the Vega-Lite specs and bokeh buffers saved with each chart. Each Assignment 3 item is graded on <strong>two independent readings</strong>: what the submitted notebook shows and what this run produced. A step counts as done if either source shows the right answer. Two rules keep this honest:</p>
+
+<ul>
+  <li><strong>A number must be shown to count.</strong> Cell values inside a <code>head()</code> repr are not answers.</li>
+  <li><strong>Source code alone is never full marks.</strong> A step the source clearly performs but never displays earns 70% and gets a look from a person.</li>
+</ul>
+
+<h2 id="confidence-and-review">5. Confidence and review</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Signal</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>Deterministic test, or a matched expected value</td><td>confidence 1.0</td></tr>
+    <tr><td>One uniquely matching object</td><td>0.98</td></tr>
+    <tr><td>Two plausible objects</td><td>0.75 → <span class="badge badge-warn">review</span></td></tr>
+    <tr><td>High ambiguity</td><td>0.40 → <span class="badge badge-warn">review</span></td></tr>
+    <tr><td>Execution failure, multiple notebooks, missing objects</td><td><span class="badge badge-warn">review</span></td></tr>
+    <tr><td>Qualitative item without LLM grading</td><td><span class="badge badge-warn">review</span></td></tr>
+    <tr><td><strong>Any deduction at all</strong></td><td><span class="badge badge-warn">review</span></td></tr>
+  </tbody>
+</table></div>
+
+<p>A submission's confidence is its <em>lowest</em> item confidence, because the weakest item decides how far the grade can be trusted. The policy is implemented in <a href="api/grader.scoring.html#grader.scoring.apply_review_policy"><code>grader.scoring.apply_review_policy</code></a>.</p>
+
+<h2 id="statuses">Item statuses</h2>
+
+<p>Every rubric item comes back with one of these statuses. The UI never uses colour alone: each status also has an icon and a word.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Status</th><th>Icon</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>pass</code></td><td>✓</td><td>Full credit</td></tr>
+    <tr><td><code>partial</code></td><td>⚠</td><td>Some credit, with a named reason</td></tr>
+    <tr><td><code>warning</code></td><td>⚠</td><td>Something worth a look, short of a failure</td></tr>
+    <tr><td><code>manual_review</code></td><td>⚠</td><td>A person must decide. Judgement items always come back this way.</td></tr>
+    <tr><td><code>fail</code></td><td>✕</td><td>The step was attempted and is wrong</td></tr>
+    <tr><td><code>execution_error</code></td><td>✕</td><td>The notebook did not run far enough to tell</td></tr>
+    <tr><td><code>not_found</code></td><td>—</td><td>Nothing resembling the step was found</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="scores">Scores and rounding</h2>
+
+<p>Partial credit is rounded to the rubric's <code>settings.score_rounding</code> increment (0.5 by default), so a TA never has to explain a score of 14.28. Scores are clamped to <code>[0, points]</code>. A check that raises an exception never loses the submission: the item comes back as <code>manual_review</code> with confidence 0 and the error in its evidence.</p>

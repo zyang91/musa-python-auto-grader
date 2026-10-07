@@ -1,0 +1,91 @@
+<!-- title: CLI reference -->
+<!-- description: The cli.py commands and flags for headless, scripted and CI grading runs. -->
+
+<p class="eyebrow">User guide</p>
+<h1>CLI reference</h1>
+<p class="lead"><code>cli.py</code> runs a grading session from a terminal or in CI. It uses the same <code>GradingService</code> as the web app and writes the same session to <code>results/</code>.</p>
+
+<pre><code class="language-text">usage: musa-grader [-h] {grade,sessions,rubrics} ...</code></pre>
+
+<h2><code>grade</code></h2>
+
+<p>Grade a folder of submissions or a Canvas export ZIP.</p>
+
+<pre><code class="language-bash">python cli.py grade SUBMISSIONS [--rubric PATH] [--data PATH]... [--mode {docker,local}]
+                    [--image IMAGE] [--timeout SECONDS] [--cell-timeout SECONDS]
+                    [--confidence-threshold FLOAT]</code></pre>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Argument</th><th>Default</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>SUBMISSIONS</code></td><td><span class="muted">required</span></td><td>A submissions folder or a Canvas export ZIP.</td></tr>
+    <tr><td><code>--rubric</code></td><td><code>rubrics/hw1.yaml</code></td><td>The rubric to grade against.</td></tr>
+    <tr><td><code>--data PATH</code></td><td><span class="muted">none</span></td><td>An assignment data file to place into every submission. Repeat the flag for several files. Students submit notebooks only, so Assignment 1 needs this.</td></tr>
+    <tr><td><code>--mode</code></td><td><code>docker</code></td><td><code>docker</code> runs each notebook in the sandbox image. <code>local</code> runs student code on this machine <strong>without isolation</strong>.</td></tr>
+    <tr><td><code>--image</code></td><td><code>musa-grader:latest</code></td><td>The sandbox image for docker mode.</td></tr>
+    <tr><td><code>--timeout</code></td><td><code>600</code></td><td>Whole-notebook timeout in seconds. A rubric's <code>execution_timeout_seconds</code> raises it, never lowers it.</td></tr>
+    <tr><td><code>--cell-timeout</code></td><td><code>300</code></td><td>Per-cell timeout in seconds.</td></tr>
+    <tr><td><code>--confidence-threshold</code></td><td><code>0.8</code></td><td>Items graded below this confidence go to the review queue.</td></tr>
+  </tbody>
+</table></div>
+
+<p>Before grading, the command prints <code>warning:</code> lines from <a href="api/grader.service.html#grader.service.GradingService.preflight"><code>GradingService.preflight()</code></a>. Examples: no data file set for an assignment that needs one, a data path that does not exist, or one of Assignment 3's five files missing. If <code>--mode docker</code> is given and Docker is not running, it exits with status 2.</p>
+
+<h3>Example output</h3>
+
+<pre><code class="language-text">7 submissions found in examples/submissions
+[1/7] student_001
+[2/7] student_002
+...
+
+✓ student_001: 100/100
+✓ student_003: 71.5/100 · needs review
+✕ student_005: 38/100 · needs review
+...
+
+# Assignment 1: The Donut Effect — class summary
+
+- Submissions: 7
+- Mean score: …
+- Needing review: …
+- Execution errors: …
+
+## Most common issues
+...
+
+Saved to results/hw1_20261006_142233</code></pre>
+
+<p>The scores above are illustrative. Each line shows the execution icon (✓ ran, ✕ failed, — not run), the student, the score, and whether the submission needs review. The class summary that follows is the same markdown as <code>class_report.md</code>.</p>
+
+<h3>Examples</h3>
+
+<pre><code class="language-bash"># Assignment 1 in the sandbox, with the class's Zillow file
+python cli.py grade examples/submissions --mode docker --data examples/data/zillow_zhvi.csv
+
+# Assignment 2: no data, graded from saved outputs
+python cli.py grade examples/hw2_submissions --rubric rubrics/hw2.yaml
+
+# Assignment 3 with a longer budget for the raster work
+python cli.py grade canvas_export.zip --rubric rubrics/hw3.yaml --timeout 1800 --cell-timeout 1800</code></pre>
+
+<h2><code>sessions</code></h2>
+
+<p>List saved grading sessions in <code>results/</code>: session id, assignment, submission count and last update.</p>
+
+<pre><code class="language-bash">python cli.py sessions</code></pre>
+
+<h2><code>rubrics</code></h2>
+
+<p>List every rubric in <code>rubrics/</code> that parses, as <code>assignment_id  path</code>. CI runs this to check that every rubric loads.</p>
+
+<pre><code class="language-bash">python cli.py rubrics</code></pre>
+
+<h2>Exit codes</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Code</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>0</code></td><td>Success. Submissions may still be flagged for review.</td></tr>
+    <tr><td><code>2</code></td><td>Rubric not found, or docker mode requested while Docker is unavailable.</td></tr>
+  </tbody>
+</table></div>

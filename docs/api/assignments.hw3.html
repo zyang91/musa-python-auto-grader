@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>assignments.hw3 · MUSA Grader</title>
+<meta name="description" content="Assignment 3 autograder — evictions, code violations and the NDVI.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)" id="hljs-dark">
+<script>
+  (function () {
+    try { var t = localStorage.getItem("musa-docs-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  })();
+</script>
+</head>
+<body data-root="../">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="icon-button menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg viewBox="0 0 32 32" aria-hidden="true" class="logo"><rect x="3" y="3" width="26" height="26" rx="7" class="logo-bg"/><path d="M9.5 16.5l4.2 4.2 8.8-9.4" class="logo-check"/></svg><span>MUSA Grader</span><span class="version">v0.1.0</span></a>
+  <button class="search-trigger" type="button" aria-label="Search the documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search docs</span><kbd>/</kbd></button>
+  <div class="topbar-actions">
+    <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <a class="icon-button" href="https://github.com/zyang91/musa-python-auto-grader" aria-label="GitHub repository"><svg viewBox="0 0 16 16" aria-hidden="true" class="filled"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation">
+    <nav><p class="nav-section">Introduction</p><ul class="nav-list">
+<li><a href="../index.html">Overview</a></li>
+<li><a href="../getting-started.html">Getting started</a></li>
+</ul>
+<p class="nav-section">User guide</p><ul class="nav-list">
+<li><a href="../ta-workflow.html">TA workflow</a></li>
+<li><a href="../cli.html">CLI reference</a></li>
+<li><a href="../how-it-works.html">How grading works</a></li>
+<li><a href="../assignments.html">Assignments</a></li>
+<li><a href="../rubrics.html">Rubrics</a></li>
+<li><a href="../docker.html">Docker sandbox</a></li>
+<li><a href="../results.html">Results and exports</a></li>
+</ul>
+<p class="nav-section">Developer guide</p><ul class="nav-list">
+<li><a href="../extending.html">Adding an assignment</a></li>
+<li><a href="../testing.html">Testing and CI</a></li>
+</ul>
+<p class="nav-section">API reference</p><ul class="nav-list">
+<li><a href="../api/index.html">Overview</a></li>
+<li class="nav-group"><span class="nav-group-label">Package</span><ul>
+<li><a href="../api/grader.html"><code>grader</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Engine</span><ul>
+<li><a href="../api/grader.service.html"><code>grader.service</code></a></li>
+<li><a href="../api/grader.rubric.html"><code>grader.rubric</code></a></li>
+<li><a href="../api/grader.models.html"><code>grader.models</code></a></li>
+<li><a href="../api/grader.results.html"><code>grader.results</code></a></li>
+<li><a href="../api/grader.scoring.html"><code>grader.scoring</code></a></li>
+<li><a href="../api/grader.feedback.html"><code>grader.feedback</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Execution</span><ul>
+<li><a href="../api/grader.discovery.html"><code>grader.discovery</code></a></li>
+<li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
+<li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
+<li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
+<li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
+<li><a href="../api/grader.inspection.html"><code>grader.inspection</code></a></li>
+<li><a href="../api/grader.answers.html"><code>grader.answers</code></a></li>
+<li><a href="../api/grader.charts.html"><code>grader.charts</code></a></li>
+<li><a href="../api/grader.llm.html"><code>grader.llm</code></a></li>
+<li><a href="../api/grader.utils.html"><code>grader.utils</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Assignments</span><ul>
+<li><a href="../api/assignments.html"><code>assignments</code></a></li>
+<li><a href="../api/assignments.base.html"><code>assignments.base</code></a></li>
+<li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
+<li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
+<li><a href="../api/assignments.hw3.html" class="active" aria-current="page"><code>assignments.hw3</code></a></li>
+</ul></li></ul></nav>
+  </aside>
+  <div class="sidebar-scrim" hidden></div>
+  <main id="content" class="content content-api">
+    <article class="prose">
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py">assignments/hw3.py</a> · 2574 lines</p>
+<h1 class="module-title"><code>assignments.hw3</code></h1>
+<div class="module-doc"><p>Assignment 3 autograder — evictions, code violations and the NDVI.</p>
+<p>Graded against <code>assignment_template/assignment-3.ipynb</code>.</p>
+<h3 class="doc-heading">Why this grader looks nothing like the other two</h3>
+<p>Assignments 1 and 2 have no answer key: one class downloads its own Zillow extract, the other picks its own dataset. Assignment 3 hands out one zip file and everyone uses it, so for the first time the right answers are <em>known</em>. Philadelphia has 384 census tracts in <code>PA-tracts.geojson</code>; the fifteen listed violation types cover 34,108 rows of <code>li_violations.csv</code>; the median NDVI inside the city limits is 0.2025. Those are facts about the shipped data, so the checks below compare against them rather than inferring intent.</p>
+<p>That also changes what confidence means here. In Assignment 1 several frames may plausibly be &quot;the Philadelphia subset&quot;, and the ambiguity is the finding. Here a frame either carries 384 Philadelphia tracts or it does not; if one does, the step demonstrably happened, and it does not matter which variable holds it. So a matched expected value scores at confidence 1.0, and confidence drops only where the grader is choosing between readings of a partial answer.</p>
+<h3 class="doc-heading">Where the evidence comes from</h3>
+<p>Two places, and every item is graded on both.</p>
+<p>The first is the notebook the student handed in. Re-running is the fragile part here — five data files read from whatever relative path each student used — and when the placement misses, the notebook dies at the first <code>read_file</code> and a correct submission grades as a column of zeros. Their own run did not have that problem, and the file carries what it printed: <code>384</code>, <code>34108</code>, <code>Median NDVI, city: 0.2025</code>, and <code>:HoloMap [year]</code> for the chart in 1.1.5. <code>grader/answers.py</code> harvests those, and the evaluators at the bottom of this module read them.</p>
+<p>The second is the probe payload, extended for this assignment (see <code>grader/probe_runtime.py</code>): GeoDataFrames now carry their CRS, geometry types and total area; numpy arrays carry NaN-aware statistics, which is the only way to describe an NDVI array that is mostly NaN; shapely geometries and open rasterio datasets are described in place.</p>
+<p>The plots are the interesting part. An hvplot call returns a holoviews object that knows what it is — a HoloMap carries the dimension its widget selects and one frame per value of it, a Layout carries its row/column shape — and those objects are read out of the kernel, <code>Out</code> included, because <code>df.hvplot(...)</code> on the last line of a cell is never bound to a name. So <code>groupby=</code> and <code>dynamic=False</code> are graded by their effect rather than by searching the source for the keywords.</p>
+<p>The matplotlib figures (the hex bin map, the two tree plots) have no such structure, only a picture, so those reuse <code>grader/charts.py</code> exactly as Assignment 2 does — which already merges the executed and submitted notebooks — and the one item the assignment marks on styling comes back for a person to confirm.</p>
+<p>The two readings are combined in <code>grade()</code> by taking the better of them: a step counts as done if either shows the right answer. Neither is reliably better, so neither is ranked above the other; what differs is the confidence attached, and whether a TA is told which one carried the item.</p></div>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap"><table class="summary-table"><thead><tr><th>Name</th><th>Kind</th><th>Description</th></tr></thead><tbody><tr><td><a href="#assignments.hw3.HW3Grader"><code>HW3Grader</code></a></td><td><span class="kind">class</span></td><td></td></tr></tbody></table></div>
+<h2 id="constants">Constants</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr id="assignments.hw3.WIDGET_CONTAINERS"><td><code class="field-name">WIDGET_CONTAINERS</code></td><td><code>(&#x27;HoloMap&#x27;, &#x27;GridSpace&#x27;, &#x27;NdLayout&#x27;)</code></td><td>holoviews container types that mean &quot;one chart per value of a dimension&quot;.</td></tr><tr id="assignments.hw3.LAZY_CONTAINERS"><td><code class="field-name">LAZY_CONTAINERS</code></td><td><code>(&#x27;DynamicMap&#x27;,)</code></td><td>The same thing, but never evaluated: hvplot returns this when <code>dynamic=False</code> is left out, and it holds no frames at all.</td></tr><tr id="assignments.hw3.LAYOUT_CONTAINERS"><td><code class="field-name">LAYOUT_CONTAINERS</code></td><td><code>(&#x27;Layout&#x27;, &#x27;NdLayout&#x27;)</code></td><td></td></tr></tbody></table></div>
+<h2 id="classes">Classes</h2>
+
+<section class="api-class" id="assignments.hw3.HW3Grader">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">HW3Grader</span><span class="sig-params">(_SavedAnswerChecks, <a class="xref" href="assignments.base.html#assignments.base.AssignmentGrader">AssignmentGrader</a>)</span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader" aria-label="Link to HW3Grader">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L642" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">registered grader</span></p>
+    <p class="muted">No description.</p>
+    
+    
+<div class="field-table">
+  <p class="rubric">Class attributes</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">assignment_id</code></td><td><code></code></td><td><code>&#x27;hw3&#x27;</code></td><td></td></tr><tr><td><code class="field-name">SUBMITTED_CONFIDENCE</code></td><td><code></code></td><td><code>0.9</code></td><td>Confidence for a step seen only in the student&#x27;s own saved output: above the review threshold, so it does not flag a correct submission on its own, but below the 1.0 of a result this grading run produced itself. A saved output is the student&#x27;s claim about their run — it can be stale, and it can be edited by hand.</td></tr><tr><td><code class="field-name">NARROW_FRAME_COLUMNS</code></td><td><code></code></td><td><code>12</code></td><td>An Eviction Lab frame carries 399 numeric columns, and across 3,217 tracts one of them will sum to almost any total by coincidence. A result of a group-by or a merge is narrow, so width is the guard: it keeps the raw file out of searches that look for a frame by what its numbers add up to.</td></tr></tbody>
+  </table></div>
+</div>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.answers">
+  <dt class="sig"><span class="sig-name">answers</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>) -&gt; answerlib.<a class="xref" href="grader.answers.html#grader.answers.NotebookAnswers">NotebookAnswers</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.answers" aria-label="Link to answers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L683" title="View source on GitHub">[source]</a></dt>
+  <dd><p>What the notebooks show, read once per submission and reused.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.grade">
+  <dt class="sig"><span class="sig-name">grade</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>) -&gt; list[<a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a>]</span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.grade" aria-label="Link to grade">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L694" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Grade on the objects this run produced <em>and</em> on what the file shows.</p>
+<p>The two readings are independent and neither is reliably better, so they are combined by taking the better of them rather than by ranking them: a step counts as done if the executed run shows the right answer or the submitted notebook does. That is what stops a data path the grader could not resolve from turning a correct submission into a column of zeros.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.charts">
+  <dt class="sig"><span class="sig-name">charts</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>) -&gt; chartlib.<a class="xref" href="grader.charts.html#grader.charts.ChartEvidence">ChartEvidence</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.charts" aria-label="Link to charts">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L756" title="View source on GitHub">[source]</a></dt>
+  <dd><p>matplotlib figures, read once per submission and reused.</p></dd>
+</dl>
+<p class="rubric">Rubric checks <span class="count">22</span></p>
+<p class="muted small">Each <code>check_&lt;rubric_id&gt;</code> method grades the rubric item with that id and returns one <code>RubricItemResult</code>.</p>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_eviction_data_loading">
+  <dt class="sig"><span class="sig-name">check_eviction_data_loading</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_eviction_data_loading" aria-label="Link to check_eviction_data_loading">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L944" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">3 pts</span><span class="badge badge-gray">structural</span><strong>1.1.1 Eviction data loaded with geopandas</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>PA-tracts.geojson is read with geopandas from a relative path.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>absolute_path_penalty</code> <code>expected_rows</code> <code>missing_read_penalty</code> <code>not_geodataframe_penalty</code> <code>required_imports</code> <code>row_tolerance</code> <code>wrong_size_penalty</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_philadelphia_tracts">
+  <dt class="sig"><span class="sig-name">check_philadelphia_tracts</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_philadelphia_tracts" aria-label="Link to check_philadelphia_tracts">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1019" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">5 pts</span><span class="badge badge-gray">deterministic</span><strong>1.1.2 Data trimmed to Philadelphia</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>The Pennsylvania tracts are trimmed to the 384 tracts of Philadelphia County. The file has no city column — the county lives in <code>pl</code> (&quot;Philadelphia County, Pennsylvania&quot;) and in the 42101 prefix of GEOID.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>expected_rows</code> <code>geoid_prefix</code> <code>impure_credit_ratio</code> <code>incomplete_credit_ratio</code> <code>min_purity</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_tidy_evictions">
+  <dt class="sig"><span class="sig-name">check_tidy_evictions</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_tidy_evictions" aria-label="Link to check_tidy_evictions">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1091" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">6 pts</span><span class="badge badge-gray">deterministic</span><strong>1.1.3 Melted to tidy format</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>pd.melt() over the fourteen eviction columns e-03 to e-16, keeping GEOID and geometry as id_vars — 384 tracts x 14 years = 5,376 rows.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>expected_rows</code> <code>expected_value_sum</code> <code>expected_year_labels</code> <code>missing_geometry_credit_ratio</code> <code>required_id_columns</code> <code>value_column_hints</code> <code>value_sum_rel_tol</code> <code>wrong_year_span_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_evictions_by_year_plot">
+  <dt class="sig"><span class="sig-name">check_evictions_by_year_plot</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_evictions_by_year_plot" aria-label="Link to check_evictions_by_year_plot">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1187" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">5 pts</span><span class="badge badge-gray">deterministic</span><strong>1.1.4 Yearly eviction trend plotted with hvplot</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>A groupby over the year column, summed, plotted with hvplot — any chart type. Graded on the numbers actually plotted.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>accepted_elements</code> <code>expected_max</code> <code>expected_points</code> <code>expected_total</code> <code>total_rel_tol</code> <code>wrong_library_credit_ratio</code> <code>wrong_values_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_evictions_choropleth">
+  <dt class="sig"><span class="sig-name">check_evictions_choropleth</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_evictions_choropleth" aria-label="Link to check_evictions_choropleth">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1348" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">5 pts</span><span class="badge badge-gray">deterministic</span><strong>1.1.5 Year-by-year eviction choropleth with a widget</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>An hvplot choropleth of the tidy frame with <code>groupby=</code> on the year column and <code>dynamic=False</code>, producing a HoloMap with one frame per year.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>dynamic_map_credit_ratio</code> <code>expected_frames</code> <code>expected_keys</code> <code>key_dimension_hints</code> <code>no_widget_credit_ratio</code> <code>polygon_elements</code> <code>wrong_dimension_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_violations_choropleth">
+  <dt class="sig"><span class="sig-name">check_violations_choropleth</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_violations_choropleth" aria-label="Link to check_violations_choropleth">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1353" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">5 pts</span><span class="badge badge-gray">deterministic</span><strong>1.2.7 Choropleth per violation type with a widget</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>An hvplot choropleth with <code>groupby=</code> on the violation type and <code>dynamic=False</code> — a HoloMap with one frame per type.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>dynamic_map_credit_ratio</code> <code>expected_frames</code> <code>key_dimension_hints</code> <code>no_widget_credit_ratio</code> <code>polygon_elements</code> <code>wrong_dimension_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_violations_loading">
+  <dt class="sig"><span class="sig-name">check_violations_loading</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_violations_loading" aria-label="Link to check_violations_loading">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1361" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>1.2.1 Violations loaded and converted to a GeoDataFrame</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>li_violations.csv read with pandas and converted to a GeoDataFrame of 434,052 points built from the lng/lat columns, with a CRS set.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>bounds_tolerance</code> <code>expected_bounds</code> <code>expected_crs_epsg</code> <code>expected_geometry</code> <code>expected_rows</code> <code>missing_crs_credit_ratio</code> <code>not_geodataframe_credit_ratio</code> <code>row_tolerance</code> <code>swapped_coordinates_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_violations_subset">
+  <dt class="sig"><span class="sig-name">check_violations_subset</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_violations_subset" aria-label="Link to check_violations_subset">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1457" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>1.2.2 Trimmed to the fifteen maintenance violation types</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>The listed fifteen violation types, which cover 34,108 of the 434,052 rows.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>expected_rows</code> <code>expected_type_count</code> <code>partial_types_credit_ratio</code> <code>violation_types</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_hexbin_map">
+  <dt class="sig"><span class="sig-name">check_hexbin_map</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_hexbin_map" aria-label="Link to check_hexbin_map">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1517" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>1.2.3 Hex bin map with census tracts overlaid</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>matplotlib&#x27;s hexbin() over the violation points with the tract boundaries drawn on top, in a projected CRS rather than EPSG:4326.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>hexbin_patterns</code> <code>missing_overlay_credit_ratio</code> <code>not_rendered_credit_ratio</code> <code>overlay_patterns</code> <code>reprojection_patterns</code> <code>unprojected_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_spatial_join">
+  <dt class="sig"><span class="sig-name">check_spatial_join</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_spatial_join" aria-label="Link to check_spatial_join">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1580" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">5 pts</span><span class="badge badge-gray">deterministic</span><strong>1.2.4 Violations spatially joined to census tracts</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>geopandas.sjoin() attaches a GEOID to each of the 34,108 violations. Every one of them falls inside a Philadelphia tract, so a correct join loses no rows and leaves no GEOID missing.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>expected_rows</code> <code>geoid_prefix</code> <code>lossy_join_credit_ratio</code> <code>requires_columns</code> <code>row_tolerance</code> <code>unfiltered_expected_rows</code> <code>unfiltered_join_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_violations_by_tract">
+  <dt class="sig"><span class="sig-name">check_violations_by_tract</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_violations_by_tract" aria-label="Link to check_violations_by_tract">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1648" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">5 pts</span><span class="badge badge-gray">deterministic</span><strong>1.2.5 Violations counted per type and tract</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>A groupby over violation type and GEOID giving a three-column frame (violationdescription, GEOID, N) whose counts sum to 34,108.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>allowed_row_counts</code> <code>count_column_hints</code> <code>expected_count_sum</code> <code>expected_type_count</code> <code>partial_grouping_credit_ratio</code> <code>required_columns</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_merge_geometries">
+  <dt class="sig"><span class="sig-name">check_merge_geometries</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_merge_geometries" aria-label="Link to check_merge_geometries">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1723" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">3 pts</span><span class="badge badge-gray">deterministic</span><strong>1.2.6 Counts merged back onto tract geometries</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>pandas.merge() with the tract geometries first, so the result is a GeoDataFrame and not a plain DataFrame.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>allowed_row_counts</code> <code>not_geodataframe_credit_ratio</code> <code>require_geodataframe</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_side_by_side">
+  <dt class="sig"><span class="sig-name">check_side_by_side</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_side_by_side" aria-label="Link to check_side_by_side">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1773" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>1.3 Evictions and violations side by side</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>2016 evictions and a single violation type, drawn as two choropleths and composed into one row of two columns.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>eviction_total_rel_tol</code> <code>expected_columns</code> <code>expected_eviction_year_total</code> <code>not_composed_credit_ratio</code> <code>polygon_elements</code> <code>still_grouped_credit_ratio</code> <code>wrong_orientation_credit_ratio</code> <code>wrong_subset_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_landsat_loading">
+  <dt class="sig"><span class="sig-name">check_landsat_loading</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_landsat_loading" aria-label="Link to check_landsat_loading">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1872" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">3 pts</span><span class="badge badge-gray">deterministic</span><strong>2.1.1 Landsat scene opened with rasterio</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>The ten-band Landsat 8 scene is opened with rasterio.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>expected_array_shape</code> <code>expected_band_count</code> <code>expected_crs_epsg</code> <code>expected_height</code> <code>expected_width</code> <code>wrong_raster_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_city_suburb_polygons">
+  <dt class="sig"><span class="sig-name">check_city_suburb_polygons</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_city_suburb_polygons" aria-label="Link to check_city_suburb_polygons">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L1937" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">5 pts</span><span class="badge badge-gray">deterministic</span><strong>2.1.2 City and suburb polygons built</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>The city limits polygon, and a suburbs polygon made by subtracting it from its own envelope. Both must be in the raster&#x27;s CRS for the mask to work.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>area_rel_tol</code> <code>envelope_not_differenced_credit_ratio</code> <code>expected_city_area</code> <code>expected_suburb_area</code> <code>expected_suburb_geom_types</code> <code>missing_suburbs_credit_ratio</code> <code>unprojected_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_ndvi_masking">
+  <dt class="sig"><span class="sig-name">check_ndvi_masking</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_ndvi_masking" aria-label="Link to check_ndvi_masking">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L2048" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">6 pts</span><span class="badge badge-gray">deterministic</span><strong>2.1.3 Raster masked and NDVI computed for each area</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>rasterio.mask.mask() applied with each polygon, and NDVI computed from the red and near-infrared bands of the masked array.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>expected_city_median</code> <code>expected_city_pixels</code> <code>expected_suburb_median</code> <code>expected_suburb_pixels</code> <code>mask_patterns</code> <code>median_abs_tol</code> <code>one_area_credit_ratio</code> <code>pixel_rel_tol</code> <code>valid_range</code> <code>wrong_bands_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_ndvi_medians">
+  <dt class="sig"><span class="sig-name">check_ndvi_medians</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_ndvi_medians" aria-label="Link to check_ndvi_medians">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L2123" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>2.1.4 Median NDVI compared between city and suburbs</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>np.nanmedian() over each NDVI array, printed, with the suburbs coming out greener than the city.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>expect_suburbs_greater</code> <code>expected_city_median</code> <code>expected_suburb_median</code> <code>median_abs_tol</code> <code>nan_result_credit_ratio</code> <code>print_patterns</code> <code>right_direction_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_tree_data_loading">
+  <dt class="sig"><span class="sig-name">check_tree_data_loading</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_tree_data_loading" aria-label="Link to check_tree_data_loading">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L2208" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">3 pts</span><span class="badge badge-gray">deterministic</span><strong>2.2.1 Street tree data loaded</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>The 2,480 street tree points are loaded with geopandas.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>expected_geometry</code> <code>expected_rows</code> <code>raster_crs_epsg</code> <code>row_tolerance</code> <code>unprojected_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_tree_ndvi">
+  <dt class="sig"><span class="sig-name">check_tree_ndvi</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_tree_ndvi" aria-label="Link to check_tree_ndvi">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L2256" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>2.2.2 NDVI sampled at the tree locations</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>rasterstats used to read the NDVI at each of the 2,480 points, giving one value per tree.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>alternative_patterns</code> <code>count_tolerance</code> <code>expected_count</code> <code>expected_mean</code> <code>expected_median</code> <code>max_nan_fraction</code> <code>median_abs_tol</code> <code>rasterstats_patterns</code> <code>valid_range</code> <code>wrong_values_credit_ratio</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_tree_plots">
+  <dt class="sig"><span class="sig-name">check_tree_plots</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_tree_plots" aria-label="Link to check_tree_plots">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L2387" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>2.2.3 Histogram and mapped tree points</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>A matplotlib histogram of the NDVI values with a vertical line at zero, and a geopandas plot of the tree points coloured by NDVI with the city limits drawn on it.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>boundary_patterns</code> <code>detail_share</code> <code>histogram_patterns</code> <code>histogram_share</code> <code>not_rendered_credit_ratio</code> <code>point_plot_patterns</code> <code>zero_line_patterns</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_tree_plot_styling">
+  <dt class="sig"><span class="sig-name">check_tree_plot_styling</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_tree_plot_styling" aria-label="Link to check_tree_plot_styling">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L2449" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">3 pts</span><span class="badge badge-gray">qualitative</span><strong>2.2.3 Figure styling (labels, legend, colour choices)</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>The one item on this assignment that a person has to look at.</p>
+<p>The assignment asks for figures that are &quot;clear and well-styled&quot;, which is a statement about a picture. The signals below say where to look; they cannot say whether the picture reads, so this always comes back as manual review with a provisional score rather than a silent mark.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>provisional_ceiling_ratio</code> <code>weighted_signals</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw3.HW3Grader.check_common_violations_extra_credit">
+  <dt class="sig"><span class="sig-name">check_common_violations_extra_credit</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw3.HW3Grader.check_common_violations_extra_credit" aria-label="Link to check_common_violations_extra_credit">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw3.py#L2521" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">0 pts</span><span class="badge badge-gray">deterministic</span><strong>Extra credit: the twenty most common violation types</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw3.yaml">rubrics/hw3.yaml</a></p><p>The twenty most common violation types over 2012-2016 mapped as a second set of interactive choropleths, with three types named as having little spatial overlap with evictions. Worth no points in the rubric total; when it is found, the item is flagged so a TA can award the bonus by hand.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>expected_count_sum</code> <code>expected_frames</code> <code>min_discussion_words</code> <code>suggested_points</code></p></dd>
+</dl>
+  </div>
+</section>
+    </article>
+    <footer class="page-footer">
+      <nav class="pager" aria-label="Pages"><a class="pager-prev" href="../api/assignments.hw2.html"><small>Previous</small><span>assignments.hw2</span></a></nav>
+      <div class="footer-meta"><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
+    </footer>
+  </main>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#summary">Summary</a></li><li class="toc-l2"><a href="#constants">Constants</a></li><li class="toc-l2"><a href="#classes">Classes</a></li><li class="toc-l3"><a href="#assignments.hw3.HW3Grader">HW3Grader</a></li></ul></nav></aside>
+</div>
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
+  <div class="search-panel">
+    <div class="search-input-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Search guides and API…" aria-label="Search" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+    <ul class="search-results" role="listbox"></ul>
+    <p class="search-hint">Type to search pages, sections, classes and functions.</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/main.js"></script>
+</body>
+</html>

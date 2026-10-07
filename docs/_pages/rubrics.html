@@ -1,0 +1,163 @@
+<!-- title: Rubrics -->
+<!-- description: The rubric YAML schema: assignment metadata, settings, discovery, data supply, probe hints and rubric items. -->
+
+<p class="eyebrow">User guide</p>
+<h1>Rubrics</h1>
+<p class="lead">Everything the grader expects lives in <code>rubrics/*.yaml</code>: expected values, tolerances, hidden-test anchors, and credit ratios for common near-misses. To change the grading, edit the YAML and press <strong>Regrade</strong>. No Python changes are needed.</p>
+
+<h2 id="before-grading-a-real-class">Before grading a real class</h2>
+
+<div class="callout callout-warn">
+  <p class="callout-title">Check what the assignment fixes</p>
+  <ul>
+    <li><strong>Assignment 1:</strong> the <code>center_city_zips</code> list matches the one printed in the student template, and <code>start_date</code>/<code>end_date</code> match the dates in the instructions. Nothing else needs updating when the data changes.</li>
+    <li><strong>Assignment 2:</strong> there is no answer key to check. <code>hw2.yaml</code> holds policy: how much a chart that never rendered is worth, what counts as a transformation, how many words make a discussion, and the ceiling on an unreviewed aesthetics score.</li>
+    <li><strong>Assignment 3:</strong> every expected count and median was computed from <code>assignment_template/assignment3-data.zip</code>. If you hand out a different zip, they all change together. Re-run the reference solution and update the numbers, or widen the tolerances.</li>
+  </ul>
+</div>
+
+<h2>File layout</h2>
+
+<p>A rubric has six top-level blocks. Only <code>assignment.id</code> and at least one <code>rubric</code> item are required.</p>
+
+<pre><code class="language-yaml">assignment:            # who this rubric is for
+  id: hw1              # required; selects the grader class registered under this id
+  name: "Assignment 1: The Donut Effect"
+  version: HW1-v2      # stored with every session
+  total_points: 100    # must equal the sum of the item points
+  description: >
+    Load the Zillow ZHVI data, trim to Philadelphia, ...
+
+settings: {...}        # grading behaviour
+discovery: {...}       # how to find the notebook in a submission
+data: {...}            # data the instructor supplies
+probe: {...}           # hints for the in-kernel probe
+rubric: [...]          # the graded items</code></pre>
+
+<p><a href="api/grader.rubric.html#grader.rubric.load_rubric"><code>load_rubric()</code></a> validates the file and raises <code>RubricError</code> on a missing id, an empty rubric, a duplicate item id, an unknown item type, or item points that don't add up to <code>total_points</code>.</p>
+
+<h2><code>assignment</code></h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td><span class="muted">required</span></td><td>Assignment id. The grader class with a matching <code>assignment_id</code> grades it. If there is none, the generic base grader is used.</td></tr>
+    <tr><td><code>name</code></td><td>the id</td><td>Shown in the UI and the class report.</td></tr>
+    <tr><td><code>version</code></td><td><code>&lt;id&gt;-v1</code></td><td>Saved with every session, so you can tell which rubric produced a grade.</td></tr>
+    <tr><td><code>total_points</code></td><td>sum of items</td><td>Checked against the sum of the item points.</td></tr>
+    <tr><td><code>description</code></td><td></td><td>Free text.</td></tr>
+  </tbody>
+</table></div>
+
+<h2><code>settings</code></h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>score_rounding</code></td><td><code>0.5</code></td><td>Partial credit is rounded to this increment. Use <code>0</code> to disable.</td></tr>
+    <tr><td><code>execution_timeout_seconds</code></td><td><code>0</code></td><td>A <em>minimum</em> notebook timeout for this assignment. It raises the configured timeout and never lowers it. Assignment 3 sets 1800.</td></tr>
+    <tr><td><code>confidence_review_threshold</code></td><td><code>0.80</code></td><td>Documents the intended review threshold. The threshold actually used is set in Settings or with <code>--confidence-threshold</code>.</td></tr>
+  </tbody>
+</table></div>
+
+<h2><code>discovery</code></h2>
+
+<pre><code class="language-yaml">discovery:
+  notebook_name_hints: ["assignment-1", "assignment1", "hw1", "homework1", "musa"]
+  ignore_name_patterns: ["checkpoint", "untitled", "scratch", "solution", "draft", "copy of"]</code></pre>
+
+<p>Hints raise a notebook's score when it is chosen from a submission. Notebooks matching an ignore pattern are skipped. See <a href="how-it-works.html#discovery">Discovery</a>.</p>
+
+<h2><code>data</code></h2>
+
+<pre><code class="language-yaml">data:
+  required: true                     # refuse to run without a data file (HW1)
+  optional: false                    # offer the data upload without requiring it (HW3)
+  description: >                     # shown in the sidebar and in preflight warnings
+    Zillow ZHVI by ZIP code, e.g. Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv
+  expected_files: []                 # HW3 lists its five; preflight names any missing
+  fallback_locations: ["data", ""]   # conventional places to put each file
+  max_placements: 12                 # cap on target paths per submission (HW3: 40)
+  prefer_student_files: false        # grade on the student's own file if they sent one</code></pre>
+
+<h2><code>probe</code></h2>
+
+<p>Hints the in-kernel probe uses to recognise columns, plus limits on how much it reports. Hints are matched against column names, case-insensitively.</p>
+
+<pre><code class="language-yaml">probe:
+  id_column_hints: ["zipcode", "zip_code", "zip", "regionname", "postal"]
+  date_column_hints: ["date", "month", "year", "period", "time", "variable"]
+  value_column_hints: ["zhvi", "value", "home_value", "price", "index"]
+  max_head_rows: 5          # default 5
+  max_unique_values: 120    # default 80</code></pre>
+
+<h2><code>rubric</code> items</h2>
+
+<p>Each item maps to one <code>check_&lt;id&gt;</code> method on the assignment's grader class. An item without a matching method comes back as <code>manual_review</code> with the note <em>"add a check_&lt;id&gt; method"</em>, so a rubric can be written before its checks.</p>
+
+<pre><code class="language-yaml">rubric:
+  - id: notebook_execution           # unique; selects check_notebook_execution
+    name: Notebook executes successfully
+    points: 10
+    type: execution                  # see the table below
+    description: The notebook runs top to bottom in a clean environment.
+    config:                          # free-form; read by the check method
+      partial_credit_ratio: 0.4</code></pre>
+
+<h3>Item types</h3>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Type</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>execution</code></td><td>Did the notebook run? Handled by the shared <code>check_notebook_execution</code>. Partial credit is proportional to how far it got, scaled by <code>partial_credit_ratio</code>.</td></tr>
+    <tr><td><code>structural</code></td><td>Checks on the source: imports, read calls, relative paths, functions defined.</td></tr>
+    <tr><td><code>deterministic</code></td><td>Checks on results: probe objects, saved answers, chart specs. This is the default type.</td></tr>
+    <tr><td><code>hidden_test</code></td><td>A function is called inside the student's kernel with inputs from the rubric. Expected values never leave the host.</td></tr>
+    <tr><td><code>qualitative</code></td><td>Needs a person's judgement, or an LLM if enabled. Always reviewed.</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Hidden-test config</h3>
+
+<p>Two call styles are supported. <code>scalar_args</code> passes literal arguments. <code>group_frame</code> asks the probe to build a DataFrame from interpolated anchor points, using the student's own column names.</p>
+
+<pre><code class="language-yaml">- id: percent_increase_function
+  points: 20
+  type: hidden_test
+  config:
+    type: group_frame
+    selector:                        # how to find the student's function
+      name_hints: ["percent", "increase", "calculate", "change", "growth"]
+      arity: 1
+    start_date: "2020-03-31"
+    end_date: "2022-03-31"
+    frame:
+      id_column_hints: ["regionname", "zipcode", "zip"]
+      date_column_hints: ["date", "month", "variable"]
+      value_column_hints: ["zhvi", "value"]
+      default_id_column: "RegionName"
+      default_date_column: "date"
+      default_value_column: "ZHVI"
+    cases:
+      - label: "100 → 150 (Mar 2020 → Mar 2022)"
+        anchors: [["2019-01-31", 80], ["2020-03-31", 100], ["2022-03-31", 150], ["2023-12-31", 200]]
+    rel_tol: 0.001
+    abs_tol: 0.001
+    fraction_form_credit_ratio: 0.6  # returned 0.5 instead of 50
+    first_last_credit_ratio: 0.5     # used the first and last rows
+    stub_credit_ratio: 0.0           # left as the template</code></pre>
+
+<p>For <code>scalar_args</code>, each case has <code>args</code> and optional <code>kwargs</code> and <code>label</code>.</p>
+
+<h3>Credit ratios</h3>
+
+<p>Most item configs end in <code>*_credit_ratio</code> or <code>*_penalty</code> keys. These are the named near-misses: each is the fraction of the item's points awarded when the check recognises that particular mistake. They are policy, so tune them freely. The <a href="api/assignments.hw1.html">assignment grader reference</a> documents which keys each check reads.</p>
+
+<h2>Validating a rubric</h2>
+
+<pre><code class="language-bash">python cli.py rubrics</code></pre>
+
+<p>A rubric that fails to parse is left out of <code>python cli.py rubrics</code> and the sidebar. Load it directly to see the error:</p>
+
+<pre><code class="language-python">from grader.rubric import load_rubric
+load_rubric("rubrics/hw4.yaml")   # raises RubricError with the reason</code></pre>

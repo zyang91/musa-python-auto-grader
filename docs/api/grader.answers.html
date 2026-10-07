@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>grader.answers · MUSA Grader</title>
+<meta name="description" content="Answers read out of a notebook&#x27;s own saved outputs (design.md §23, §25).">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)" id="hljs-dark">
+<script>
+  (function () {
+    try { var t = localStorage.getItem("musa-docs-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  })();
+</script>
+</head>
+<body data-root="../">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="icon-button menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg viewBox="0 0 32 32" aria-hidden="true" class="logo"><rect x="3" y="3" width="26" height="26" rx="7" class="logo-bg"/><path d="M9.5 16.5l4.2 4.2 8.8-9.4" class="logo-check"/></svg><span>MUSA Grader</span><span class="version">v0.1.0</span></a>
+  <button class="search-trigger" type="button" aria-label="Search the documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search docs</span><kbd>/</kbd></button>
+  <div class="topbar-actions">
+    <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <a class="icon-button" href="https://github.com/zyang91/musa-python-auto-grader" aria-label="GitHub repository"><svg viewBox="0 0 16 16" aria-hidden="true" class="filled"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation">
+    <nav><p class="nav-section">Introduction</p><ul class="nav-list">
+<li><a href="../index.html">Overview</a></li>
+<li><a href="../getting-started.html">Getting started</a></li>
+</ul>
+<p class="nav-section">User guide</p><ul class="nav-list">
+<li><a href="../ta-workflow.html">TA workflow</a></li>
+<li><a href="../cli.html">CLI reference</a></li>
+<li><a href="../how-it-works.html">How grading works</a></li>
+<li><a href="../assignments.html">Assignments</a></li>
+<li><a href="../rubrics.html">Rubrics</a></li>
+<li><a href="../docker.html">Docker sandbox</a></li>
+<li><a href="../results.html">Results and exports</a></li>
+</ul>
+<p class="nav-section">Developer guide</p><ul class="nav-list">
+<li><a href="../extending.html">Adding an assignment</a></li>
+<li><a href="../testing.html">Testing and CI</a></li>
+</ul>
+<p class="nav-section">API reference</p><ul class="nav-list">
+<li><a href="../api/index.html">Overview</a></li>
+<li class="nav-group"><span class="nav-group-label">Package</span><ul>
+<li><a href="../api/grader.html"><code>grader</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Engine</span><ul>
+<li><a href="../api/grader.service.html"><code>grader.service</code></a></li>
+<li><a href="../api/grader.rubric.html"><code>grader.rubric</code></a></li>
+<li><a href="../api/grader.models.html"><code>grader.models</code></a></li>
+<li><a href="../api/grader.results.html"><code>grader.results</code></a></li>
+<li><a href="../api/grader.scoring.html"><code>grader.scoring</code></a></li>
+<li><a href="../api/grader.feedback.html"><code>grader.feedback</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Execution</span><ul>
+<li><a href="../api/grader.discovery.html"><code>grader.discovery</code></a></li>
+<li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
+<li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
+<li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
+<li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
+<li><a href="../api/grader.inspection.html"><code>grader.inspection</code></a></li>
+<li><a href="../api/grader.answers.html" class="active" aria-current="page"><code>grader.answers</code></a></li>
+<li><a href="../api/grader.charts.html"><code>grader.charts</code></a></li>
+<li><a href="../api/grader.llm.html"><code>grader.llm</code></a></li>
+<li><a href="../api/grader.utils.html"><code>grader.utils</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Assignments</span><ul>
+<li><a href="../api/assignments.html"><code>assignments</code></a></li>
+<li><a href="../api/assignments.base.html"><code>assignments.base</code></a></li>
+<li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
+<li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
+<li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+</ul></li></ul></nav>
+  </aside>
+  <div class="sidebar-scrim" hidden></div>
+  <main id="content" class="content content-api">
+    <article class="prose">
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py">grader/answers.py</a> · 659 lines</p>
+<h1 class="module-title"><code>grader.answers</code></h1>
+<div class="module-doc"><p>Answers read out of a notebook&#x27;s own saved outputs (design.md §23, §25).</p>
+<h3 class="doc-heading">Why this exists</h3>
+<p>Assignment 3 has an answer key — everyone runs the same zip — so the grader knows that Philadelphia has 384 tracts and that the median NDVI inside the city limits is 0.2025. The question is where to <em>see</em> the student&#x27;s version of those numbers.</p>
+<p>Re-running the notebook is one answer, and it is the strongest one when it works. But it is also the fragile one, and on this assignment it is fragile in a way that is nobody&#x27;s fault: five data files instead of one, read from whatever path each student happened to use, sometimes built with <code>os.path.join</code> or a variable the grader cannot resolve. When the placement misses, the notebook dies at the first <code>read_file</code> and every step after it is invisible — a submission that was entirely correct grades as if nothing happened.</p>
+<p>The student&#x27;s own run does not have that problem. They ran it with their data in the right place, and the notebook they handed in carries what it printed:</p>
+<pre class="doc-literal"><code>In  [3]: len(phl)
+Out [3]: 384</code></pre>
+<p>That <code>384</code> is the answer to 1.1.2, sitting in the file. So is <code>34108</code>, and <code>(368606317.0763259, 462551418.69179374)</code>, and <code>Median NDVI, city: 0.2025</code>. This module harvests them, and the checks in <code>assignments/hw3.py</code> accept either source: the step counts as done if the executed run shows it <em>or</em> the submitted notebook does. Execution stops being load-bearing and becomes corroboration.</p>
+<h3 class="doc-heading">What can be read, and what it is worth</h3>
+<div class="table-wrap"><table><thead><tr><th>Output</th><th>What it yields</th></tr></thead><tbody><tr><td><code>print(...)</code></td><td>every number in the text — deliberately shown</td></tr><tr><td>a bare final expression</td><td>every number, when it is short enough to be a result rather than a table</td></tr><tr><td>a DataFrame repr</td><td><code>5376 rows x 4 columns</code>, the column names, and nothing else — the cell values of a <code>head()</code> are not answers, and harvesting them invents matches</td></tr><tr><td><code>.describe()</code></td><td>count / mean / median / min / max</td></tr><tr><td><code>.info()</code></td><td>row count, column names, dtypes</td></tr><tr><td>an hvplot chart</td><td><code>:HoloMap [year]</code> — the object&#x27;s own repr, which says whether <code>dynamic=False</code> was passed, plus the widget&#x27;s option list from the embedded HTML</td></tr><tr><td>matplotlib</td><td><code>&lt;Figure size 800x450 with 1 Axes&gt;</code> and the PNG</td></tr></tbody></table></div>
+<p>A saved output is the student&#x27;s claim about their own run, not a fact the grader established, so a check that rests on one alone says so and grades at lower confidence — the same caveat <code>grader/charts.py</code> records for a chart seen only in the submitted file. Outputs can be stale, and they can be edited by hand.</p></div>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap"><table class="summary-table"><thead><tr><th>Name</th><th>Kind</th><th>Description</th></tr></thead><tbody><tr><td><a href="#grader.answers.HoloviewsRepr"><code>HoloviewsRepr</code></a></td><td><span class="kind">class</span></td><td>One holoviews object, as its own repr describes it.</td></tr><tr><td><a href="#grader.answers.CellAnswers"><code>CellAnswers</code></a></td><td><span class="kind">class</span></td><td>Everything one code cell&#x27;s saved output states.</td></tr><tr><td><a href="#grader.answers.NotebookAnswers"><code>NotebookAnswers</code></a></td><td><span class="kind">class</span></td><td>Every answer a notebook shows, with where each one was seen.</td></tr><tr><td><a href="#grader.answers.read_answers"><code>read_answers()</code></a></td><td><span class="kind">function</span></td><td>Harvest one notebook&#x27;s saved outputs.</td></tr><tr><td><a href="#grader.answers.collect_answers"><code>collect_answers()</code></a></td><td><span class="kind">function</span></td><td>Answers from both notebooks, merged cell by cell.</td></tr></tbody></table></div>
+<h2 id="constants">Constants</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr id="grader.answers.SOURCE_EXECUTED"><td><code class="field-name">SOURCE_EXECUTED</code></td><td><code>&#x27;executed&#x27;</code></td><td></td></tr><tr id="grader.answers.SOURCE_SUBMITTED"><td><code class="field-name">SOURCE_SUBMITTED</code></td><td><code>&#x27;submitted&#x27;</code></td><td></td></tr><tr id="grader.answers.SOURCE_MERGED"><td><code class="field-name">SOURCE_MERGED</code></td><td><code>&#x27;merged&#x27;</code></td><td></td></tr><tr id="grader.answers.SOURCE_NONE"><td><code class="field-name">SOURCE_NONE</code></td><td><code>&#x27;none&#x27;</code></td><td></td></tr><tr id="grader.answers.MAX_SCALAR_CHARS"><td><code class="field-name">MAX_SCALAR_CHARS</code></td><td><code>6000</code></td><td>A result short enough to be a result. Tables are excluded by their own markers rather than by length (a <code>head()</code> repr carries an HTML table, <code>.info()</code> and <code>.describe()</code> have shapes of their own), so this only has to rule out the pathological case — a cell that dumps a whole file. It is generous because <code>landsat.count, landsat.crs</code> prints a full WKT block, and the EPSG code inside that block is the answer.</td></tr><tr id="grader.answers.NUMBER_RE"><td><code class="field-name">NUMBER_RE</code></td><td><code>re.compile(&#x27;-?\\d+(?:\\.\\d+)?(?:[eE][-+]?\\d+)?&#x27;)</code></td><td></td></tr><tr id="grader.answers.SHAPE_TEXT_RE"><td><code class="field-name">SHAPE_TEXT_RE</code></td><td><code>re.compile(&#x27;\\[(\\d[\\d,]*)\\s+rows?\\s+x\\s+(\\d[\\d,]*)\\s+columns?\\]&#x27;)</code></td><td>pandas prints its shape under a truncated frame: &quot;[5376 rows x 4 columns]&quot; in text and &quot;&lt;p&gt;5376 rows × 4 columns&lt;/p&gt;&quot; in HTML (a multiplication sign, not x).</td></tr><tr id="grader.answers.SHAPE_HTML_RE"><td><code class="field-name">SHAPE_HTML_RE</code></td><td><code>re.compile(&#x27;(\\d[\\d,]*)\\s*rows?\\s*[x×]\\s*(\\d[\\d,]*)\\s*columns?&#x27;)</code></td><td></td></tr><tr id="grader.answers.ENTRIES_RE"><td><code class="field-name">ENTRIES_RE</code></td><td><code>re.compile(&#x27;(\\d[\\d,]*)\\s+entries&#x27;)</code></td><td><code>.info()</code>: &quot;RangeIndex: 5376 entries, 0 to 5375&quot;</td></tr><tr id="grader.answers.INFO_COLUMN_RE"><td><code class="field-name">INFO_COLUMN_RE</code></td><td><code>re.compile(&#x27;^\\s*\\d+\\s+(\\S+)\\s+\\d[\\d,]*\\s+non-null&#x27;, re.M)</code></td><td><code>.info()</code> column table: &quot; 0   GEOID   5376 non-null   str&quot;</td></tr><tr id="grader.answers.DESCRIBE_RE"><td><code class="field-name">DESCRIBE_RE</code></td><td><code>re.compile(&#x27;^\\s*(count|mean|std|min|25%|50%|75%|max)\\s+(-?\\d+(?:\\.\\d+)?(?:[eE][-+]?\\d+)?)\\s*$&#x27;, re.M)</code></td><td><code>.describe()</code> rows, in the text repr.</td></tr><tr id="grader.answers.FIGURE_RE"><td><code class="field-name">FIGURE_RE</code></td><td><code>re.compile(&#x27;&lt;Figure size (\\d+)x(\\d+) with (\\d+) Axes?&gt;&#x27;)</code></td><td></td></tr><tr id="grader.answers.HTML_TABLE_RE"><td><code class="field-name">HTML_TABLE_RE</code></td><td><code>re.compile(&#x27;&lt;table\\b&#x27;, re.I)</code></td><td></td></tr><tr id="grader.answers.HTML_HEADER_RE"><td><code class="field-name">HTML_HEADER_RE</code></td><td><code>re.compile(&#x27;&lt;th[^&gt;]*&gt;([^&lt;]{1,60})&lt;/th&gt;&#x27;, re.I)</code></td><td></td></tr><tr id="grader.answers.HOLOVIEWS_LINE_RE"><td><code class="field-name">HOLOVIEWS_LINE_RE</code></td><td><code>re.compile(&#x27;^(?P&lt;indent&gt;\\s*)(?:\\.(?P&lt;path&gt;\\S+)\\s+)?:(?P&lt;kind&gt;[A-Za-z]\\w*)(?:\\s+\\[(?P&lt;kdims&gt;[^\\]]*)\\])?(?:\\s+\\((?P&lt;vdims&gt;[^)]*)\\…</code></td><td>The repr holoviews gives every object: :HoloMap   [year] :Polygons   [x,y]   (evictions,GEOID) :Layout .Polygons.I  :Polygons   [x,y]   (evictions)</td></tr><tr id="grader.answers.WIDGET_RE"><td><code class="field-name">WIDGET_RE</code></td><td><code>re.compile(&#x27;&quot;title&quot;:&quot;(?P&lt;title&gt;[^&quot;]{1,80})&quot;,&quot;options&quot;:\\[(?P&lt;options&gt;[^\\]]{0,8000})\\]|&quot;options&quot;:\\[(?P&lt;options2&gt;[^\\]]{0,8000})\\],&quot;title…</code></td><td>The widget Panel renders beside a HoloMap, in the embedded bokeh document.</td></tr><tr id="grader.answers.QUOTED_RE"><td><code class="field-name">QUOTED_RE</code></td><td><code>re.compile(&#x27;&quot;((?:[^&quot;\\\\]|\\\\.){0,200})&quot;&#x27;)</code></td><td></td></tr><tr id="grader.answers.NDARRAY_RE"><td><code class="field-name">NDARRAY_RE</code></td><td><code>re.compile(&#x27;&quot;array&quot;:\\{&quot;type&quot;:&quot;bytes&quot;,&quot;data&quot;:&quot;(?P&lt;data&gt;[A-Za-z0-9+/=]{4,200000})&quot;\\},&quot;shape&quot;:\\[(?P&lt;length&gt;\\d{1,9})\\],&quot;dtype&quot;:&quot;(?P&lt;dtype&gt;…</code></td><td>Bokeh writes a chart&#x27;s numeric columns into the notebook as a base64 (usually gzipped) buffer. This is where &quot;the numbers actually plotted&quot; live once the kernel is gone.</td></tr><tr id="grader.answers.STRUCT_CODES"><td><code class="field-name">STRUCT_CODES</code></td><td><code>{&#x27;float64&#x27;: (&#x27;d&#x27;, 8), &#x27;float32&#x27;: (&#x27;f&#x27;, 4), &#x27;int64&#x27;: (&#x27;q&#x27;, 8), &#x27;int32&#x27;: (&#x27;i&#x27;, 4), &#x27;int16&#x27;: (&#x27;h&#x27;, 2), &#x27;int8&#x27;: (&#x27;b&#x27;, 1), &#x27;uint64&#x27;: (&#x27;Q&#x27;, 8), &#x27;…</code></td><td></td></tr><tr id="grader.answers.IMAGE_MIMES"><td><code class="field-name">IMAGE_MIMES</code></td><td><code>(&#x27;image/png&#x27;, &#x27;image/jpeg&#x27;, &#x27;image/svg+xml&#x27;)</code></td><td></td></tr><tr id="grader.answers.WIDGET_KINDS"><td><code class="field-name">WIDGET_KINDS</code></td><td><code>(&#x27;HoloMap&#x27;, &#x27;GridSpace&#x27;, &#x27;NdLayout&#x27;)</code></td><td>Containers whose whole point is one chart per value of a dimension.</td></tr><tr id="grader.answers.LAZY_KINDS"><td><code class="field-name">LAZY_KINDS</code></td><td><code>(&#x27;DynamicMap&#x27;,)</code></td><td>The same thing, never evaluated: what hvplot returns without <code>dynamic=False</code>.</td></tr><tr id="grader.answers.LAYOUT_KINDS"><td><code class="field-name">LAYOUT_KINDS</code></td><td><code>(&#x27;Layout&#x27;, &#x27;NdLayout&#x27;)</code></td><td></td></tr></tbody></table></div>
+<h2 id="classes">Classes</h2>
+
+<section class="api-class" id="grader.answers.HoloviewsRepr">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">HoloviewsRepr</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.answers.HoloviewsRepr" aria-label="Link to HoloviewsRepr">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L146" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>One holoviews object, as its own repr describes it.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">kind</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">kdims</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">vdims</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">children</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">frame_keys</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td>Option list of the widget beside it, read from the embedded bokeh document.</td></tr><tr><td><code class="field-name">widget_dimension</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">values</code></td><td><code>dict[str, float]</code></td><td><code>field(default_factory=dict)</code></td><td>The numbers the chart actually draws, decoded from that same document.</td></tr><tr><td><code class="field-name">code_cell</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">source</code></td><td><code>str</code></td><td><code>SOURCE_NONE</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.answers.HoloviewsRepr.is_widget">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">is_widget</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.answers.HoloviewsRepr.is_widget" aria-label="Link to is_widget">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L162" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.answers.HoloviewsRepr.is_lazy">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">is_lazy</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.answers.HoloviewsRepr.is_lazy" aria-label="Link to is_lazy">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L166" title="View source on GitHub">[source]</a></dt>
+  <dd><p>A DynamicMap: the widget exists but no frame was ever computed.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.answers.HoloviewsRepr.is_layout">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">is_layout</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.answers.HoloviewsRepr.is_layout" aria-label="Link to is_layout">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L171" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.answers.HoloviewsRepr.element_types">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">element_types</span><span class="sig-params">: list[str]</span>
+    <a class="headerlink" href="#grader.answers.HoloviewsRepr.element_types" aria-label="Link to element_types">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L175" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.answers.HoloviewsRepr.summary">
+  <dt class="sig"><span class="sig-name">summary</span><span class="sig-params">() -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#grader.answers.HoloviewsRepr.summary" aria-label="Link to summary">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L178" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.answers.CellAnswers">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">CellAnswers</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.answers.CellAnswers" aria-label="Link to CellAnswers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L193" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>Everything one code cell&#x27;s saved output states.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">code_cell</code></td><td><code>int</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">cell_index</code></td><td><code>int</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">source_code</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">text</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">shown</code></td><td><code>list[float]</code></td><td><code>field(default_factory=list)</code></td><td>Numbers the cell deliberately showed: printed, or returned as a short result. Never cell values scraped out of a table repr.</td></tr><tr><td><code class="field-name">shapes</code></td><td><code>list[tuple[int, int]]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">row_counts</code></td><td><code>list[int]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">columns</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">describe</code></td><td><code>dict[str, float]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">holoviews</code></td><td><code>list[<a class="xref" href="#grader.answers.HoloviewsRepr">HoloviewsRepr</a>]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">figures</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">images</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">errored</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr><tr><td><code class="field-name">error</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">origin</code></td><td><code>str</code></td><td><code>SOURCE_NONE</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.answers.CellAnswers.has_output">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">has_output</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.answers.CellAnswers.has_output" aria-label="Link to has_output">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L215" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.answers.CellAnswers.has_answer">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">has_answer</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.answers.CellAnswers.has_answer" aria-label="Link to has_answer">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L222" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Output that states something, as opposed to a traceback.</p>
+<p>The distinction decides the merge below. When the grading run cannot find the data, every cell after the first <code>read_file</code> raises, and a raise is output — so ranking cells by &quot;has output&quot; hands every slot to the failed run and hides the answers the student actually saved.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.answers.NotebookAnswers">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">NotebookAnswers</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers" aria-label="Link to NotebookAnswers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L237" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>Every answer a notebook shows, with where each one was seen.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">cells</code></td><td><code>list[<a class="xref" href="#grader.answers.CellAnswers">CellAnswers</a>]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">source</code></td><td><code>str</code></td><td><code>SOURCE_NONE</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.answers.NotebookAnswers.figures">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">figures</span><span class="sig-params">: int</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.figures" aria-label="Link to figures">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L307" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.answers.NotebookAnswers.error_cells">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">error_cells</span><span class="sig-params">: list[<a class="xref" href="#grader.answers.CellAnswers">CellAnswers</a>]</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.error_cells" aria-label="Link to error_cells">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L311" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.answers.NotebookAnswers.cells_with_output">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">cells_with_output</span><span class="sig-params">: int</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.cells_with_output" aria-label="Link to cells_with_output">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L315" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.answers.NotebookAnswers.cells_with_answers">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">cells_with_answers</span><span class="sig-params">: int</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.cells_with_answers" aria-label="Link to cells_with_answers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L319" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.answers.NotebookAnswers.shows">
+  <dt class="sig"><span class="sig-name">shows</span><span class="sig-params">(expected: float, rel_tol: float = 0.0, abs_tol: float = 0.0) -&gt; <a class="xref" href="#grader.answers.CellAnswers">CellAnswers</a> | None</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.shows" aria-label="Link to shows">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L244" title="View source on GitHub">[source]</a></dt>
+  <dd><p>The first cell that printed or returned this number.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.answers.NotebookAnswers.shows_all">
+  <dt class="sig"><span class="sig-name">shows_all</span><span class="sig-params">(expected: Iterable[float], rel_tol: float = 0.0, abs_tol: float = 0.0) -&gt; bool</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.shows_all" aria-label="Link to shows_all">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L255" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.answers.NotebookAnswers.shows_together">
+  <dt class="sig"><span class="sig-name">shows_together</span><span class="sig-params">(expected: Iterable[float], rel_tol: float = 0.0, abs_tol: float = 0.0) -&gt; <a class="xref" href="#grader.answers.CellAnswers">CellAnswers</a> | None</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.shows_together" aria-label="Link to shows_together">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L259" title="View source on GitHub">[source]</a></dt>
+  <dd><p>A single cell that shows all of these numbers at once.</p>
+<p>&quot;10&quot; on its own means nothing — it is in every notebook. &quot;10 and 32618 in the same output&quot; is a ten-band scene in UTM zone 18N, which is the file this assignment ships.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.answers.NotebookAnswers.shows_rows">
+  <dt class="sig"><span class="sig-name">shows_rows</span><span class="sig-params">(expected: int, tolerance: int = 0) -&gt; <a class="xref" href="#grader.answers.CellAnswers">CellAnswers</a> | None</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.shows_rows" aria-label="Link to shows_rows">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L278" title="View source on GitHub">[source]</a></dt>
+  <dd><p>A frame of this many rows, from a repr footer, <code>.shape</code> or <code>.info()</code>.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.answers.NotebookAnswers.frames_with_columns">
+  <dt class="sig"><span class="sig-name">frames_with_columns</span><span class="sig-params">(names: Iterable[str]) -&gt; list[<a class="xref" href="#grader.answers.CellAnswers">CellAnswers</a>]</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.frames_with_columns" aria-label="Link to frames_with_columns">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L289" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.answers.NotebookAnswers.describes">
+  <dt class="sig"><span class="sig-name">describes</span><span class="sig-params">(key: str, expected: float, abs_tol: float) -&gt; <a class="xref" href="#grader.answers.CellAnswers">CellAnswers</a> | None</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.describes" aria-label="Link to describes">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L296" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.answers.NotebookAnswers.charts">
+  <dt class="sig"><span class="sig-name">charts</span><span class="sig-params">() -&gt; list[<a class="xref" href="#grader.answers.HoloviewsRepr">HoloviewsRepr</a>]</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.charts" aria-label="Link to charts">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L303" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.answers.NotebookAnswers.note">
+  <dt class="sig"><span class="sig-name">note</span><span class="sig-params">() -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#grader.answers.NotebookAnswers.note" aria-label="Link to note">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L322" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+<h2 id="functions">Functions</h2>
+
+<dl class="api-object api-function" id="grader.answers.read_answers">
+  <dt class="sig"><span class="sig-name">read_answers</span><span class="sig-params">(path: str | Path | None, origin: str) -&gt; <a class="xref" href="#grader.answers.NotebookAnswers">NotebookAnswers</a></span>
+    <a class="headerlink" href="#grader.answers.read_answers" aria-label="Link to read_answers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L562" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Harvest one notebook&#x27;s saved outputs.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.answers.collect_answers">
+  <dt class="sig"><span class="sig-name">collect_answers</span><span class="sig-params">(executed_path: str | Path | None, submitted_path: str | Path | None) -&gt; <a class="xref" href="#grader.answers.NotebookAnswers">NotebookAnswers</a></span>
+    <a class="headerlink" href="#grader.answers.collect_answers" aria-label="Link to collect_answers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L592" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Answers from both notebooks, merged cell by cell.</p>
+<p>Two notebooks may show the same answer: the one this grading run executed, and the one the student handed in with its outputs already saved. Neither is reliably the better source — the executed run can die on a data path the grader could not resolve, and a saved output can be stale or hand-edited — so they are merged rather than ranked, and each answer keeps the note of where it came from.</p></dd>
+</dl>
+    </article>
+    <footer class="page-footer">
+      <nav class="pager" aria-label="Pages"><a class="pager-prev" href="../api/grader.inspection.html"><small>Previous</small><span>grader.inspection</span></a><a class="pager-next" href="../api/grader.charts.html"><small>Next</small><span>grader.charts</span></a></nav>
+      <div class="footer-meta"><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
+    </footer>
+  </main>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#summary">Summary</a></li><li class="toc-l2"><a href="#constants">Constants</a></li><li class="toc-l2"><a href="#classes">Classes</a></li><li class="toc-l3"><a href="#grader.answers.HoloviewsRepr">HoloviewsRepr</a></li><li class="toc-l3"><a href="#grader.answers.CellAnswers">CellAnswers</a></li><li class="toc-l3"><a href="#grader.answers.NotebookAnswers">NotebookAnswers</a></li><li class="toc-l2"><a href="#functions">Functions</a></li><li class="toc-l3"><a href="#grader.answers.read_answers">read_answers()</a></li><li class="toc-l3"><a href="#grader.answers.collect_answers">collect_answers()</a></li></ul></nav></aside>
+</div>
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
+  <div class="search-panel">
+    <div class="search-input-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Search guides and API…" aria-label="Search" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+    <ul class="search-results" role="listbox"></ul>
+    <p class="search-hint">Type to search pages, sections, classes and functions.</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/main.js"></script>
+</body>
+</html>

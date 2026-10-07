@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>grader.models · MUSA Grader</title>
+<meta name="description" content="Structured result types shared by the engine, the store and the UI.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)" id="hljs-dark">
+<script>
+  (function () {
+    try { var t = localStorage.getItem("musa-docs-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  })();
+</script>
+</head>
+<body data-root="../">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="icon-button menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg viewBox="0 0 32 32" aria-hidden="true" class="logo"><rect x="3" y="3" width="26" height="26" rx="7" class="logo-bg"/><path d="M9.5 16.5l4.2 4.2 8.8-9.4" class="logo-check"/></svg><span>MUSA Grader</span><span class="version">v0.1.0</span></a>
+  <button class="search-trigger" type="button" aria-label="Search the documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search docs</span><kbd>/</kbd></button>
+  <div class="topbar-actions">
+    <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <a class="icon-button" href="https://github.com/zyang91/musa-python-auto-grader" aria-label="GitHub repository"><svg viewBox="0 0 16 16" aria-hidden="true" class="filled"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation">
+    <nav><p class="nav-section">Introduction</p><ul class="nav-list">
+<li><a href="../index.html">Overview</a></li>
+<li><a href="../getting-started.html">Getting started</a></li>
+</ul>
+<p class="nav-section">User guide</p><ul class="nav-list">
+<li><a href="../ta-workflow.html">TA workflow</a></li>
+<li><a href="../cli.html">CLI reference</a></li>
+<li><a href="../how-it-works.html">How grading works</a></li>
+<li><a href="../assignments.html">Assignments</a></li>
+<li><a href="../rubrics.html">Rubrics</a></li>
+<li><a href="../docker.html">Docker sandbox</a></li>
+<li><a href="../results.html">Results and exports</a></li>
+</ul>
+<p class="nav-section">Developer guide</p><ul class="nav-list">
+<li><a href="../extending.html">Adding an assignment</a></li>
+<li><a href="../testing.html">Testing and CI</a></li>
+</ul>
+<p class="nav-section">API reference</p><ul class="nav-list">
+<li><a href="../api/index.html">Overview</a></li>
+<li class="nav-group"><span class="nav-group-label">Package</span><ul>
+<li><a href="../api/grader.html"><code>grader</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Engine</span><ul>
+<li><a href="../api/grader.service.html"><code>grader.service</code></a></li>
+<li><a href="../api/grader.rubric.html"><code>grader.rubric</code></a></li>
+<li><a href="../api/grader.models.html" class="active" aria-current="page"><code>grader.models</code></a></li>
+<li><a href="../api/grader.results.html"><code>grader.results</code></a></li>
+<li><a href="../api/grader.scoring.html"><code>grader.scoring</code></a></li>
+<li><a href="../api/grader.feedback.html"><code>grader.feedback</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Execution</span><ul>
+<li><a href="../api/grader.discovery.html"><code>grader.discovery</code></a></li>
+<li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
+<li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
+<li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
+<li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
+<li><a href="../api/grader.inspection.html"><code>grader.inspection</code></a></li>
+<li><a href="../api/grader.answers.html"><code>grader.answers</code></a></li>
+<li><a href="../api/grader.charts.html"><code>grader.charts</code></a></li>
+<li><a href="../api/grader.llm.html"><code>grader.llm</code></a></li>
+<li><a href="../api/grader.utils.html"><code>grader.utils</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Assignments</span><ul>
+<li><a href="../api/assignments.html"><code>assignments</code></a></li>
+<li><a href="../api/assignments.base.html"><code>assignments.base</code></a></li>
+<li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
+<li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
+<li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+</ul></li></ul></nav>
+  </aside>
+  <div class="sidebar-scrim" hidden></div>
+  <main id="content" class="content content-api">
+    <article class="prose">
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py">grader/models.py</a> · 261 lines</p>
+<h1 class="module-title"><code>grader.models</code></h1>
+<div class="module-doc"><p>Structured result types shared by the engine, the store and the UI.</p>
+<p>The contract in design.md section 24 is the source of truth for the on-disk shape: every rubric item keeps both <code>automatic_score</code> and <code>final_score</code> so a manual override never destroys the automated result.</p></div>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap"><table class="summary-table"><thead><tr><th>Name</th><th>Kind</th><th>Description</th></tr></thead><tbody><tr><td><a href="#grader.models.ExecutionRecord"><code>ExecutionRecord</code></a></td><td><span class="kind">class</span></td><td>Outcome of running one student notebook (design.md section 19).</td></tr><tr><td><a href="#grader.models.RubricItemResult"><code>RubricItemResult</code></a></td><td><span class="kind">class</span></td><td>One graded rubric line (design.md section 24).</td></tr><tr><td><a href="#grader.models.SubmissionResult"><code>SubmissionResult</code></a></td><td><span class="kind">class</span></td><td>Everything known about one student&#x27;s submission.</td></tr><tr><td><a href="#grader.models.GradingProgress"><code>GradingProgress</code></a></td><td><span class="kind">class</span></td><td>Snapshot pushed to the UI while grading runs (design.md section 7).</td></tr><tr><td><a href="#grader.models.status_icon"><code>status_icon()</code></a></td><td><span class="kind">function</span></td><td></td></tr><tr><td><a href="#grader.models.status_color"><code>status_color()</code></a></td><td><span class="kind">function</span></td><td></td></tr></tbody></table></div>
+<h2 id="constants">Constants</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr id="grader.models.STATUS_PASS"><td><code class="field-name">STATUS_PASS</code></td><td><code>&#x27;pass&#x27;</code></td><td></td></tr><tr id="grader.models.STATUS_PARTIAL"><td><code class="field-name">STATUS_PARTIAL</code></td><td><code>&#x27;partial&#x27;</code></td><td></td></tr><tr id="grader.models.STATUS_FAIL"><td><code class="field-name">STATUS_FAIL</code></td><td><code>&#x27;fail&#x27;</code></td><td></td></tr><tr id="grader.models.STATUS_WARNING"><td><code class="field-name">STATUS_WARNING</code></td><td><code>&#x27;warning&#x27;</code></td><td></td></tr><tr id="grader.models.STATUS_MANUAL_REVIEW"><td><code class="field-name">STATUS_MANUAL_REVIEW</code></td><td><code>&#x27;manual_review&#x27;</code></td><td></td></tr><tr id="grader.models.STATUS_EXECUTION_ERROR"><td><code class="field-name">STATUS_EXECUTION_ERROR</code></td><td><code>&#x27;execution_error&#x27;</code></td><td></td></tr><tr id="grader.models.STATUS_NOT_FOUND"><td><code class="field-name">STATUS_NOT_FOUND</code></td><td><code>&#x27;not_found&#x27;</code></td><td></td></tr><tr id="grader.models.ALL_STATUSES"><td><code class="field-name">ALL_STATUSES</code></td><td><code>(STATUS_PASS, STATUS_PARTIAL, STATUS_FAIL, STATUS_WARNING, STATUS_MANUAL_REVIEW, STATUS_EXECUTION_ERROR, STATUS_NOT_FOUND)</code></td><td></td></tr><tr id="grader.models.STATUS_DISPLAY"><td><code class="field-name">STATUS_DISPLAY</code></td><td><code>{STATUS_PASS: (&#x27;✓&#x27;, &#x27;green&#x27;), STATUS_PARTIAL: (&#x27;⚠&#x27;, &#x27;yellow&#x27;), STATUS_WARNING: (&#x27;⚠&#x27;, &#x27;yellow&#x27;), STATUS_MANUAL_REVIEW: (&#x27;⚠&#x27;, &#x27;yellow&#x27;), STAT…</code></td><td>Status -&gt; (icon, colour bucket). Colour is never the only signal (section 15).</td></tr></tbody></table></div>
+<h2 id="classes">Classes</h2>
+
+<section class="api-class" id="grader.models.ExecutionRecord">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">ExecutionRecord</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.models.ExecutionRecord" aria-label="Link to ExecutionRecord">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L56" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>Outcome of running one student notebook (design.md section 19).</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">success</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr><tr><td><code class="field-name">execution_time_seconds</code></td><td><code>float</code></td><td><code>0.0</code></td><td></td></tr><tr><td><code class="field-name">timeout</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr><tr><td><code class="field-name">error_cell</code></td><td><code>int | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">error_message</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">traceback</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">mode</code></td><td><code>str</code></td><td><code>&#x27;docker&#x27;</code></td><td></td></tr><tr><td><code class="field-name">attempted</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr><tr><td><code class="field-name">log</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">executed_notebook_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.models.ExecutionRecord.status">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">status</span><span class="sig-params">: str</span>
+    <a class="headerlink" href="#grader.models.ExecutionRecord.status" aria-label="Link to status">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L71" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.models.ExecutionRecord.to_dict">
+  <dt class="sig"><span class="sig-name">to_dict</span><span class="sig-params">() -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#grader.models.ExecutionRecord.to_dict" aria-label="Link to to_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L76" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-classmethod" id="grader.models.ExecutionRecord.from_dict">
+  <dt class="sig"><span class="sig-kind">classmethod </span><span class="sig-name">from_dict</span><span class="sig-params">(data: dict[str, Any]) -&gt; &#x27;<a class="xref" href="#grader.models.ExecutionRecord">ExecutionRecord</a>&#x27;</span>
+    <a class="headerlink" href="#grader.models.ExecutionRecord.from_dict" aria-label="Link to from_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L80" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.models.RubricItemResult">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">RubricItemResult</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.models.RubricItemResult" aria-label="Link to RubricItemResult">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L85" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>One graded rubric line (design.md section 24).</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">rubric_id</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">name</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">points_possible</code></td><td><code>float</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">automatic_score</code></td><td><code>float</code></td><td><code>0.0</code></td><td></td></tr><tr><td><code class="field-name">status</code></td><td><code>str</code></td><td><code>STATUS_NOT_FOUND</code></td><td></td></tr><tr><td><code class="field-name">confidence</code></td><td><code>float</code></td><td><code>1.0</code></td><td></td></tr><tr><td><code class="field-name">feedback</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">evidence</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">type</code></td><td><code>str</code></td><td><code>&#x27;deterministic&#x27;</code></td><td></td></tr><tr><td><code class="field-name">manual_override</code></td><td><code>bool</code></td><td><code>False</code></td><td>Human intervention (design.md section 11) — never overwrites the automated value.</td></tr><tr><td><code class="field-name">manual_score</code></td><td><code>float | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">override_reason</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.models.RubricItemResult.final_score">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">final_score</span><span class="sig-params">: float</span>
+    <a class="headerlink" href="#grader.models.RubricItemResult.final_score" aria-label="Link to final_score">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L104" title="View source on GitHub">[source]</a></dt>
+  <dd><p>The manual score when overridden, otherwise the automatic score.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.models.RubricItemResult.needs_review">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">needs_review</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.models.RubricItemResult.needs_review" aria-label="Link to needs_review">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L110" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.models.RubricItemResult.to_dict">
+  <dt class="sig"><span class="sig-name">to_dict</span><span class="sig-params">() -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#grader.models.RubricItemResult.to_dict" aria-label="Link to to_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L115" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-classmethod" id="grader.models.RubricItemResult.from_dict">
+  <dt class="sig"><span class="sig-kind">classmethod </span><span class="sig-name">from_dict</span><span class="sig-params">(data: dict[str, Any]) -&gt; &#x27;<a class="xref" href="#grader.models.RubricItemResult">RubricItemResult</a>&#x27;</span>
+    <a class="headerlink" href="#grader.models.RubricItemResult.from_dict" aria-label="Link to from_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L121" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.models.SubmissionResult">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">SubmissionResult</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.models.SubmissionResult" aria-label="Link to SubmissionResult">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L127" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>Everything known about one student&#x27;s submission.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">student_id</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">display_name</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr><tr><td><code class="field-name">notebook_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">submission_dir</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">items</code></td><td><code>list[<a class="xref" href="#grader.models.RubricItemResult">RubricItemResult</a>]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">execution</code></td><td><code><a class="xref" href="#grader.models.ExecutionRecord">ExecutionRecord</a></code></td><td><code>field(default_factory=ExecutionRecord)</code></td><td></td></tr><tr><td><code class="field-name">discovery_warnings</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">review_reasons</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">reviewed</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr><tr><td><code class="field-name">graded_at</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">status</code></td><td><code>str</code></td><td><code>&#x27;pending&#x27;</code></td><td>pending | graded | error | skipped</td></tr><tr><td><code class="field-name">error</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">artifacts</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.models.SubmissionResult.max_score">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">max_score</span><span class="sig-params">: float</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.max_score" aria-label="Link to max_score">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L146" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Sum of the items&#x27; possible points.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.models.SubmissionResult.automatic_total">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">automatic_total</span><span class="sig-params">: float</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.automatic_total" aria-label="Link to automatic_total">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L150" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.models.SubmissionResult.total_score">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">total_score</span><span class="sig-params">: float</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.total_score" aria-label="Link to total_score">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L154" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Sum of the items&#x27; final scores.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.models.SubmissionResult.percentage">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">percentage</span><span class="sig-params">: float | None</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.percentage" aria-label="Link to percentage">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L158" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.models.SubmissionResult.confidence">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">confidence</span><span class="sig-params">: float | None</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.confidence" aria-label="Link to confidence">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L164" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Lowest item confidence — the weakest link decides trust in the grade.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.models.SubmissionResult.has_manual_override">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">has_manual_override</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.has_manual_override" aria-label="Link to has_manual_override">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L172" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-property" id="grader.models.SubmissionResult.needs_review">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">needs_review</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.needs_review" aria-label="Link to needs_review">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L176" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.models.SubmissionResult.open_review_reasons">
+  <dt class="sig"><span class="sig-name">open_review_reasons</span><span class="sig-params">() -&gt; list[str]</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.open_review_reasons" aria-label="Link to open_review_reasons">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L181" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.models.SubmissionResult.item">
+  <dt class="sig"><span class="sig-name">item</span><span class="sig-params">(rubric_id: str) -&gt; <a class="xref" href="#grader.models.RubricItemResult">RubricItemResult</a> | None</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.item" aria-label="Link to item">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L192" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="grader.models.SubmissionResult.to_dict">
+  <dt class="sig"><span class="sig-name">to_dict</span><span class="sig-params">() -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.to_dict" aria-label="Link to to_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L198" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-classmethod" id="grader.models.SubmissionResult.from_dict">
+  <dt class="sig"><span class="sig-kind">classmethod </span><span class="sig-name">from_dict</span><span class="sig-params">(data: dict[str, Any]) -&gt; &#x27;<a class="xref" href="#grader.models.SubmissionResult">SubmissionResult</a>&#x27;</span>
+    <a class="headerlink" href="#grader.models.SubmissionResult.from_dict" aria-label="Link to from_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L221" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.models.GradingProgress">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">GradingProgress</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.models.GradingProgress" aria-label="Link to GradingProgress">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L240" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>Snapshot pushed to the UI while grading runs (design.md section 7).</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">total</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">completed</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">successful</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">flagged</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">failed</code></td><td><code>int</code></td><td><code>0</code></td><td></td></tr><tr><td><code class="field-name">current_student</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">stage</code></td><td><code>str</code></td><td><code>&#x27;idle&#x27;</code></td><td></td></tr><tr><td><code class="field-name">stages</code></td><td><code>dict[str, str]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">finished</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr><tr><td><code class="field-name">message</code></td><td><code>str</code></td><td><code>&#x27;&#x27;</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.models.GradingProgress.remaining">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">remaining</span><span class="sig-params">: int</span>
+    <a class="headerlink" href="#grader.models.GradingProgress.remaining" aria-label="Link to remaining">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L255" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="grader.models.GradingProgress.to_dict">
+  <dt class="sig"><span class="sig-name">to_dict</span><span class="sig-params">() -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#grader.models.GradingProgress.to_dict" aria-label="Link to to_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L258" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+<h2 id="functions">Functions</h2>
+
+<dl class="api-object api-function" id="grader.models.status_icon">
+  <dt class="sig"><span class="sig-name">status_icon</span><span class="sig-params">(status: str) -&gt; str</span>
+    <a class="headerlink" href="#grader.models.status_icon" aria-label="Link to status_icon">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L47" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.models.status_color">
+  <dt class="sig"><span class="sig-name">status_color</span><span class="sig-params">(status: str) -&gt; str</span>
+    <a class="headerlink" href="#grader.models.status_color" aria-label="Link to status_color">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/models.py#L51" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+    </article>
+    <footer class="page-footer">
+      <nav class="pager" aria-label="Pages"><a class="pager-prev" href="../api/grader.rubric.html"><small>Previous</small><span>grader.rubric</span></a><a class="pager-next" href="../api/grader.results.html"><small>Next</small><span>grader.results</span></a></nav>
+      <div class="footer-meta"><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
+    </footer>
+  </main>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#summary">Summary</a></li><li class="toc-l2"><a href="#constants">Constants</a></li><li class="toc-l2"><a href="#classes">Classes</a></li><li class="toc-l3"><a href="#grader.models.ExecutionRecord">ExecutionRecord</a></li><li class="toc-l3"><a href="#grader.models.RubricItemResult">RubricItemResult</a></li><li class="toc-l3"><a href="#grader.models.SubmissionResult">SubmissionResult</a></li><li class="toc-l3"><a href="#grader.models.GradingProgress">GradingProgress</a></li><li class="toc-l2"><a href="#functions">Functions</a></li><li class="toc-l3"><a href="#grader.models.status_icon">status_icon()</a></li><li class="toc-l3"><a href="#grader.models.status_color">status_color()</a></li></ul></nav></aside>
+</div>
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
+  <div class="search-panel">
+    <div class="search-input-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Search guides and API…" aria-label="Search" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+    <ul class="search-results" role="listbox"></ul>
+    <p class="search-hint">Type to search pages, sections, classes and functions.</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/main.js"></script>
+</body>
+</html>
