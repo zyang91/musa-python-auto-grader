@@ -1,0 +1,201 @@
+<!-- title: Assignments -->
+<!-- description: How Assignments 1, 2 and 3 are graded, and where each one's 100 points go. -->
+
+<p class="eyebrow">User guide</p>
+<h1>Assignments</h1>
+<p class="lead">The dataset decides what can be checked. Each assignment gives the grader a different situation, and the rubric is designed around it.</p>
+
+<div class="card-grid">
+  <a class="card" href="#assignment-1-the-donut-effect"><span class="card-title">Assignment 1</span><p>The Donut Effect. No answer key, so each step is checked against the student's own data.</p></a>
+  <a class="card" href="#assignment-2-exploratory-visualization"><span class="card-title">Assignment 2</span><p>Exploratory Visualization. No data handed in, so the required elements are graded from saved outputs.</p></a>
+  <a class="card" href="#assignment-3-evictions-and-the-ndvi"><span class="card-title">Assignment 3</span><p>Evictions and the NDVI. One shared zip, so there is an answer key for the first time.</p></a>
+</div>
+
+<hr>
+
+<h2>Assignment 1: The Donut Effect</h2>
+<p><span class="badge">rubrics/hw1.yaml</span><span class="badge badge-gray">assignments/hw1.py</span><span class="badge badge-bad">data required</span></p>
+
+<p>Students download their own Zillow ZHVI extract, and Zillow revises and extends that file every month. Row counts, ZIP counts and final percentages therefore differ legitimately between submissions, so the grader never compares against a stored answer. It asks whether each step in the instructions <em>worked</em>, and checks it against the student's own data:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Instruction</th><th>How it is checked</th></tr></thead>
+  <tbody>
+    <tr><td>Load the data</td><td>A pandas import, a <code>read_*</code> call, a relative path, and a wide frame with many month columns</td></tr>
+    <tr><td>Trim to Philadelphia</td><td>Every ZIP in the subset is a Philadelphia ZIP, and City/State hold no other place</td></tr>
+    <tr><td>Melt to tidy</td><td>Row count equals <strong>this student's own</strong> unique ZIPs × unique dates, with values in a column named <code>ZHVI</code></td></tr>
+    <tr><td>Split Center City</td><td>The two frames partition <strong>this student's own</strong> Philadelphia ZIP set, using the template's ZIP list</td></tr>
+    <tr><td>Percent increase function</td><td>Called on a frame the grader builds, so the right answer is known whatever data was loaded. See <a href="how-it-works.html#hidden-tests">Hidden tests</a>.</td></tr>
+    <tr><td>Compare the two groups</td><td>Both averages exist, are plausible, and point in the Donut Effect direction</td></tr>
+  </tbody>
+</table></div>
+
+<p>The only fixed values in the rubric are the ones the assignment itself fixes: the Center City ZIP list printed in the student template, and the two comparison dates (2020-03-31 and 2022-03-31). A regression test confirms this: the same notebook graded against a shorter, smaller, rescaled ZHVI file still scores 100/100.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Item</th><th>Type</th><th class="num">Points</th></tr></thead>
+  <tbody>
+    <tr><td>Notebook executes successfully</td><td><code>execution</code></td><td class="num">10</td></tr>
+    <tr><td>Data loaded correctly</td><td><code>structural</code></td><td class="num">10</td></tr>
+    <tr><td>Data trimmed to Philadelphia</td><td><code>deterministic</code></td><td class="num">15</td></tr>
+    <tr><td>Data melted into tidy format</td><td><code>deterministic</code></td><td class="num">20</td></tr>
+    <tr><td>Center City split correctly</td><td><code>deterministic</code></td><td class="num">15</td></tr>
+    <tr><td>Percent increase function works</td><td><code>hidden_test</code></td><td class="num">20</td></tr>
+    <tr><td>Center City vs. rest of Philadelphia compared</td><td><code>deterministic</code></td><td class="num">10</td></tr>
+    <tr class="total"><td>Total</td><td></td><td class="num">100</td></tr>
+  </tbody>
+</table></div>
+
+<hr>
+
+<h2>Assignment 2: Exploratory Visualization</h2>
+<p><span class="badge">rubrics/hw2.yaml</span><span class="badge badge-gray">assignments/hw2.py</span><span class="badge badge-gray">no data</span></p>
+
+<p>Students pick their own dataset and hand in <strong>only the notebook</strong>. The grader has no copy of the data, so it cannot re-run anything: every submission dies at <code>read_csv</code>. The content of a chart was never checkable, and this assignment doesn't ask for it. It asks whether the student can produce the required elements. So the rubric splits the assignment in two.</p>
+
+<h3>Facts, graded automatically (70 points)</h3>
+
+<p>An Altair chart compiles to a Vega-Lite specification, and that specification is stored in the notebook's own saved output. The grader <em>reads</em> mean/count/bin transformations, interval brushes and <code>transform_filter()</code> cross-filters out of the spec instead of guessing from the source text. That is how it tells apart the three things students most often confuse:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Student wrote</th><th>Vega-Lite says</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td><code>alt.selection_interval()</code> + <code>add_params</code></td><td><code>params: [{select: {type: interval}}]</code></td><td><span class="badge badge-ok">brush ✓</span></td></tr>
+    <tr><td><code>.interactive()</code></td><td>the same, plus <code>bind: "scales"</code></td><td>pan/zoom, <strong>not</strong> a brush</td></tr>
+    <tr><td><code>alt.selection_point()</code></td><td><code>select: {type: point}</code></td><td>a selection, half credit</td></tr>
+    <tr><td><code>transform_filter("datum.x &gt; 5")</code></td><td><code>filter</code> with no param</td><td>a subset, <strong>not</strong> a transformation</td></tr>
+    <tr><td><code>transform_filter(brush)</code> across <code>hconcat</code></td><td><code>filter: {param: …}</code> + two views</td><td><span class="badge badge-ok">cross-filter ✓ extra credit</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3>Judgement, graded by a person (30 points)</h3>
+
+<p>The assignment grades the matplotlib chart on "colour choices and clarity" and asks for written reasoning under each chart. The quality of a picture and the substance of a paragraph can't be checked by a machine. Those items <strong>always</strong> come back as <code>manual_review</code>, whatever they score. Each carries a provisional score built from real signals (labelling and colour calls extracted from the source, word counts, the position of each markdown cell) plus the text itself. A TA confirms or adjusts a number instead of starting from a blank box.</p>
+
+<p>The grader records, per chart, where the evidence came from. If an instructor <em>does</em> supply the dataset, a freshly executed chart replaces the saved one automatically and confidence rises from 0.85 to 0.95.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Item</th><th>Type</th><th class="num">Points</th></tr></thead>
+  <tbody>
+    <tr><td>Notebook was run and submitted with its outputs</td><td><code>execution</code></td><td class="num">10</td></tr>
+    <tr><td>Dataset loaded from a relative path</td><td><code>structural</code></td><td class="num">10</td></tr>
+    <tr><td>Matplotlib chart present and rendered</td><td><code>deterministic</code></td><td class="num">10</td></tr>
+    <tr><td>Reasoning for using matplotlib</td><td><code>qualitative</code></td><td class="num">5</td></tr>
+    <tr><td>Matplotlib chart aesthetics (colour and clarity)</td><td><code>qualitative</code></td><td class="num">5</td></tr>
+    <tr><td>Seaborn chart present and rendered</td><td><code>deterministic</code></td><td class="num">10</td></tr>
+    <tr><td>Motivation for the seaborn plot type</td><td><code>qualitative</code></td><td class="num">5</td></tr>
+    <tr><td>Three Altair charts</td><td><code>deterministic</code></td><td class="num">15</td></tr>
+    <tr><td>Altair transformation used</td><td><code>deterministic</code></td><td class="num">8</td></tr>
+    <tr><td>Brush selection used</td><td><code>deterministic</code></td><td class="num">7</td></tr>
+    <tr><td>Written conclusion below each chart</td><td><code>qualitative</code></td><td class="num">15</td></tr>
+    <tr><td>Extra credit: cross-filtered two-chart Altair dashboard</td><td><code>deterministic</code></td><td class="num">0</td></tr>
+    <tr class="total"><td>Total</td><td></td><td class="num">100</td></tr>
+  </tbody>
+</table></div>
+
+<p>The extra-credit dashboard is worth <strong>0 points</strong> in the rubric so that it never inflates the maximum. When it is found, the item is flagged with the suggested bonus. A manual override on it adds to the student's total without changing what they are graded out of.</p>
+
+<hr>
+
+<h2>Assignment 3: Evictions and the NDVI</h2>
+<p><span class="badge">rubrics/hw3.yaml</span><span class="badge badge-gray">assignments/hw3.py</span><span class="badge badge-warn">data optional</span></p>
+
+<p>Assignment 3 hands out <code>assignment3-data.zip</code>, and everyone works from it. That one difference changes the whole design: for the first time the right answers exist, so the grader checks results rather than inferring intent.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Fact about the shipped data</th><th class="num">Value</th></tr></thead>
+  <tbody>
+    <tr><td>Philadelphia census tracts in <code>PA-tracts.geojson</code></td><td class="num">384</td></tr>
+    <tr><td>Rows of <code>li_violations.csv</code> in the fifteen listed types (of 434,052)</td><td class="num">34,108</td></tr>
+    <tr><td>Rows in the tidy eviction frame</td><td class="num">5,376</td></tr>
+    <tr><td>Evictions in that frame</td><td class="num">149,472</td></tr>
+    <tr><td>Median NDVI inside the city limits</td><td class="num">0.2025</td></tr>
+    <tr><td>Median NDVI in the suburbs</td><td class="num">0.3748</td></tr>
+    <tr><td>Street trees sampled / their median NDVI</td><td class="num">2,480 / 0.178</td></tr>
+  </tbody>
+</table></div>
+
+<p>Every value was recomputed under the variations students legitimately produce (<code>crop=True</code> and <code>crop=False</code>, masked and filled arrays, <code>sjoin(how="inner")</code> and <code>how="left"</code>) before it was written into the rubric. Where a step has two defensible answers, both are listed rather than one being called wrong. For example, the optional <code>unstack(fill_value=0).stack()</code> fill gives 5,535 groups instead of 4,000.</p>
+
+<p>Because the answers are fixed, a matched expected value scores confidence 1.0. Grading combines <a href="how-it-works.html#two-readings">two readings</a>, the saved outputs and the re-run, so <strong>the data is optional</strong>:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th class="num">The correct demo submission scores</th></tr></thead>
+  <tbody>
+    <tr><td>With all five data files supplied</td><td class="num">99.5 / 100</td></tr>
+    <tr><td>With no data supplied at all</td><td class="num">99.5 / 100</td></tr>
+  </tbody>
+</table></div>
+
+<p>Supply the data and 19 of the 22 items come back confirmed by both readings. Leave it out and the grade comes from the submitted notebook alone, at one confidence step lower (0.9 rather than 1.0).</p>
+
+<h3>Plots are graded on the objects</h3>
+
+<p>Two thirds of Part 1 uses <code>hvplot</code>, and an hvplot call returns a holoviews object that knows what it is:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>The instructions ask for</th><th>What the object says</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td><code>groupby="year"</code>, <code>dynamic=False</code></td><td><code>HoloMap</code>, kdims <code>[year]</code>, 14 frames of <code>Polygons</code></td><td><span class="badge badge-ok">widget choropleth ✓</span></td></tr>
+    <tr><td>The same, <code>dynamic=False</code> omitted</td><td><code>DynamicMap</code>, <strong>0 frames</strong></td><td>nothing renders. Named, 60% credit</td></tr>
+    <tr><td>One map per violation type</td><td><code>HoloMap</code>, kdims <code>[violationdescription]</code>, 15 frames</td><td><span class="badge badge-ok">✓</span></td></tr>
+    <tr><td>Two maps side by side</td><td><code>Layout</code>, shape <code>(1, 2)</code>, children <code>[Polygons, Polygons]</code></td><td><span class="badge badge-ok">✓</span></td></tr>
+    <tr><td>The same, panels never trimmed</td><td><code>Layout</code> whose children are <code>HoloMap</code></td><td>still carries its widget. 75%</td></tr>
+    <tr><td>The yearly eviction trend</td><td><code>Curve</code>, 14 points <strong>summing to 149,472</strong></td><td>graded on the numbers plotted</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Named mistakes, not just wrong answers</h3>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>What the student did</th><th>How it is recognised</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td><code>points_from_xy(lat, lng)</code></td><td>The data spans 39.8–40.1 east, not −75.2</td><td>Coordinate swap, 30%</td></tr>
+    <tr><td>Joined before trimming</td><td>The join has 434,052 rows, not 34,108</td><td>Right step, wrong order: 70%</td></tr>
+    <tr><td>Joined across two CRSs</td><td>The join lost rows, and none should be lost</td><td>Named, 50%</td></tr>
+    <tr><td>NDVI from bands 3 and 4</td><td>Medians come back at −0.02, not 0.20</td><td>Off-by-one band index, 50%</td></tr>
+    <tr><td><code>np.median</code> on a masked array</td><td>The medians are NaN</td><td>The NaN trap, 40%</td></tr>
+    <tr><td>Suburbs = the envelope</td><td>Its area is city + suburbs</td><td><code>difference()</code> never applied, 50%</td></tr>
+    <tr><td>Tracts left in EPSG:4326</td><td>The polygon's area is 0.037, not 369 km²</td><td>Degrees vs metres, 40%</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Where the 100 points go</h3>
+
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>Item</th><th class="num">Points</th></tr></thead>
+  <tbody>
+    <tr><td></td><td>Notebook executes</td><td class="num">10</td></tr>
+    <tr><td>1.1.1</td><td>Eviction data loaded with geopandas</td><td class="num">3</td></tr>
+    <tr><td>1.1.2</td><td>Trimmed to Philadelphia (384 tracts)</td><td class="num">5</td></tr>
+    <tr><td>1.1.3</td><td>Melted to tidy format (5,376 rows)</td><td class="num">6</td></tr>
+    <tr><td>1.1.4</td><td>Yearly eviction trend with hvplot</td><td class="num">5</td></tr>
+    <tr><td>1.1.5</td><td>Year-by-year choropleth with a widget</td><td class="num">5</td></tr>
+    <tr><td>1.2.1</td><td>Violations loaded as a point GeoDataFrame</td><td class="num">4</td></tr>
+    <tr><td>1.2.2</td><td>Trimmed to the fifteen types (34,108 rows)</td><td class="num">4</td></tr>
+    <tr><td>1.2.3</td><td>Hex bin map with tracts overlaid</td><td class="num">4</td></tr>
+    <tr><td>1.2.4</td><td>Spatial join to census tracts</td><td class="num">5</td></tr>
+    <tr><td>1.2.5</td><td>Counted per type and tract</td><td class="num">5</td></tr>
+    <tr><td>1.2.6</td><td>Merged back onto tract geometries</td><td class="num">3</td></tr>
+    <tr><td>1.2.7</td><td>Choropleth per violation type with a widget</td><td class="num">5</td></tr>
+    <tr><td>1.3</td><td>Evictions and violations side by side</td><td class="num">4</td></tr>
+    <tr><td>2.1.1</td><td>Landsat scene opened with rasterio</td><td class="num">3</td></tr>
+    <tr><td>2.1.2</td><td>City and suburb polygons</td><td class="num">5</td></tr>
+    <tr><td>2.1.3</td><td>Masked, and the NDVI computed</td><td class="num">6</td></tr>
+    <tr><td>2.1.4</td><td>Median NDVI compared</td><td class="num">4</td></tr>
+    <tr><td>2.2.1</td><td>Street tree data loaded</td><td class="num">3</td></tr>
+    <tr><td>2.2.2</td><td>NDVI sampled at the tree locations</td><td class="num">4</td></tr>
+    <tr><td>2.2.3</td><td>Histogram and mapped tree points</td><td class="num">4</td></tr>
+    <tr><td>2.2.3</td><td>Figure styling (<em>judged by a person</em>)</td><td class="num">3</td></tr>
+    <tr><td>1.4</td><td>Extra credit (<em>0 points, flagged, suggested 5</em>)</td><td class="num">0</td></tr>
+    <tr class="total"><td></td><td>Total</td><td class="num">100</td></tr>
+  </tbody>
+</table></div>
+
+<p>Execution is 10 points, Part 1 is 58 across thirteen steps, and Part 2 is 32 across eight. Within each part, the weight follows how much the step matters: the melt, the spatial join and the NDVI masking are where the assignment's teaching happens, while the loading steps are hard to get wrong and cheap to fix.</p>
+
+<hr>
+
+<h2>Assignments 4–6</h2>
+
+<p>Their student templates are in <code>assignment_template/</code>, but they are not graded yet. Each needs a rubric YAML and a grader class. See <a href="extending.html">Adding an assignment</a>.</p>

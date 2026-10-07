@@ -1,0 +1,95 @@
+<!-- title: Overview -->
+<!-- description: Semi-automatic grading for Jupyter Notebook assignments in MUSA 5500: Geospatial Data Science in Python. -->
+
+<div class="hero">
+  <p class="eyebrow">MUSA 5500 · Geospatial Data Science in Python</p>
+  <h1>MUSA Grader</h1>
+  <p class="lead">Semi-automatic grading for Jupyter Notebook assignments. It automates what can be tested objectively, flags anything ambiguous, and keeps human review quick. Every deduction traces back to a deterministic test, a structural check, a notebook result or a person's decision.</p>
+  <div class="hero-actions">
+    <a class="button button-primary" href="getting-started.html">Get started →</a>
+    <a class="button" href="how-it-works.html">How grading works</a>
+    <a class="button" href="api/index.html">API reference</a>
+  </div>
+</div>
+
+<div class="callout">
+  <p class="callout-title">The grader screens submissions. It does not set marks on its own.</p>
+  <p>The grader can clear a submission, but it never marks one down by itself. Any submission that comes back below full marks goes to a person, and the deduction stands only if that person agrees. The time saved comes from the submissions the grader clears. Where the grader is unsure, nobody relies on it.</p>
+</div>
+
+<h2>What it does</h2>
+
+<div class="card-grid">
+  <a class="card" href="how-it-works.html#discovery">
+    <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg></span>
+    <span class="card-title">Finds the notebook</span>
+    <p>Reads folders of student work or flat Canvas export ZIPs. When two notebooks look equally likely, it flags the submission instead of guessing.</p>
+  </a>
+  <a class="card" href="docker.html">
+    <span class="card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+    <span class="card-title">Runs it in a sandbox</span>
+    <p>Each notebook runs in its own Docker container with no network, capped memory and CPU, and a read-only filesystem.</p>
+  </a>
+  <a class="card" href="how-it-works.html#inspection-without-variable-names">
+    <span class="card-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+    <span class="card-title">Inspects results, not names</span>
+    <p>A probe describes every DataFrame, GeoDataFrame, array and chart in the kernel, so students can name their variables however they like.</p>
+  </a>
+  <a class="card" href="rubrics.html">
+    <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M9 4h10v16H5V8z"/><path d="M9 4v4H5M9 13h6M9 17h6"/></svg></span>
+    <span class="card-title">Rubric as configuration</span>
+    <p>Expected values, tolerances and credit ratios live in YAML. To fix the grading, edit the file and press Regrade. No Python changes needed.</p>
+  </a>
+  <a class="card" href="ta-workflow.html#review-queue">
+    <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 3 2 21h20z"/><path d="M12 10v5M12 18h.01"/></svg></span>
+    <span class="card-title">Review queue</span>
+    <p>Lists only the submissions that need a decision, each with the reason it was flagged, the evidence and a manual override.</p>
+  </a>
+  <a class="card" href="results.html">
+    <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></span>
+    <span class="card-title">Exports</span>
+    <p><code>grades.csv</code>, the review queue, per-student markdown feedback and the full session JSON, all stored on disk under <code>results/</code>.</p>
+  </a>
+</div>
+
+<h2>Three assignments, three ways to grade</h2>
+
+<p>What the grader can check depends on the dataset. Each of the three assignments gives it a different situation:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>Assignment 1: The Donut Effect</th><th>Assignment 2: Exploratory Visualization</th><th>Assignment 3: Evictions and the NDVI</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Dataset</strong></td><td>One Zillow file, <strong>downloaded by each student</strong></td><td>The student's own choice, <strong>never handed in</strong></td><td><strong>One zip, distributed with the assignment</strong></td></tr>
+    <tr><td><strong>Answer key?</strong></td><td>No. Zillow revises the file monthly</td><td>No. Every student uses a different dataset</td><td><strong>Yes.</strong> Everyone runs the same five files</td></tr>
+    <tr><td><strong>What is graded</strong></td><td>Whether each step <em>worked</em>, checked against the student's own data</td><td>Whether the student can <em>produce the required elements</em></td><td>Whether each result <em>is correct</em></td></tr>
+    <tr><td><strong>Evidence from</strong></td><td>The grading run's own execution</td><td>The outputs saved in the notebook</td><td><strong>Both</strong>, combined</td></tr>
+  </tbody>
+</table></div>
+
+<p>See <a href="assignments.html">Assignments</a> for how each one is graded and where its 100 points go.</p>
+
+<h2>Student data</h2>
+
+<ul>
+  <li>Grading runs entirely on the instructor's or TA's machine. Submissions are never uploaded anywhere.</li>
+  <li>The Streamlit UI binds to localhost, and notebooks run in a Docker container with no network access.</li>
+  <li>Failure patterns are reproduced in <code>tests/</code> with synthetic fixtures. No student file, name or identifier appears in the repository.</li>
+  <li>Optional LLM grading of written answers is off by default. When it is on, names, emails and ID numbers are redacted before any text leaves the machine.</li>
+</ul>
+
+<h2>Architecture at a glance</h2>
+
+<div class="pipeline">
+  <span>Streamlit UI</span><i>→</i><span>GradingService</span><i>→</i><span>executor</span><i>→</i><span>assignment grader</span><i>→</i><span>rubric engine</span><i>→</i><span>results store</span>
+</div>
+
+<p>The UI contains no grading logic. It calls <a href="api/grader.service.html#grader.service.GradingService"><code>grader.service.GradingService</code></a> and displays what comes back, and the <a href="cli.html">CLI</a> works the same way. You can drive the grader from your own Python code in a few lines:</p>
+
+<pre><code class="language-python">from grader import GraderSettings, GradingService
+
+service = GradingService.from_rubric_path(
+    "rubrics/hw1.yaml",
+    GraderSettings(shared_data_paths=["examples/data/zillow_zhvi.csv"]),
+)
+session = service.run(service.load_submissions("examples/submissions").candidates)
+print(session.summary())</code></pre>

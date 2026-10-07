@@ -1,0 +1,71 @@
+<!-- title: Testing and CI -->
+<!-- description: Running the test suite, the markers it uses, what CI checks, and how to rebuild these docs. -->
+
+<p class="eyebrow">Developer guide</p>
+<h1>Testing and CI</h1>
+
+<h2>Running the tests</h2>
+
+<pre><code class="language-bash">python -m pytest                  # the full suite, about 40 s
+python -m pytest -m "not slow"    # skip the tests that run real kernels
+python -m pytest -m docker        # grade a notebook in the sandbox image (needs it built)
+ruff check .                      # syntax errors and undefined names</code></pre>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Marker</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td><code>slow</code></td><td>Runs a real notebook kernel (a few seconds each)</td></tr>
+    <tr><td><code>docker</code></td><td>Runs in the sandbox image. Skipped unless <code>musa-grader:latest</code> is built.</td></tr>
+  </tbody>
+</table></div>
+
+<p>Ruff is limited to the checks that mean the grader would crash (<code>E9</code>, <code>F63</code>, <code>F7</code>, <code>F82</code>). <code>assignment_template/</code> and notebooks are excluded because the templates are deliberately unfinished code.</p>
+
+<h2>What the suite covers</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>File</th><th>Covers</th></tr></thead>
+  <tbody>
+    <tr><td><code>test_discovery.py</code></td><td>Folder and Canvas layouts, notebook choice, ambiguous submissions</td></tr>
+    <tr><td><code>test_data_supply.py</code></td><td>Placing instructor data at the paths each notebook reads, path safety</td></tr>
+    <tr><td><code>test_execution.py</code>, <code>test_docker_execution.py</code></td><td>Local and sandboxed execution, timeouts, probe stripping</td></tr>
+    <tr><td><code>test_hw1.py</code>, <code>test_hw2.py</code>, <code>test_hw3.py</code></td><td>Per-assignment checks and named near-misses</td></tr>
+    <tr><td><code>test_hw2_integration.py</code>, <code>test_integration.py</code></td><td>End-to-end grading of demo classes</td></tr>
+    <tr><td><code>test_answers.py</code>, <code>test_charts.py</code></td><td>Reading answers and chart specs from saved outputs</td></tr>
+    <tr><td><code>test_real_submission_patterns.py</code></td><td>Failure patterns seen in real classes, reproduced synthetically</td></tr>
+    <tr><td><code>test_results.py</code></td><td>Session persistence, overrides, exports</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Continuous integration</h2>
+
+<p><code>.github/workflows/ci.yml</code> runs on every push to <code>main</code> and every pull request:</p>
+
+<ol>
+  <li><strong>Tests</strong> on Python 3.10, 3.11, 3.12 and 3.13: install, ruff, <code>python cli.py rubrics</code>, then the full suite with real kernels in local mode.</li>
+  <li><strong>Docker images</strong>: build the sandbox, import every package the assignments use, build the app image, grade a real notebook inside the sandbox, grade the demo class from inside the app container (and assert <code>student_001</code> scores 100), and check that the app answers its health check.</li>
+</ol>
+
+<p>Dependabot opens weekly update PRs for the grader's packages, the sandbox's pinned packages, the base images and the Actions. Each one goes through the same CI.</p>
+
+<h2>Building these docs</h2>
+
+<p>The site is static HTML in <code>docs/</code>. Guide pages are written by hand as fragments in <code>docs/_pages/</code>. The API reference is generated from the docstrings in <code>grader/</code> and <code>assignments/</code>. The build reads the source with <code>ast</code> instead of importing it, so it needs only the standard library:</p>
+
+<pre><code class="language-bash">python docs/build.py</code></pre>
+
+<p>Rebuild after changing a docstring or a page, and commit the output. To preview locally:</p>
+
+<pre><code class="language-bash">python -m http.server -d docs 8000</code></pre>
+
+<p>To publish, enable GitHub Pages for the repository with <strong>Deploy from a branch → main → /docs</strong>.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>To change</th><th>Edit</th></tr></thead>
+  <tbody>
+    <tr><td>A guide page</td><td><code>docs/_pages/&lt;page&gt;.html</code>, then rebuild</td></tr>
+    <tr><td>Page order or the API module list</td><td><code>GUIDE</code> and <code>API_MODULES</code> in <code>docs/build.py</code></td></tr>
+    <tr><td>An API description</td><td>The docstring in the source, then rebuild</td></tr>
+    <tr><td>Styling or behaviour</td><td><code>docs/assets/style.css</code>, <code>docs/assets/main.js</code></td></tr>
+  </tbody>
+</table></div>

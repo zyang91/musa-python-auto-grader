@@ -1,0 +1,101 @@
+<!-- title: TA workflow -->
+<!-- description: A tour of the Streamlit app, from loading submissions to exporting grades. -->
+
+<p class="eyebrow">User guide</p>
+<h1>TA workflow</h1>
+<p class="lead">The Streamlit app is the main interface. It configures a <code>GradingService</code> and shows what comes back, and nothing in the UI grades anything itself.</p>
+
+<pre><code class="language-text">Select an assignment
+  → upload a Canvas ZIP or point at a submissions folder
+  → review what discovery found
+  → Run Grader (notebooks execute in isolated containers)
+  → class overview: mean, distribution, most common issues
+  → review queue: only the submissions that need a decision
+  → per-student page: rubric scores, evidence, manual override
+  → export grades.csv and per-student feedback</code></pre>
+
+<h2>Start the app</h2>
+
+<pre><code class="language-bash">streamlit run app.py</code></pre>
+
+<p>The app binds to localhost. Uploads can be up to 600 MB, because the Zillow extract is well over Streamlit's 200 MB default. See <code>.streamlit/config.toml</code>.</p>
+
+<h2>The sidebar</h2>
+
+<h3>Assignment</h3>
+<p>Choose any rubric found in <code>rubrics/</code>. The list is built from every YAML file that parses.</p>
+
+<h3>Submissions</h3>
+<p>Upload a Canvas export ZIP, or type a local folder path and press <strong>Load folder</strong>. Both layouts are supported: a folder of per-student folders, and a flat Canvas export (<code>doejane_12345_67890_assignment1.ipynb</code>, including <code>_late_</code> files).</p>
+
+<h3>Assignment data</h3>
+<p>Students hand in a notebook and nothing else, so you provide the data. Upload the file(s) here, or use <em>"or use a file already on this machine"</em> to give a path. Uploads are kept in <code>.musa_grader_data/</code> and survive a restart. Each file in use is listed with its size and can be removed individually.</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Assignment</th><th>Data</th></tr></thead>
+  <tbody>
+    <tr><td>Assignment 1</td><td><span class="badge badge-bad">required</span> The Zillow ZHVI extract. The app refuses to start a run without it.</td></tr>
+    <tr><td>Assignment 2</td><td><span class="badge badge-gray">none</span> Students choose their own dataset, so the saved outputs are graded.</td></tr>
+    <tr><td>Assignment 3</td><td><span class="badge badge-warn">optional</span> The five files from <code>assignment3-data.zip</code>. Supplying them lets the grader re-run each notebook to confirm the saved answers. The sidebar names any of the five that are missing.</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Pages</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Page</th><th>What it is for</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Overview</strong></td><td>The class dashboard: mean, median, distribution, most common issues. You can also reload a saved session from here.</td></tr>
+    <tr><td><strong>Submissions</strong></td><td>What discovery found: the chosen notebook per student, warnings, and submissions with multiple or missing notebooks.</td></tr>
+    <tr><td><strong>Grading</strong></td><td>Starts a run and shows live progress per student and per stage: notebook execution, structural checks, hidden tests, feedback generation.</td></tr>
+    <tr><td><strong>Students</strong></td><td>The per-student page: each rubric item's score, status, confidence, feedback and evidence, the rendered notebook, and manual overrides.</td></tr>
+    <tr><td><strong>Review Queue</strong></td><td>Only the submissions that need a decision, broken submissions first.</td></tr>
+    <tr><td><strong>Class Analytics</strong></td><td>Per-item breakdown across the class: where points were lost and how often.</td></tr>
+    <tr><td><strong>Export</strong></td><td>Download grades, feedback and archives, and regrade a session.</td></tr>
+    <tr><td><strong>Settings</strong></td><td>Execution mode and limits, review policy, optional LLM grading.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 id="review-queue">The review queue</h2>
+
+<p>A submission goes to the queue when any of these applies:</p>
+
+<ul>
+  <li>It <strong>lost any points at all</strong>. This rule is on by default, and it is the strongest one.</li>
+  <li>The notebook failed to execute or timed out.</li>
+  <li>Discovery found multiple notebooks or none.</li>
+  <li>An item's confidence is below the threshold (default 0.80).</li>
+  <li>An item has status <code>manual_review</code>. This includes every qualitative item when LLM grading is off.</li>
+</ul>
+
+<p>Each queue entry names the items that lost points and how many, and broken submissions sort above small deductions. Marking a submission reviewed, or overriding it back to full marks, removes it from the queue.</p>
+
+<div class="callout callout-warn">
+  <p class="callout-title">An automated deduction is a claim about a student's work</p>
+  <p>That is why a person signs off before it becomes a grade. Full marks need no defence and pass straight through. For a large class you can switch the rule off in <strong>Settings → Review every submission that loses points</strong>. The queue then holds only uncertain or failed submissions.</p>
+</div>
+
+<h2>Manual overrides</h2>
+
+<p>An override never replaces the automatic score. Both are kept:</p>
+
+<pre><code class="language-json">{ "automatic_score": 12, "manual_override": true,
+  "final_score": 15, "override_reason": "Alternative valid implementation." }</code></pre>
+
+<p>Re-running the grader regenerates the automatic scores. With <strong>Preserve manual overrides</strong> on, your decisions are reapplied on top. For extra-credit items (worth 0 points in the rubric), an override adds to the student's total without changing the maximum they are graded out of.</p>
+
+<h2>Settings</h2>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Setting</th><th>Default</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Execution mode</td><td><code>docker</code></td><td><code>local</code> runs student code on this machine with no network, memory or filesystem isolation.</td></tr>
+    <tr><td>Notebook timeout</td><td>600 s</td><td>A rubric's <code>execution_timeout_seconds</code> raises it, never lowers it. Assignment 3 asks for 1800.</td></tr>
+    <tr><td>Cell timeout</td><td>300 s</td><td></td></tr>
+    <tr><td>Memory / CPU limit</td><td><code>2g</code> / <code>1.0</code></td><td>Passed to <code>docker run</code>.</td></tr>
+    <tr><td>Docker image</td><td><code>musa-grader:latest</code></td><td></td></tr>
+    <tr><td>Review every submission that loses points</td><td>on</td><td>See above.</td></tr>
+    <tr><td>Confidence threshold</td><td>0.80</td><td>Items graded below this confidence go to the queue.</td></tr>
+    <tr><td>LLM grading</td><td>off</td><td>Provider <code>anthropic</code>. Needs <code>ANTHROPIC_API_KEY</code> in the environment. Low-confidence judgements still go to a person.</td></tr>
+  </tbody>
+</table></div>

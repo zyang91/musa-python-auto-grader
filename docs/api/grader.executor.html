@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>grader.executor · MUSA Grader</title>
+<meta name="description" content="Notebook execution (design.md §18-19).">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)" id="hljs-dark">
+<script>
+  (function () {
+    try { var t = localStorage.getItem("musa-docs-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  })();
+</script>
+</head>
+<body data-root="../">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="icon-button menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg viewBox="0 0 32 32" aria-hidden="true" class="logo"><rect x="3" y="3" width="26" height="26" rx="7" class="logo-bg"/><path d="M9.5 16.5l4.2 4.2 8.8-9.4" class="logo-check"/></svg><span>MUSA Grader</span><span class="version">v0.1.0</span></a>
+  <button class="search-trigger" type="button" aria-label="Search the documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search docs</span><kbd>/</kbd></button>
+  <div class="topbar-actions">
+    <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <a class="icon-button" href="https://github.com/zyang91/musa-python-auto-grader" aria-label="GitHub repository"><svg viewBox="0 0 16 16" aria-hidden="true" class="filled"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation">
+    <nav><p class="nav-section">Introduction</p><ul class="nav-list">
+<li><a href="../index.html">Overview</a></li>
+<li><a href="../getting-started.html">Getting started</a></li>
+</ul>
+<p class="nav-section">User guide</p><ul class="nav-list">
+<li><a href="../ta-workflow.html">TA workflow</a></li>
+<li><a href="../cli.html">CLI reference</a></li>
+<li><a href="../how-it-works.html">How grading works</a></li>
+<li><a href="../assignments.html">Assignments</a></li>
+<li><a href="../rubrics.html">Rubrics</a></li>
+<li><a href="../docker.html">Docker sandbox</a></li>
+<li><a href="../results.html">Results and exports</a></li>
+</ul>
+<p class="nav-section">Developer guide</p><ul class="nav-list">
+<li><a href="../extending.html">Adding an assignment</a></li>
+<li><a href="../testing.html">Testing and CI</a></li>
+</ul>
+<p class="nav-section">API reference</p><ul class="nav-list">
+<li><a href="../api/index.html">Overview</a></li>
+<li class="nav-group"><span class="nav-group-label">Package</span><ul>
+<li><a href="../api/grader.html"><code>grader</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Engine</span><ul>
+<li><a href="../api/grader.service.html"><code>grader.service</code></a></li>
+<li><a href="../api/grader.rubric.html"><code>grader.rubric</code></a></li>
+<li><a href="../api/grader.models.html"><code>grader.models</code></a></li>
+<li><a href="../api/grader.results.html"><code>grader.results</code></a></li>
+<li><a href="../api/grader.scoring.html"><code>grader.scoring</code></a></li>
+<li><a href="../api/grader.feedback.html"><code>grader.feedback</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Execution</span><ul>
+<li><a href="../api/grader.discovery.html"><code>grader.discovery</code></a></li>
+<li><a href="../api/grader.executor.html" class="active" aria-current="page"><code>grader.executor</code></a></li>
+<li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
+<li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
+<li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
+<li><a href="../api/grader.inspection.html"><code>grader.inspection</code></a></li>
+<li><a href="../api/grader.answers.html"><code>grader.answers</code></a></li>
+<li><a href="../api/grader.charts.html"><code>grader.charts</code></a></li>
+<li><a href="../api/grader.llm.html"><code>grader.llm</code></a></li>
+<li><a href="../api/grader.utils.html"><code>grader.utils</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Assignments</span><ul>
+<li><a href="../api/assignments.html"><code>assignments</code></a></li>
+<li><a href="../api/assignments.base.html"><code>assignments.base</code></a></li>
+<li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
+<li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
+<li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+</ul></li></ul></nav>
+  </aside>
+  <div class="sidebar-scrim" hidden></div>
+  <main id="content" class="content content-api">
+    <article class="prose">
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py">grader/executor.py</a> · 395 lines</p>
+<h1 class="module-title"><code>grader.executor</code></h1>
+<div class="module-doc"><p>Notebook execution (design.md §18-19).</p>
+<p>Two modes share one code path: the notebook is instrumented with probe cells, written into an isolated working directory, and executed by a subprocess. Docker is the default because student code is untrusted; local execution exists for machines without Docker and is labelled unsafe everywhere it appears.</p></div>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap"><table class="summary-table"><thead><tr><th>Name</th><th>Kind</th><th>Description</th></tr></thead><tbody><tr><td><a href="#grader.executor.ExecutionConfig"><code>ExecutionConfig</code></a></td><td><span class="kind">class</span></td><td>Limits for one notebook execution, derived from <code>GraderSettings</code>.</td></tr><tr><td><a href="#grader.executor.ExecutionError"><code>ExecutionError</code></a></td><td><span class="kind">class</span></td><td></td></tr><tr><td><a href="#grader.executor.build_probe_cells"><code>build_probe_cells()</code></a></td><td><span class="kind">function</span></td><td>Return the notebook cells that dump the student&#x27;s namespace to JSON.</td></tr><tr><td><a href="#grader.executor.build_url_redirect_cell"><code>build_url_redirect_cell()</code></a></td><td><span class="kind">function</span></td><td>A first cell that points data URLs at the supplied local file.</td></tr><tr><td><a href="#grader.executor.instrument_notebook"><code>instrument_notebook()</code></a></td><td><span class="kind">function</span></td><td>Append probe cells (and, if needed, prepend URL redirects) to a copy.</td></tr><tr><td><a href="#grader.executor.docker_available"><code>docker_available()</code></a></td><td><span class="kind">function</span></td><td>Whether a Docker daemon answers on this machine.</td></tr><tr><td><a href="#grader.executor.docker_image_exists"><code>docker_image_exists()</code></a></td><td><span class="kind">function</span></td><td>Whether the sandbox image has been built locally.</td></tr><tr><td><a href="#grader.executor.execute_submission"><code>execute_submission()</code></a></td><td><span class="kind">function</span></td><td>Execute one prepared submission. Returns (execution record, probe payload).</td></tr><tr><td><a href="#grader.executor.strip_probe_cells"><code>strip_probe_cells()</code></a></td><td><span class="kind">function</span></td><td>Remove the injected cells so the saved notebook is the student&#x27;s work.</td></tr></tbody></table></div>
+<h2 id="constants">Constants</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr id="grader.executor.MODE_DOCKER"><td><code class="field-name">MODE_DOCKER</code></td><td><code>&#x27;docker&#x27;</code></td><td></td></tr><tr id="grader.executor.MODE_LOCAL"><td><code class="field-name">MODE_LOCAL</code></td><td><code>&#x27;local&#x27;</code></td><td></td></tr><tr id="grader.executor.PACKAGE_DIR"><td><code class="field-name">PACKAGE_DIR</code></td><td><code>Path(__file__).resolve().parent</code></td><td></td></tr><tr id="grader.executor.RUNNER_SOURCE"><td><code class="field-name">RUNNER_SOURCE</code></td><td><code>PACKAGE_DIR / &#x27;notebook_runner.py&#x27;</code></td><td></td></tr><tr id="grader.executor.PROBE_SOURCE"><td><code class="field-name">PROBE_SOURCE</code></td><td><code>PACKAGE_DIR / &#x27;probe_runtime.py&#x27;</code></td><td></td></tr><tr id="grader.executor.INSTRUMENTED_NAME"><td><code class="field-name">INSTRUMENTED_NAME</code></td><td><code>&#x27;_musa_instrumented.ipynb&#x27;</code></td><td></td></tr><tr id="grader.executor.RUNNER_NAME"><td><code class="field-name">RUNNER_NAME</code></td><td><code>&#x27;_musa_runner.py&#x27;</code></td><td></td></tr><tr id="grader.executor.ARTIFACTS_DIRNAME"><td><code class="field-name">ARTIFACTS_DIRNAME</code></td><td><code>&#x27;_musa_artifacts&#x27;</code></td><td></td></tr><tr id="grader.executor.DEFAULT_IMAGE"><td><code class="field-name">DEFAULT_IMAGE</code></td><td><code>&#x27;musa-grader:latest&#x27;</code></td><td></td></tr><tr id="grader.executor.URL_REDIRECT_TEMPLATE"><td><code class="field-name">URL_REDIRECT_TEMPLATE</code></td><td><code>&#x27;# --- MUSA Grader: the grading run is offline; URLs of supplied data files read the local copy ---\ndef _musa_install_url_redirects(redire…</code></td><td></td></tr></tbody></table></div>
+<h2 id="classes">Classes</h2>
+
+<section class="api-class" id="grader.executor.ExecutionConfig">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">ExecutionConfig</span><span class="sig-params"></span>
+    <a class="headerlink" href="#grader.executor.ExecutionConfig" aria-label="Link to ExecutionConfig">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L42" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p>Limits for one notebook execution, derived from <code>GraderSettings</code>.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">mode</code></td><td><code>str</code></td><td><code>MODE_DOCKER</code></td><td></td></tr><tr><td><code class="field-name">docker_image</code></td><td><code>str</code></td><td><code>DEFAULT_IMAGE</code></td><td></td></tr><tr><td><code class="field-name">timeout_seconds</code></td><td><code>int</code></td><td><code>600</code></td><td></td></tr><tr><td><code class="field-name">cell_timeout_seconds</code></td><td><code>int</code></td><td><code>300</code></td><td></td></tr><tr><td><code class="field-name">memory_limit</code></td><td><code>str</code></td><td><code>&#x27;2g&#x27;</code></td><td></td></tr><tr><td><code class="field-name">cpu_limit</code></td><td><code>str</code></td><td><code>&#x27;1.0&#x27;</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="grader.executor.ExecutionConfig.hard_timeout">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">hard_timeout</span><span class="sig-params">: int</span>
+    <a class="headerlink" href="#grader.executor.ExecutionConfig.hard_timeout" aria-label="Link to hard_timeout">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L51" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="grader.executor.ExecutionError">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">ExecutionError</span><span class="sig-params">(RuntimeError)</span>
+    <a class="headerlink" href="#grader.executor.ExecutionError" aria-label="Link to ExecutionError">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L56" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"></p>
+    <p class="muted">No description.</p>
+    
+    
+  </div>
+</section>
+<h2 id="functions">Functions</h2>
+
+<dl class="api-object api-function" id="grader.executor.build_probe_cells">
+  <dt class="sig"><span class="sig-name">build_probe_cells</span><span class="sig-params">(probe_config: dict[str, Any]) -&gt; list[Any]</span>
+    <a class="headerlink" href="#grader.executor.build_probe_cells" aria-label="Link to build_probe_cells">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L64" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Return the notebook cells that dump the student&#x27;s namespace to JSON.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.executor.build_url_redirect_cell">
+  <dt class="sig"><span class="sig-name">build_url_redirect_cell</span><span class="sig-params">(redirects: dict[str, str]) -&gt; Any</span>
+    <a class="headerlink" href="#grader.executor.build_url_redirect_cell" aria-label="Link to build_url_redirect_cell">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L141" title="View source on GitHub">[source]</a></dt>
+  <dd><p>A first cell that points data URLs at the supplied local file.</p>
+<p>The container has no network, by design. A student who loads the data straight from Zillow&#x27;s URL is following a reasonable pattern, so a URL whose filename matches a file the instructor supplied is read from that local copy; any other URL still fails exactly as it would offline.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.executor.instrument_notebook">
+  <dt class="sig"><span class="sig-name">instrument_notebook</span><span class="sig-params">(notebook_path: str | Path, probe_config: dict[str, Any], output_path: str | Path, url_redirects: dict[str, str] | None = None) -&gt; Path</span>
+    <a class="headerlink" href="#grader.executor.instrument_notebook" aria-label="Link to instrument_notebook">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L156" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Append probe cells (and, if needed, prepend URL redirects) to a copy.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.executor.docker_available">
+  <dt class="sig"><span class="sig-name">docker_available</span><span class="sig-params">() -&gt; bool</span>
+    <a class="headerlink" href="#grader.executor.docker_available" aria-label="Link to docker_available">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L181" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Whether a Docker daemon answers on this machine.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.executor.docker_image_exists">
+  <dt class="sig"><span class="sig-name">docker_image_exists</span><span class="sig-params">(image: str) -&gt; bool</span>
+    <a class="headerlink" href="#grader.executor.docker_image_exists" aria-label="Link to docker_image_exists">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L193" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Whether the sandbox image has been built locally.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.executor.execute_submission">
+  <dt class="sig"><span class="sig-name">execute_submission</span><span class="sig-params">(workdir: str | Path, probe_config: dict[str, Any], config: <a class="xref" href="#grader.executor.ExecutionConfig">ExecutionConfig</a>, run_subdir: str = &#x27;&#x27;) -&gt; tuple[<a class="xref" href="grader.models.html#grader.models.ExecutionRecord">ExecutionRecord</a>, dict[str, Any] | None]</span>
+    <a class="headerlink" href="#grader.executor.execute_submission" aria-label="Link to execute_submission">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L205" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Execute one prepared submission. Returns (execution record, probe payload).</p>
+<p><code>run_subdir</code> is where inside <code>workdir</code> the notebook runs from (see <code>prepare_workdir</code>); artifacts always go to <code>workdir/_musa_artifacts</code>.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="grader.executor.strip_probe_cells">
+  <dt class="sig"><span class="sig-name">strip_probe_cells</span><span class="sig-params">(notebook_path: str | Path) -&gt; Path</span>
+    <a class="headerlink" href="#grader.executor.strip_probe_cells" aria-label="Link to strip_probe_cells">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/executor.py#L291" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Remove the injected cells so the saved notebook is the student&#x27;s work.</p></dd>
+</dl>
+    </article>
+    <footer class="page-footer">
+      <nav class="pager" aria-label="Pages"><a class="pager-prev" href="../api/grader.discovery.html"><small>Previous</small><span>grader.discovery</span></a><a class="pager-next" href="../api/grader.notebook_runner.html"><small>Next</small><span>grader.notebook_runner</span></a></nav>
+      <div class="footer-meta"><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
+    </footer>
+  </main>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#summary">Summary</a></li><li class="toc-l2"><a href="#constants">Constants</a></li><li class="toc-l2"><a href="#classes">Classes</a></li><li class="toc-l3"><a href="#grader.executor.ExecutionConfig">ExecutionConfig</a></li><li class="toc-l3"><a href="#grader.executor.ExecutionError">ExecutionError</a></li><li class="toc-l2"><a href="#functions">Functions</a></li><li class="toc-l3"><a href="#grader.executor.build_probe_cells">build_probe_cells()</a></li><li class="toc-l3"><a href="#grader.executor.build_url_redirect_cell">build_url_redirect_cell()</a></li><li class="toc-l3"><a href="#grader.executor.instrument_notebook">instrument_notebook()</a></li><li class="toc-l3"><a href="#grader.executor.docker_available">docker_available()</a></li><li class="toc-l3"><a href="#grader.executor.docker_image_exists">docker_image_exists()</a></li><li class="toc-l3"><a href="#grader.executor.execute_submission">execute_submission()</a></li><li class="toc-l3"><a href="#grader.executor.strip_probe_cells">strip_probe_cells()</a></li></ul></nav></aside>
+</div>
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
+  <div class="search-panel">
+    <div class="search-input-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Search guides and API…" aria-label="Search" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+    <ul class="search-results" role="listbox"></ul>
+    <p class="search-hint">Type to search pages, sections, classes and functions.</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/main.js"></script>
+</body>
+</html>

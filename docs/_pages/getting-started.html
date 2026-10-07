@@ -1,0 +1,109 @@
+<!-- title: Getting started -->
+<!-- description: Install the grader, build the sandbox image, generate demo submissions and run your first grading session. -->
+
+<p class="eyebrow">Introduction</p>
+<h1>Getting started</h1>
+<p class="lead">Install the grader, build the sandbox image, and grade a demo class in about ten minutes.</p>
+
+<h2>Requirements</h2>
+
+<ul>
+  <li><strong>Python 3.10 or newer.</strong> CI tests 3.10 through 3.13.</li>
+  <li><strong>Docker</strong>, recommended. Student code is untrusted, and the default execution mode runs every notebook in an isolated container. Without Docker you can still use <code>--mode local</code>, but notebooks then run on your machine with no isolation.</li>
+  <li>For Assignment 3's demo submissions only: the geospatial stack (geopandas, rasterio, hvplot and the rest). The sandbox image already includes all of it.</li>
+</ul>
+
+<h2>Install</h2>
+
+<ol class="steps">
+  <li>
+    <strong>Install the Python dependencies</strong>
+<pre><code class="language-bash">pip install -r requirements.txt</code></pre>
+    <p>Or install the package in editable mode with the development tools (pytest, ruff):</p>
+<pre><code class="language-bash">pip install -e ".[dev]"</code></pre>
+  </li>
+  <li>
+    <strong>Build the grading container</strong>
+    <p>Do this once per semester, and again whenever the sandbox packages change.</p>
+<pre><code class="language-bash">docker build -t musa-grader:latest -f docker/Dockerfile .</code></pre>
+  </li>
+  <li>
+    <strong>Check that the rubrics load</strong>
+<pre><code class="language-bash">python cli.py rubrics</code></pre>
+    <p>This should list <code>hw1</code>, <code>hw2</code> and <code>hw3</code> with their YAML paths.</p>
+  </li>
+</ol>
+
+<h2>Grade a demo class</h2>
+
+<p>The repository ships generators for synthetic submissions covering the cases a TA usually sees. The submissions contain notebooks only, with no data, which is how the class hands work in.</p>
+
+<h3>Assignment 1</h3>
+
+<pre><code class="language-bash">python examples/make_example_data.py && python examples/make_example_submissions.py</code></pre>
+
+<p>This builds seven submissions: two correct, one with plausible mistakes, one with two notebooks, one that crashes partway, one with no notebook, and one untouched template.</p>
+
+<pre><code class="language-bash">python cli.py grade examples/submissions --mode docker --data examples/data/zillow_zhvi.csv</code></pre>
+
+<h3>Assignment 2</h3>
+
+<pre><code class="language-bash">python examples/make_hw2_data.py && python examples/make_hw2_submissions.py</code></pre>
+
+<p>These four submissions are <strong>run against the data and saved with their outputs, then handed in without the data</strong>. One does everything including the extra credit, one makes the usual near-misses, one hit an error in the student's own run, and one was never run. No data file is needed for grading: every notebook will fail to execute, and that is expected, because the rubric grades the outputs the students saved.</p>
+
+<pre><code class="language-bash">python cli.py grade examples/hw2_submissions --rubric rubrics/hw2.yaml</code></pre>
+
+<h3>Assignment 3</h3>
+
+<pre><code class="language-bash">python examples/make_hw3_submissions.py
+python cli.py grade examples/hw3_submissions --rubric rubrics/hw3.yaml</code></pre>
+
+<p>Expected scores: <strong>99.5, 68.5, 34.5 and 10</strong> out of 100. The correct submission misses 0.5 because of the ceiling on the styling item: no submission reaches full marks on a judgement item until a person has looked at it.</p>
+
+<p>To have the grader re-run each notebook and confirm what it shows, unzip the data and supply all five files:</p>
+
+<pre><code class="language-bash">unzip assignment_template/assignment3-data.zip -d /tmp/hw3
+python cli.py grade examples/hw3_submissions --rubric rubrics/hw3.yaml \
+  --data /tmp/hw3/assignment3-data/PA-tracts.geojson \
+  --data /tmp/hw3/assignment3-data/li_violations.csv \
+  --data /tmp/hw3/assignment3-data/landsat8_philly.tif \
+  --data /tmp/hw3/assignment3-data/City_Limits.geojson \
+  --data /tmp/hw3/assignment3-data/ppr_tree_canopy_points_2015.geojson</code></pre>
+
+<h2>Start the web app</h2>
+
+<pre><code class="language-bash">streamlit run app.py</code></pre>
+
+<p>Then, in the sidebar:</p>
+
+<ol>
+  <li>Pick <strong>Assignment 1</strong>.</li>
+  <li>Upload the assignment data file. For the demo, use <code>examples/data/zillow_zhvi.csv</code>.</li>
+  <li>Load <code>examples/submissions</code>, or upload a Canvas ZIP.</li>
+  <li>Choose an execution mode and press <strong>Run Grader</strong>.</li>
+</ol>
+
+<p>See <a href="ta-workflow.html">TA workflow</a> for a tour of each page.</p>
+
+<div class="callout callout-tip">
+  <p class="callout-title">Grading a real class</p>
+  <p>For Assignment 1, download the ZHVI extract from <a href="https://www.zillow.com/research/data/">Zillow research data</a> (<em>ZHVI All Homes, by ZIP code</em>) and upload that instead of the demo file. Nothing else changes. Before you grade, check the two values the assignment fixes, as described in <a href="rubrics.html#before-grading-a-real-class">Rubrics</a>.</p>
+</div>
+
+<h2>Run everything in Docker</h2>
+
+<p>To move the grader to a new machine without setting up Python, build the sandbox image and start the app with Compose. Docker is the only requirement.</p>
+
+<pre><code class="language-bash">docker build -t musa-grader:latest -f docker/Dockerfile .
+docker compose up -d --build</code></pre>
+
+<p>Then open <a href="http://localhost:8501">http://localhost:8501</a>. See <a href="docker.html#running-the-app-in-a-container">Docker sandbox</a> for how the app container starts the sandbox containers.</p>
+
+<h2>Next steps</h2>
+
+<div class="card-grid">
+  <a class="card" href="how-it-works.html"><span class="card-title">How grading works</span><p>Data supply, discovery, execution, inspection, hidden tests and the review policy.</p></a>
+  <a class="card" href="rubrics.html"><span class="card-title">Rubrics</span><p>The YAML schema, item types and what to check before a real class.</p></a>
+  <a class="card" href="cli.html"><span class="card-title">CLI reference</span><p>Every command and flag for scripted and CI runs.</p></a>
+</div>

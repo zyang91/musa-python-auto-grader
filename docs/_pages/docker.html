@@ -1,0 +1,81 @@
+<!-- title: Docker sandbox -->
+<!-- description: How student notebooks are isolated, what is in the sandbox image, and how to run the app itself in a container. -->
+
+<p class="eyebrow">User guide</p>
+<h1>Docker sandbox</h1>
+<p class="lead">Student code is untrusted. By default every notebook runs in its own short-lived container that can't reach the network, the rest of the disk, or the grading machine's credentials.</p>
+
+<h2>Build the image</h2>
+
+<p>Build it once per semester, and again after changing the sandbox packages:</p>
+
+<pre><code class="language-bash">docker build -t musa-grader:latest -f docker/Dockerfile .</code></pre>
+
+<h2>Isolation flags</h2>
+
+<p>The grader starts one container per submission with:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Flag</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><code>--network none</code></td><td>Student code can't reach the internet or the campus network</td></tr>
+    <tr><td><code>--memory 2g --memory-swap 2g</code></td><td>A runaway allocation kills the container, not the laptop</td></tr>
+    <tr><td><code>--cpus 1.0 --pids-limit 256</code></td><td>One submission can't starve the others</td></tr>
+    <tr><td><code>--read-only</code> + <code>--tmpfs /tmp</code></td><td>The image can't be modified, and scratch space is discarded</td></tr>
+    <tr><td><code>-v &lt;workdir&gt;:/grading</code></td><td>Only the copied submission is visible, never the rest of the disk</td></tr>
+  </tbody>
+</table></div>
+
+<p>No host environment variables are forwarded, so API keys and credentials on the grading machine are not visible to student code. Outside a container, the grader passes <code>--user &lt;your uid&gt;</code> to the sandbox, so docker mode works on a Linux host as well as on Docker Desktop.</p>
+
+<div class="callout callout-danger">
+  <p class="callout-title">Local mode has none of this</p>
+  <p><code>--mode local</code> (or <em>Unsafe Local</em> in Settings) runs student notebooks directly on your machine with no network, memory or filesystem isolation. Use it for the bundled demo submissions or for debugging, not for a real class.</p>
+</div>
+
+<h2>Memory and time</h2>
+
+<p>Assignment 3 is the heavy one: a 24 MB GeoJSON, a spatial join over 34,108 points and two masks of a ten-band raster. It fits inside the 2 GB cap, but a correct submission takes a few minutes rather than a few seconds, so the rubric raises <code>execution_timeout_seconds</code> to 1800. Set the same on the command line with <code>--timeout</code> and <code>--cell-timeout</code>.</p>
+
+<h2>What is in the image</h2>
+
+<p>The base list (pandas, matplotlib, seaborn, altair, geopandas, shapely) covers Assignments 1 and 2. Assignment 3 adds rasterio, rasterstats, hvplot, holoviews, bokeh, panel, cartopy, geoviews and mapclassify. Packages are pinned in <code>docker/requirements-sandbox.txt</code>.</p>
+
+<ul>
+  <li><strong><code>geoviews</code></strong>: <code>hvplot.polygons()</code> on a GeoDataFrame raises <code>ModuleNotFoundError</code> without it. A package missing from the image is not the student's mistake, but it would give a correct submission a zero.</li>
+  <li><strong><code>rasterio &gt;= 1.4.4</code></strong>: earlier 1.4.x releases have no linux/arm64 wheel.</li>
+  <li><strong><code>rasterstats &gt;= 0.21.0</code></strong>: 0.20.0 requires <code>fiona</code>, which has no linux/arm64 wheel at all.</li>
+</ul>
+
+<p>Both pin issues appear only on Apple Silicon, never on an Intel machine.</p>
+
+<p>If a student notebook needs a package that isn't in the image, add it to the pinned list and rebuild. Don't install packages at grading time: the container has no network.</p>
+
+<h2>Updating the pins</h2>
+
+<p>Dependabot proposes bumps to <code>requirements-sandbox.txt</code>. CI rebuilds the image for every such PR, imports every package the assignments use, and grades a real notebook in it. Passing CI means the image still works. It doesn't mean every student's numbers are unchanged, so <strong>merge sandbox bumps between assignments, not in the middle of grading one.</strong></p>
+
+<h2 id="running-the-app-in-a-container">Running the app in a container</h2>
+
+<p><code>docker/app.Dockerfile</code> packages the Streamlit UI and CLI, and <code>docker-compose.yml</code> at the repository root runs it:</p>
+
+<pre><code class="language-bash">docker build -t musa-grader:latest -f docker/Dockerfile .
+docker compose up -d --build</code></pre>
+
+<p>Open <a href="http://localhost:8501">http://localhost:8501</a>. Sessions are saved in <code>results/</code> and uploads in <code>.musa_grader_data/</code>. Anything you put in <code>submissions/</code> can be loaded from the UI as <code>submissions</code>.</p>
+
+<p>The app never runs student code itself. It reaches the host's Docker daemon through the mounted socket and starts one sandbox container per submission as a sibling, with every flag in the table above. Three details make this work:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Detail</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><code>/tmp/musa-grader</code> is mounted at the <strong>same path</strong> on both sides</td><td>The host daemon resolves the sandbox's <code>-v &lt;workdir&gt;:/grading</code>, so the path the app sees must exist on the host</td></tr>
+    <tr><td>The app runs as uid 10001, the sandbox's user</td><td>Work directories are mode 0700, and the sandbox must be able to open them</td></tr>
+    <tr><td>The entrypoint joins the socket's group, then drops root</td><td>The socket's gid is 0 on Docker Desktop and <code>docker</code> on Linux</td></tr>
+  </tbody>
+</table></div>
+
+<div class="callout callout-warn">
+  <p class="callout-title">The Docker socket is root-equivalent</p>
+  <p>Mounting it gives the app container root-equivalent access to the host. That is acceptable for a tool that runs on a TA's own machine and binds to localhost only. Don't expose port 8501 beyond your machine.</p>
+</div>

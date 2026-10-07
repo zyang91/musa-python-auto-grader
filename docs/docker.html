@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docker sandbox · MUSA Grader</title>
+<meta name="description" content="How student notebooks are isolated, what is in the sandbox image, and how to run the app itself in a container.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)" id="hljs-dark">
+<script>
+  (function () {
+    try { var t = localStorage.getItem("musa-docs-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  })();
+</script>
+</head>
+<body data-root="">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="icon-button menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true" class="logo"><rect x="3" y="3" width="26" height="26" rx="7" class="logo-bg"/><path d="M9.5 16.5l4.2 4.2 8.8-9.4" class="logo-check"/></svg><span>MUSA Grader</span><span class="version">v0.1.0</span></a>
+  <button class="search-trigger" type="button" aria-label="Search the documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search docs</span><kbd>/</kbd></button>
+  <div class="topbar-actions">
+    <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <a class="icon-button" href="https://github.com/zyang91/musa-python-auto-grader" aria-label="GitHub repository"><svg viewBox="0 0 16 16" aria-hidden="true" class="filled"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation">
+    <nav><p class="nav-section">Introduction</p><ul class="nav-list">
+<li><a href="index.html">Overview</a></li>
+<li><a href="getting-started.html">Getting started</a></li>
+</ul>
+<p class="nav-section">User guide</p><ul class="nav-list">
+<li><a href="ta-workflow.html">TA workflow</a></li>
+<li><a href="cli.html">CLI reference</a></li>
+<li><a href="how-it-works.html">How grading works</a></li>
+<li><a href="assignments.html">Assignments</a></li>
+<li><a href="rubrics.html">Rubrics</a></li>
+<li><a href="docker.html" class="active" aria-current="page">Docker sandbox</a></li>
+<li><a href="results.html">Results and exports</a></li>
+</ul>
+<p class="nav-section">Developer guide</p><ul class="nav-list">
+<li><a href="extending.html">Adding an assignment</a></li>
+<li><a href="testing.html">Testing and CI</a></li>
+</ul>
+<p class="nav-section">API reference</p><ul class="nav-list">
+<li><a href="api/index.html">Overview</a></li>
+<li class="nav-group"><span class="nav-group-label">Package</span><ul>
+<li><a href="api/grader.html"><code>grader</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Engine</span><ul>
+<li><a href="api/grader.service.html"><code>grader.service</code></a></li>
+<li><a href="api/grader.rubric.html"><code>grader.rubric</code></a></li>
+<li><a href="api/grader.models.html"><code>grader.models</code></a></li>
+<li><a href="api/grader.results.html"><code>grader.results</code></a></li>
+<li><a href="api/grader.scoring.html"><code>grader.scoring</code></a></li>
+<li><a href="api/grader.feedback.html"><code>grader.feedback</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Execution</span><ul>
+<li><a href="api/grader.discovery.html"><code>grader.discovery</code></a></li>
+<li><a href="api/grader.executor.html"><code>grader.executor</code></a></li>
+<li><a href="api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
+<li><a href="api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
+<li><a href="api/grader.notebook.html"><code>grader.notebook</code></a></li>
+<li><a href="api/grader.inspection.html"><code>grader.inspection</code></a></li>
+<li><a href="api/grader.answers.html"><code>grader.answers</code></a></li>
+<li><a href="api/grader.charts.html"><code>grader.charts</code></a></li>
+<li><a href="api/grader.llm.html"><code>grader.llm</code></a></li>
+<li><a href="api/grader.utils.html"><code>grader.utils</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Assignments</span><ul>
+<li><a href="api/assignments.html"><code>assignments</code></a></li>
+<li><a href="api/assignments.base.html"><code>assignments.base</code></a></li>
+<li><a href="api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
+<li><a href="api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
+<li><a href="api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+</ul></li></ul></nav>
+  </aside>
+  <div class="sidebar-scrim" hidden></div>
+  <main id="content" class="content">
+    <article class="prose">
+<p class="eyebrow">User guide</p>
+<h1>Docker sandbox</h1>
+<p class="lead">Student code is untrusted. By default every notebook runs in its own short-lived container that can't reach the network, the rest of the disk, or the grading machine's credentials.</p>
+
+<h2 id="build-the-image">Build the image<a class="headerlink" href="#build-the-image" aria-label="Link to this section">#</a></h2>
+
+<p>Build it once per semester, and again after changing the sandbox packages:</p>
+
+<pre><code class="language-bash">docker build -t musa-grader:latest -f docker/Dockerfile .</code></pre>
+
+<h2 id="isolation-flags">Isolation flags<a class="headerlink" href="#isolation-flags" aria-label="Link to this section">#</a></h2>
+
+<p>The grader starts one container per submission with:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Flag</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><code>--network none</code></td><td>Student code can't reach the internet or the campus network</td></tr>
+    <tr><td><code>--memory 2g --memory-swap 2g</code></td><td>A runaway allocation kills the container, not the laptop</td></tr>
+    <tr><td><code>--cpus 1.0 --pids-limit 256</code></td><td>One submission can't starve the others</td></tr>
+    <tr><td><code>--read-only</code> + <code>--tmpfs /tmp</code></td><td>The image can't be modified, and scratch space is discarded</td></tr>
+    <tr><td><code>-v &lt;workdir&gt;:/grading</code></td><td>Only the copied submission is visible, never the rest of the disk</td></tr>
+  </tbody>
+</table></div>
+
+<p>No host environment variables are forwarded, so API keys and credentials on the grading machine are not visible to student code. Outside a container, the grader passes <code>--user &lt;your uid&gt;</code> to the sandbox, so docker mode works on a Linux host as well as on Docker Desktop.</p>
+
+<div class="callout callout-danger">
+  <p class="callout-title">Local mode has none of this</p>
+  <p><code>--mode local</code> (or <em>Unsafe Local</em> in Settings) runs student notebooks directly on your machine with no network, memory or filesystem isolation. Use it for the bundled demo submissions or for debugging, not for a real class.</p>
+</div>
+
+<h2 id="memory-and-time">Memory and time<a class="headerlink" href="#memory-and-time" aria-label="Link to this section">#</a></h2>
+
+<p>Assignment 3 is the heavy one: a 24 MB GeoJSON, a spatial join over 34,108 points and two masks of a ten-band raster. It fits inside the 2 GB cap, but a correct submission takes a few minutes rather than a few seconds, so the rubric raises <code>execution_timeout_seconds</code> to 1800. Set the same on the command line with <code>--timeout</code> and <code>--cell-timeout</code>.</p>
+
+<h2 id="what-is-in-the-image">What is in the image<a class="headerlink" href="#what-is-in-the-image" aria-label="Link to this section">#</a></h2>
+
+<p>The base list (pandas, matplotlib, seaborn, altair, geopandas, shapely) covers Assignments 1 and 2. Assignment 3 adds rasterio, rasterstats, hvplot, holoviews, bokeh, panel, cartopy, geoviews and mapclassify. Packages are pinned in <code>docker/requirements-sandbox.txt</code>.</p>
+
+<ul>
+  <li><strong><code>geoviews</code></strong>: <code>hvplot.polygons()</code> on a GeoDataFrame raises <code>ModuleNotFoundError</code> without it. A package missing from the image is not the student's mistake, but it would give a correct submission a zero.</li>
+  <li><strong><code>rasterio &gt;= 1.4.4</code></strong>: earlier 1.4.x releases have no linux/arm64 wheel.</li>
+  <li><strong><code>rasterstats &gt;= 0.21.0</code></strong>: 0.20.0 requires <code>fiona</code>, which has no linux/arm64 wheel at all.</li>
+</ul>
+
+<p>Both pin issues appear only on Apple Silicon, never on an Intel machine.</p>
+
+<p>If a student notebook needs a package that isn't in the image, add it to the pinned list and rebuild. Don't install packages at grading time: the container has no network.</p>
+
+<h2 id="updating-the-pins">Updating the pins<a class="headerlink" href="#updating-the-pins" aria-label="Link to this section">#</a></h2>
+
+<p>Dependabot proposes bumps to <code>requirements-sandbox.txt</code>. CI rebuilds the image for every such PR, imports every package the assignments use, and grades a real notebook in it. Passing CI means the image still works. It doesn't mean every student's numbers are unchanged, so <strong>merge sandbox bumps between assignments, not in the middle of grading one.</strong></p>
+
+<h2 id="running-the-app-in-a-container">Running the app in a container<a class="headerlink" href="#running-the-app-in-a-container" aria-label="Link to this section">#</a></h2>
+
+<p><code>docker/app.Dockerfile</code> packages the Streamlit UI and CLI, and <code>docker-compose.yml</code> at the repository root runs it:</p>
+
+<pre><code class="language-bash">docker build -t musa-grader:latest -f docker/Dockerfile .
+docker compose up -d --build</code></pre>
+
+<p>Open <a href="http://localhost:8501">http://localhost:8501</a>. Sessions are saved in <code>results/</code> and uploads in <code>.musa_grader_data/</code>. Anything you put in <code>submissions/</code> can be loaded from the UI as <code>submissions</code>.</p>
+
+<p>The app never runs student code itself. It reaches the host's Docker daemon through the mounted socket and starts one sandbox container per submission as a sibling, with every flag in the table above. Three details make this work:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Detail</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><code>/tmp/musa-grader</code> is mounted at the <strong>same path</strong> on both sides</td><td>The host daemon resolves the sandbox's <code>-v &lt;workdir&gt;:/grading</code>, so the path the app sees must exist on the host</td></tr>
+    <tr><td>The app runs as uid 10001, the sandbox's user</td><td>Work directories are mode 0700, and the sandbox must be able to open them</td></tr>
+    <tr><td>The entrypoint joins the socket's group, then drops root</td><td>The socket's gid is 0 on Docker Desktop and <code>docker</code> on Linux</td></tr>
+  </tbody>
+</table></div>
+
+<div class="callout callout-warn">
+  <p class="callout-title">The Docker socket is root-equivalent</p>
+  <p>Mounting it gives the app container root-equivalent access to the host. That is acceptable for a tool that runs on a TA's own machine and binds to localhost only. Don't expose port 8501 beyond your machine.</p>
+</div>
+
+    </article>
+    <footer class="page-footer">
+      <nav class="pager" aria-label="Pages"><a class="pager-prev" href="rubrics.html"><small>Previous</small><span>Rubrics</span></a><a class="pager-next" href="results.html"><small>Next</small><span>Results and exports</span></a></nav>
+      <div class="footer-meta"><a class="edit-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/docs/_pages/docker.html">Edit this page on GitHub</a><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
+    </footer>
+  </main>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#build-the-image">Build the image</a></li><li class="toc-l2"><a href="#isolation-flags">Isolation flags</a></li><li class="toc-l2"><a href="#memory-and-time">Memory and time</a></li><li class="toc-l2"><a href="#what-is-in-the-image">What is in the image</a></li><li class="toc-l2"><a href="#updating-the-pins">Updating the pins</a></li><li class="toc-l2"><a href="#running-the-app-in-a-container">Running the app in a container</a></li></ul></nav></aside>
+</div>
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
+  <div class="search-panel">
+    <div class="search-input-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Search guides and API…" aria-label="Search" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+    <ul class="search-results" role="listbox"></ul>
+    <p class="search-hint">Type to search pages, sections, classes and functions.</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="assets/search-index.js"></script>
+<script src="assets/main.js"></script>
+</body>
+</html>
