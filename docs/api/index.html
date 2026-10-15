@@ -63,6 +63,8 @@
 <li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
 <li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
 <li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+<li><a href="../api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a></li>
+<li><a href="../api/grader.function_runner.html"><code>grader.function_runner</code></a></li>
 </ul></li>
 <li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
 <li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
@@ -78,6 +80,7 @@
 <li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
 <li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+<li><a href="../api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
@@ -119,9 +122,11 @@ print("saved to", session.root)</code></pre></div>
 <h2 id="execution">Execution<a class="headerlink" href="#execution" aria-label="Link to this section">#</a></h2>
 <div class="module-grid">
 <a class="module-card" href="grader.discovery.html"><code>grader.discovery</code><span>Find student submissions in a folder or a Canvas export ZIP (design.md §16-17).</span><small>1 class · 8 functions</small></a>
-<a class="module-card" href="grader.executor.html"><code>grader.executor</code><span>Notebook execution (design.md §18-19).</span><small>2 classes · 7 functions</small></a>
+<a class="module-card" href="grader.executor.html"><code>grader.executor</code><span>Notebook execution (design.md §18-19).</span><small>2 classes · 8 functions</small></a>
 <a class="module-card" href="grader.notebook_runner.html"><code>grader.notebook_runner</code><span>Standalone notebook runner. Copied into the working directory and executed as a subprocess — locally with the host interpreter, or inside the grading container. It must not import anything from the <code>grader</code> package.</span><small>1 function</small></a>
 <a class="module-card" href="grader.probe_runtime.html"><code>grader.probe_runtime</code><span>Code injected into the student&#x27;s kernel after their notebook runs.</span><small>module</small></a>
+<a class="module-card" href="grader.function_sandbox.html"><code>grader.function_sandbox</code><span>Run a few named functions from a notebook, and nothing else, in the sandbox.</span><small>2 classes · 4 functions</small></a>
+<a class="module-card" href="grader.function_runner.html"><code>grader.function_runner</code><span>Standalone runner for isolated function tests. Copied into a fresh, otherwise empty directory and executed inside the network-less grading container by <code>grader/function_sandbox.py</code>. It must not import anything from the <code>grader</code> package.</span><small>1 class · 1 function</small></a>
 </div>
 <h2 id="evidence">Evidence<a class="headerlink" href="#evidence" aria-label="Link to this section">#</a></h2>
 <div class="module-grid">
@@ -139,6 +144,7 @@ print("saved to", session.root)</code></pre></div>
 <a class="module-card" href="assignments.hw1.html"><code>assignments.hw1</code><span>Assignment 1 autograder — &quot;The Donut Effect for Philadelphia ZIP Codes&quot;.</span><small>1 class</small></a>
 <a class="module-card" href="assignments.hw2.html"><code>assignments.hw2</code><span>Assignment 2 autograder — exploratory visualization with matplotlib, seaborn and altair.</span><small>1 class</small></a>
 <a class="module-card" href="assignments.hw3.html"><code>assignments.hw3</code><span>Assignment 3 autograder — evictions, code violations and the NDVI.</span><small>1 class · 1 function</small></a>
+<a class="module-card" href="assignments.hw4.html"><code>assignments.hw4</code><span>Assignment 4 autograder — street networks and web scraping.</span><small>3 classes · 3 functions</small></a>
 </div>
     </article>
     <footer class="page-footer">

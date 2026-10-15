@@ -63,6 +63,8 @@
 <li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
 <li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
 <li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+<li><a href="../api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a></li>
+<li><a href="../api/grader.function_runner.html"><code>grader.function_runner</code></a></li>
 </ul></li>
 <li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
 <li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
@@ -78,12 +80,13 @@
 <li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
 <li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+<li><a href="../api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
   <main id="content" class="content content-api">
     <article class="prose">
-<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py">grader/scoring.py</a> · 228 lines</p>
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py">grader/scoring.py</a> · 231 lines</p>
 <h1 class="module-title"><code>grader.scoring</code></h1>
 <div class="module-doc"><p>Review policy and class-level aggregation (design.md §8, §25).</p></div>
 <h2 id="summary">Summary</h2>
@@ -94,7 +97,7 @@
 
 <dl class="api-object api-function" id="grader.scoring.apply_review_policy">
   <dt class="sig"><span class="sig-name">apply_review_policy</span><span class="sig-params">(result: <a class="xref" href="grader.models.html#grader.models.SubmissionResult">SubmissionResult</a>, confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD, review_below_full_marks: bool = True) -&gt; <a class="xref" href="grader.models.html#grader.models.SubmissionResult">SubmissionResult</a></span>
-    <a class="headerlink" href="#grader.scoring.apply_review_policy" aria-label="Link to apply_review_policy">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L20" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.scoring.apply_review_policy" aria-label="Link to apply_review_policy">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L21" title="View source on GitHub">[source]</a></dt>
   <dd><p>Decide what a human still has to look at.</p>
 <p>Flags are additive and explicit: a TA should be able to read why a submission reached the queue without opening the raw results.</p>
 <p>With <code>review_below_full_marks</code> on (the default), every deduction goes to the queue: an automated deduction is a claim about a student&#x27;s work, and a person signs off on it before it becomes a grade. Full marks need no defence, so a clean submission passes straight through.</p></dd>
@@ -102,37 +105,37 @@
 
 <dl class="api-object api-function" id="grader.scoring.grade_letter">
   <dt class="sig"><span class="sig-name">grade_letter</span><span class="sig-params">(percentage: float | None) -&gt; str</span>
-    <a class="headerlink" href="#grader.scoring.grade_letter" aria-label="Link to grade_letter">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L89" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.scoring.grade_letter" aria-label="Link to grade_letter">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L92" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
 
 <dl class="api-object api-function" id="grader.scoring.class_summary">
   <dt class="sig"><span class="sig-name">class_summary</span><span class="sig-params">(results: Iterable[<a class="xref" href="grader.models.html#grader.models.SubmissionResult">SubmissionResult</a>]) -&gt; dict[str, Any]</span>
-    <a class="headerlink" href="#grader.scoring.class_summary" aria-label="Link to class_summary">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L99" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.scoring.class_summary" aria-label="Link to class_summary">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L102" title="View source on GitHub">[source]</a></dt>
   <dd><p>Summary cards, distribution and common issues (design.md §8).</p></dd>
 </dl>
 
 <dl class="api-object api-function" id="grader.scoring.grade_distribution">
   <dt class="sig"><span class="sig-name">grade_distribution</span><span class="sig-params">(percentages: list[float], bin_size: int = 10) -&gt; list[dict[str, Any]]</span>
-    <a class="headerlink" href="#grader.scoring.grade_distribution" aria-label="Link to grade_distribution">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L139" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.scoring.grade_distribution" aria-label="Link to grade_distribution">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L142" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
 
 <dl class="api-object api-function" id="grader.scoring.common_issues">
   <dt class="sig"><span class="sig-name">common_issues</span><span class="sig-params">(results: Iterable[<a class="xref" href="grader.models.html#grader.models.SubmissionResult">SubmissionResult</a>], limit: int = 10) -&gt; list[dict[str, Any]]</span>
-    <a class="headerlink" href="#grader.scoring.common_issues" aria-label="Link to common_issues">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L158" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.scoring.common_issues" aria-label="Link to common_issues">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L161" title="View source on GitHub">[source]</a></dt>
   <dd><p>Rank the deductions that affected the most students (design.md §8).</p></dd>
 </dl>
 
 <dl class="api-object api-function" id="grader.scoring.rubric_breakdown">
   <dt class="sig"><span class="sig-name">rubric_breakdown</span><span class="sig-params">(results: Iterable[<a class="xref" href="grader.models.html#grader.models.SubmissionResult">SubmissionResult</a>]) -&gt; list[dict[str, Any]]</span>
-    <a class="headerlink" href="#grader.scoring.rubric_breakdown" aria-label="Link to rubric_breakdown">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L177" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.scoring.rubric_breakdown" aria-label="Link to rubric_breakdown">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L180" title="View source on GitHub">[source]</a></dt>
   <dd><p>Mean score per rubric item — shows where the class as a whole struggled.</p></dd>
 </dl>
 
 <dl class="api-object api-function" id="grader.scoring.review_queue">
   <dt class="sig"><span class="sig-name">review_queue</span><span class="sig-params">(results: Iterable[<a class="xref" href="grader.models.html#grader.models.SubmissionResult">SubmissionResult</a>]) -&gt; list[dict[str, Any]]</span>
-    <a class="headerlink" href="#grader.scoring.review_queue" aria-label="Link to review_queue">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L200" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.scoring.review_queue" aria-label="Link to review_queue">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/scoring.py#L203" title="View source on GitHub">[source]</a></dt>
   <dd><p>Unresolved review items, worst first (design.md §14).</p></dd>
 </dl>
     </article>

@@ -49,6 +49,11 @@
 
 <p>Each submission is copied into its own working directory. The notebook is <em>instrumented</em> with probe cells, and a subprocess runs it. By default that subprocess runs inside a container with no network, capped memory and CPU, a read-only root filesystem and no host environment variables. See <a href="docker.html">Docker sandbox</a>.</p>
 
+<div class="callout">
+  <p class="callout-title">When a rubric says <code>execution: mode: never</code></p>
+  <p>Assignment 4 scrapes Craigslist and downloads from OpenStreetMap and ArcGIS, so its rubric opts out of execution entirely. The service honours that in <strong>every</strong> execution mode, local included: no data is placed, no kernel or notebook container is started, and the execution stage is recorded as skipped. The grade comes from the submitted file's code and saved outputs. The only code that runs is a few named pure functions, cut out of the notebook and called in the network-less sandbox, and only in Docker mode. See <a href="assignments.html#assignment-4-street-networks-scraping">Assignment 4</a> and <a href="api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a>.</p>
+</div>
+
 <p>Errors do not stop grading. <code>allow_errors</code> is on, so the notebook runs to the end, the first failing cell and its traceback are recorded, and every check that can still run does. <strong>A failed notebook never becomes an automatic zero.</strong> The execution item itself awards partial credit for how far the notebook got: failing at the last cell is worth more than failing at the first.</p>
 
 <h2 id="inspection-without-variable-names">3. Inspection without variable names</h2>
@@ -73,6 +78,8 @@
 <p>The probe source is in <a href="api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a>. It runs only inside the student's kernel, never on the host, and everything it returns is a JSON summary.</p>
 
 <h2 id="hidden-tests">4. Hidden tests</h2>
+
+<p>Hidden tests normally run inside the student's own kernel, during the notebook run. Assignment 4's notebook is never run, so its hidden test is <code>type: isolated_functions</code>: the named functions are extracted from the notebook and called on their own in the sandbox. See <a href="rubrics.html#isolated-functions">Rubrics</a>.</p>
 
 <p><code>calculate_percent_increase(group_df)</code> takes a DataFrame, so it can't be tested with literal arguments. Instead the probe reads the column names and date dtype of the student's own tidy frame, builds a synthetic group frame from interpolated anchor points using those names, and calls the function with it. The expected answer follows from the anchors, so it is known whatever data the student loaded.</p>
 

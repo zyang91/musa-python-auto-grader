@@ -65,6 +65,8 @@ API_MODULES = [
     ("grader/executor.py", "Execution"),
     ("grader/notebook_runner.py", "Execution"),
     ("grader/probe_runtime.py", "Execution"),
+    ("grader/function_sandbox.py", "Execution"),
+    ("grader/function_runner.py", "Execution"),
     ("grader/notebook.py", "Evidence"),
     ("grader/inspection.py", "Evidence"),
     ("grader/answers.py", "Evidence"),
@@ -76,6 +78,7 @@ API_MODULES = [
     ("assignments/hw1.py", "Assignments"),
     ("assignments/hw2.py", "Assignments"),
     ("assignments/hw3.py", "Assignments"),
+    ("assignments/hw4.py", "Assignments"),
 ]
 
 
@@ -1086,7 +1089,7 @@ def build() -> None:
         (DOCS / url).write_text(html_text, encoding="utf-8")
         search.append({"t": page.title, "u": url, "s": page.section, "k": "page", "d": page.description})
         for level, anchor, label in toc:
-            search.append({"t": label, "u": f"{url}#{anchor}", "s": page.title, "k": "section"})
+            search.append({"t": html.unescape(label), "u": f"{url}#{anchor}", "s": page.title, "k": "section"})
 
     api_index_pos = len(pages)
     api_body, api_toc = add_heading_ids(render_api_index(modules))

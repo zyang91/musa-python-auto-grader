@@ -63,6 +63,8 @@
 <li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
 <li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
 <li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+<li><a href="../api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a></li>
+<li><a href="../api/grader.function_runner.html"><code>grader.function_runner</code></a></li>
 </ul></li>
 <li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
 <li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
@@ -78,12 +80,13 @@
 <li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
 <li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+<li><a href="../api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
   <main id="content" class="content content-api">
     <article class="prose">
-<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py">grader/rubric.py</a> · 164 lines</p>
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py">grader/rubric.py</a> · 179 lines</p>
 <h1 class="module-title"><code>grader.rubric</code></h1>
 <div class="module-doc"><p>YAML rubric loading (design.md section 20).</p>
 <p>A rubric file declares the assignment, its point breakdown, and per-item <code>config</code> blocks. Expected values (Center City ZIPs, tolerances, the final answer) live here rather than in code so a TA can correct them against the official solution without touching Python.</p></div>
@@ -129,7 +132,7 @@
   <p class="rubric">Fields</p>
   <div class="table-wrap"><table>
     <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
-    <tbody><tr><td><code class="field-name">id</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">name</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">version</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">total_points</code></td><td><code>float</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">items</code></td><td><code>list[<a class="xref" href="#grader.rubric.RubricItem">RubricItem</a>]</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">settings</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">probe</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">discovery</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">data</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td>Data the instructor supplies for every submission (design.md §16-17).</td></tr><tr><td><code class="field-name">source_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr></tbody>
+    <tbody><tr><td><code class="field-name">id</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">name</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">version</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">total_points</code></td><td><code>float</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">items</code></td><td><code>list[<a class="xref" href="#grader.rubric.RubricItem">RubricItem</a>]</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">settings</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">probe</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">discovery</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">data</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td>Data the instructor supplies for every submission (design.md §16-17).</td></tr><tr><td><code class="field-name">execution</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td>How (and whether) submissions are run. <code>mode: never</code> grades the submitted file as it stands and starts no kernel at all (Assignment 4).</td></tr><tr><td><code class="field-name">source_path</code></td><td><code>str | None</code></td><td><code>None</code></td><td></td></tr></tbody>
   </table></div>
 </div>
     
@@ -137,33 +140,40 @@
 
 <dl class="api-object api-property" id="grader.rubric.Rubric.requires_data">
   <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">requires_data</span><span class="sig-params">: bool</span>
-    <a class="headerlink" href="#grader.rubric.Rubric.requires_data" aria-label="Link to requires_data">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L63" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.rubric.Rubric.requires_data" aria-label="Link to requires_data">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L66" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
 
 <dl class="api-object api-property" id="grader.rubric.Rubric.offers_data">
   <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">offers_data</span><span class="sig-params">: bool</span>
-    <a class="headerlink" href="#grader.rubric.Rubric.offers_data" aria-label="Link to offers_data">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L67" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.rubric.Rubric.offers_data" aria-label="Link to offers_data">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L70" title="View source on GitHub">[source]</a></dt>
   <dd><p>Whether the sidebar should let a TA supply data for this assignment.</p>
 <p>Assignment 3 does not <em>require</em> its zip — it is graded from the outputs each student saved — but supplying it lets the grader re-run every notebook and confirm them, so the option has to be there.</p></dd>
 </dl>
 
+<dl class="api-object api-property" id="grader.rubric.Rubric.never_executes">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">never_executes</span><span class="sig-params">: bool</span>
+    <a class="headerlink" href="#grader.rubric.Rubric.never_executes" aria-label="Link to never_executes">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L80" title="View source on GitHub">[source]</a></dt>
+  <dd><p>The notebook must not be run during grading, by any backend.</p>
+<p>Assignment 4 scrapes Craigslist and downloads from OpenStreetMap and ArcGIS. Re-running a class of those notebooks would send every request again, once per student, to servers that are not ours — so the rubric opts out of execution entirely, whatever the TA&#x27;s execution mode.</p></dd>
+</dl>
+
 <dl class="api-object api-property" id="grader.rubric.Rubric.declared_points">
   <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">declared_points</span><span class="sig-params">: float</span>
-    <a class="headerlink" href="#grader.rubric.Rubric.declared_points" aria-label="Link to declared_points">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L77" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.rubric.Rubric.declared_points" aria-label="Link to declared_points">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L91" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
 <p class="rubric">Methods</p>
 
 <dl class="api-object api-method" id="grader.rubric.Rubric.item">
   <dt class="sig"><span class="sig-name">item</span><span class="sig-params">(rubric_id: str) -&gt; <a class="xref" href="#grader.rubric.RubricItem">RubricItem</a> | None</span>
-    <a class="headerlink" href="#grader.rubric.Rubric.item" aria-label="Link to item">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L56" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.rubric.Rubric.item" aria-label="Link to item">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L59" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="grader.rubric.Rubric.label">
   <dt class="sig"><span class="sig-name">label</span><span class="sig-params">() -&gt; str</span>
-    <a class="headerlink" href="#grader.rubric.Rubric.label" aria-label="Link to label">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L80" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.rubric.Rubric.label" aria-label="Link to label">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L94" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
   </div>
@@ -171,7 +181,7 @@
 
 <section class="api-class" id="grader.rubric.RubricError">
   <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">RubricError</span><span class="sig-params">(ValueError)</span>
-    <a class="headerlink" href="#grader.rubric.RubricError" aria-label="Link to RubricError">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L84" title="View source on GitHub">[source]</a></div>
+    <a class="headerlink" href="#grader.rubric.RubricError" aria-label="Link to RubricError">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L98" title="View source on GitHub">[source]</a></div>
   <div class="api-body">
     <p class="class-meta"></p>
     <p>Raised when a rubric file is missing or structurally invalid.</p>
@@ -183,14 +193,14 @@
 
 <dl class="api-object api-function" id="grader.rubric.load_rubric">
   <dt class="sig"><span class="sig-name">load_rubric</span><span class="sig-params">(path: str | Path) -&gt; <a class="xref" href="#grader.rubric.Rubric">Rubric</a></span>
-    <a class="headerlink" href="#grader.rubric.load_rubric" aria-label="Link to load_rubric">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L88" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.rubric.load_rubric" aria-label="Link to load_rubric">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L102" title="View source on GitHub">[source]</a></dt>
   <dd><p>Parse and validate a rubric YAML file.</p>
 <p>Raises <code>RubricError</code> when the file is missing or unparsable, <code>assignment.id</code> is absent, the rubric is empty, an item id is missing or duplicated, an item type is unknown, or the item points do not add up to <code>total_points</code>.</p></dd>
 </dl>
 
 <dl class="api-object api-function" id="grader.rubric.available_rubrics">
   <dt class="sig"><span class="sig-name">available_rubrics</span><span class="sig-params">(directory: str | Path = RUBRIC_DIR) -&gt; dict[str, Path]</span>
-    <a class="headerlink" href="#grader.rubric.available_rubrics" aria-label="Link to available_rubrics">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L152" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.rubric.available_rubrics" aria-label="Link to available_rubrics">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/rubric.py#L167" title="View source on GitHub">[source]</a></dt>
   <dd><p>Map assignment id -&gt; rubric path for every parsable rubric on disk.</p></dd>
 </dl>
     </article>
