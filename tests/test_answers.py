@@ -264,3 +264,51 @@ def test_a_notebook_that_was_never_run_says_nothing(tmp_path):
 def test_a_missing_file_is_not_an_error(tmp_path):
     assert read_answers(tmp_path / "nope.ipynb", SOURCE_SUBMITTED).cells == []
     assert read_answers(None, SOURCE_SUBMITTED).cells == []
+
+
+def test_a_year_axis_is_never_read_as_the_plotted_totals(tmp_path):
+    """Years relabelled as integers sit beside the totals at the same length."""
+    import base64
+    import gzip
+    import struct
+
+    def column(values, dtype, code):
+        raw = gzip.compress(struct.pack("<{}{}".format(len(values), code), *values))
+        return (
+            '"array":{"type":"bytes","data":"' + base64.b64encode(raw).decode() + '"}'
+            f',"shape":[{len(values)}],"dtype":"{dtype}"'
+        )
+
+    years = list(range(2003, 2017))
+    totals = [10647.0, 10491.0, 11182.0] + [9000.0] * 11
+    html = column(years, "int64", "q") + "," + column(totals, "float64", "d")
+    path = notebook(
+        tmp_path / "nb.ipynb",
+        [result("yearly.hvplot.line(x='year')", ":Curve   [year]   (evictions)", html)],
+    )
+    chart = read_answers(path, SOURCE_SUBMITTED).charts()[0]
+    assert chart.values["sum"] == sum(totals)
+    assert chart.values["sum"] != sum(years)
+
+
+def test_an_overlay_keeps_the_values_it_plots(tmp_path):
+    """`line * scatter` saves as an Overlay; its totals must still be read."""
+    import base64
+    import gzip
+    import struct
+
+    totals = [10647.0, 10491.0, 11182.0]
+    raw = gzip.compress(struct.pack("<3d", *totals))
+    html = (
+        '"array":{"type":"bytes","data":"' + base64.b64encode(raw).decode() + '"}'
+        ',"shape":[3],"dtype":"float64"'
+    )
+    text = (
+        ":Overlay\n"
+        "   .Curve.I   :Curve   [year]   (evictions)\n"
+        "   .Scatter.I :Scatter   [year]   (evictions)"
+    )
+    path = notebook(tmp_path / "nb.ipynb", [result("line * points", text, html)])
+    chart = read_answers(path, SOURCE_SUBMITTED).charts()[0]
+    assert chart.kind == "Overlay"
+    assert chart.values["sum"] == sum(totals)

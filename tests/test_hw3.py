@@ -1078,3 +1078,114 @@ def test_a_displayed_row_count_upgrades_source_evidence_to_full(hw3, hw3_rubric,
     charts_from(ctx)
     result = {r.rubric_id: r for r in hw3.grade(ctx)}["spatial_join"]
     assert result.automatic_score == result.points_possible
+
+
+# ---------------------------------------------------------------------------
+# Calibration against a real class run (aggregates only, no student files)
+# ---------------------------------------------------------------------------
+
+def test_years_relabelled_as_integers_are_the_same_fourteen_years():
+    from assignments.hw3 import keys_cover
+
+    labels = [f"e-{y:02d}" for y in range(3, 17)]
+    assert keys_cover([str(y) for y in range(2003, 2017)], labels)
+    assert keys_cover(list(range(2003, 2017)), labels)
+    assert keys_cover([f"{y}.0" for y in range(2003, 2017)], labels)
+    assert not keys_cover([str(y) for y in range(2003, 2016)], labels)
+    assert keys_cover(["CO DETECTOR NEEDED"], ["CO DETECTOR NEEDED"])
+
+
+def test_a_year_widget_keyed_on_integers_is_full_marks(hw3, hw3_rubric):
+    payload = correct_payload()
+    payload["plots"] = [
+        plot("Out[6]", "HoloMap", kdims=["year"], n_frames=14,
+             keys=list(range(2003, 2017)),
+             element_types=["Polygons"], child_types=["Polygons"]),
+    ]
+    result = run(hw3, context(hw3_rubric, payload), "evictions_choropleth")
+    assert result.status == STATUS_PASS
+
+
+def test_both_medians_prove_the_polygons_when_no_area_is_shown(hw3, hw3_rubric, tmp_path):
+    path = _saved_notebook(tmp_path, [
+        ("suburbs = city.envelope.difference(city)", None),
+        ("print(np.nanmedian(city_ndvi), np.nanmedian(suburb_ndvi))",
+         "0.20251847 0.37482514"),
+    ])
+    ctx = _no_run(hw3_rubric, path)
+    charts_from(ctx)
+    result = {r.rubric_id: r for r in hw3.grade(ctx)}["city_suburb_polygons"]
+    assert result.status == STATUS_PASS
+    assert result.automatic_score == result.points_possible
+
+
+def test_the_whole_envelope_median_does_not_prove_the_suburbs(hw3, hw3_rubric, tmp_path):
+    path = _saved_notebook(tmp_path, [
+        ("print(np.nanmedian(city_ndvi), np.nanmedian(envelope_ndvi))",
+         "0.20251847 0.31490000"),
+    ])
+    ctx = _no_run(hw3_rubric, path)
+    charts_from(ctx)
+    result = {r.rubric_id: r for r in hw3.grade(ctx)}["city_suburb_polygons"]
+    assert result.status != STATUS_PASS
+
+
+def test_histogram_and_map_in_one_cell_are_both_figures(hw3, hw3_rubric):
+    ctx = context(hw3_rubric)
+    both = (
+        "fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))\n"
+        "ax1.hist(trees['NDVI'], bins=40)\nax1.axvline(0, color='red')\n"
+        "city_limits.boundary.plot(ax=ax2, color='black')\n"
+        "trees.plot(ax=ax2, column='NDVI', cmap='YlGn', legend=True)\n"
+    )
+    charts_from(ctx, matplotlib_chart(both, 23))
+    result = run(hw3, ctx, "tree_plots")
+    assert result.status == STATUS_PASS
+
+
+def test_city_limits_drawn_as_a_filled_background_count_as_the_outline(hw3, hw3_rubric):
+    ctx = context(hw3_rubric)
+    background = (
+        "fig, ax = plt.subplots(figsize=(8, 8))\n"
+        "city_limits.plot(ax=ax, color='whitesmoke', edgecolor='black')\n"
+        "trees.plot(ax=ax, column='NDVI', cmap='YlGn', legend=True)\n"
+    )
+    charts_from(ctx, matplotlib_chart(HISTOGRAM_SOURCE, 23),
+                matplotlib_chart(background, 24))
+    result = run(hw3, ctx, "tree_plots")
+    assert result.status == STATUS_PASS
+
+
+def test_one_frame_plotted_twice_is_not_a_city_outline(hw3, hw3_rubric):
+    ctx = context(hw3_rubric)
+    trees_only = (
+        "fig, ax = plt.subplots(figsize=(8, 8))\n"
+        "trees.plot(ax=ax, column='NDVI', cmap='YlGn', legend=True)\n"
+        "trees[trees['NDVI'] < 0].plot(ax=ax, color='red')\n"
+    )
+    charts_from(ctx, matplotlib_chart(HISTOGRAM_SOURCE, 23),
+                matplotlib_chart(trees_only, 24))
+    result = run(hw3, ctx, "tree_plots")
+    assert result.status == STATUS_PARTIAL
+
+
+def test_a_line_with_points_overlaid_is_still_the_trend_chart(hw3, hw3_rubric):
+    payload = correct_payload()
+    payload["plots"] = [
+        plot("Out[5]", "Overlay", is_container=True, child_types=["Curve", "Scatter"],
+             element_types=["Curve", "Scatter"], n_points=14,
+             values={"dimension": "evictions", "count": 14, "min": 8000.0,
+                     "max": 11182.0, "sum": 149472.0}),
+    ]
+    result = run(hw3, context(hw3_rubric, payload), "evictions_by_year_plot")
+    assert result.status == STATUS_PASS
+
+
+def test_an_overlay_of_maps_is_not_a_trend_chart(hw3, hw3_rubric):
+    payload = correct_payload()
+    payload["plots"] = [
+        plot("Out[5]", "Overlay", is_container=True, child_types=["Polygons", "Points"],
+             element_types=["Polygons", "Points"]),
+    ]
+    result = run(hw3, context(hw3_rubric, payload), "evictions_by_year_plot")
+    assert result.status != STATUS_PASS

@@ -397,7 +397,7 @@ def _plotted_values(html: str, expected_length: int = 0) -> dict[str, float]:
     do: bokeh serialises each column as a base64 buffer, gzipped, with its dtype
     and length beside it.
     """
-    best: dict[str, float] = {}
+    columns: list[dict[str, float]] = []
     for match in NDARRAY_RE.finditer(html):
         code = STRUCT_CODES.get(match.group("dtype"))
         if code is None:
@@ -418,19 +418,32 @@ def _plotted_values(html: str, expected_length: int = 0) -> dict[str, float]:
         numbers = [float(v) for v in values if v == v]
         if not numbers:
             continue
-        summary = {
+        columns.append({
             "count": float(len(numbers)),
             "sum": float(sum(numbers)),
             "min": float(min(numbers)),
             "max": float(max(numbers)),
-        }
-        # A chart draws several columns (x and y, or the polygon coordinates);
-        # the one whose length matches the widget's frame list is the series.
-        if expected_length and len(numbers) == expected_length:
-            return summary
-        if not best or summary["count"] > best["count"]:
-            best = summary
-    return best
+            "_axis": _is_axis(numbers),
+        })
+    # A chart draws several columns (x and y, or the polygon coordinates); the
+    # one whose length matches the widget's frame list is the series. An x axis
+    # of years relabelled as integers (2003..2016) is the same length as the
+    # totals it sits under, so an evenly stepped integer run is never preferred.
+    if expected_length:
+        sized = [c for c in columns if c["count"] == expected_length]
+        columns = sized or columns
+    if not columns:
+        return {}
+    best = max(columns, key=lambda c: (not c["_axis"], c["count"]))
+    return {k: v for k, v in best.items() if k != "_axis"}
+
+
+def _is_axis(numbers: list[float]) -> bool:
+    """An evenly stepped, increasing run of integers: an axis, not a measurement."""
+    if len(numbers) < 3 or any(n != int(n) for n in numbers):
+        return False
+    step = numbers[1] - numbers[0]
+    return step > 0 and all(b - a == step for a, b in zip(numbers, numbers[1:]))
 
 
 def _looks_like_table(output: dict[str, Any], text: str) -> bool:
@@ -488,7 +501,9 @@ def _read_cell(cell: Any, index: int, code_cell: int, origin: str) -> CellAnswer
                 title, options = _widget_options(html, dimension)
                 chart.widget_dimension = title
                 chart.frame_keys = options
-                if not chart.children:  # a bare element, not a container of maps
+                # A bare element, or layers drawn on one set of axes — never a
+                # container of maps, whose buffers are polygon coordinates.
+                if not chart.children or chart.kind in ("Overlay", "NdOverlay"):
                     chart.values = _plotted_values(html, len(options))
             answers.holoviews.append(chart)
             continue
