@@ -224,6 +224,7 @@
     <tr><td>Two maps side by side</td><td><code>Layout</code>, shape <code>(1, 2)</code>, children <code>[Polygons, Polygons]</code></td><td><span class="badge badge-ok">✓</span></td></tr>
     <tr><td>The same, panels never trimmed</td><td><code>Layout</code> whose children are <code>HoloMap</code></td><td>still carries its widget. 75%</td></tr>
     <tr><td>The yearly eviction trend</td><td><code>Curve</code>, 14 points <strong>summing to 149,472</strong></td><td>graded on the numbers plotted</td></tr>
+    <tr><td>The same trend with its points drawn on top</td><td><code>Overlay</code> of <code>Curve * Scatter</code>, same 14 points</td><td><span class="badge badge-ok">the same chart ✓</span> (an overlay with map layers is not)</td></tr>
   </tbody>
 </table></div>
 
@@ -241,6 +242,24 @@
     <tr><td>Tracts left in EPSG:4326</td><td>The polygon's area is 0.037, not 369 km²</td><td>Degrees vs metres, 40%</td></tr>
   </tbody>
 </table></div>
+
+<h3 id="calibrated-against-a-real-class">Calibrated against a real class<a class="headerlink" href="#calibrated-against-a-real-class" aria-label="Link to this section">#</a></h3>
+
+<p>The rubric was run over a full class's submissions and checked against <strong>per-item aggregates only</strong>. No individual notebook was read to tune it. Every pattern that came back marked down when the work was right was fixed in the grader and reproduced in <code>tests/</code> with a synthetic fixture:</p>
+
+<div class="table-wrap"><table>
+  <thead><tr><th>Correct work the first version marked down</th><th>What the grader now accepts</th></tr></thead>
+  <tbody>
+    <tr><td>Year columns relabelled <code>2003</code>..<code>2016</code> after the melt</td><td><code>"e-03"</code>, <code>"2003"</code> and <code>2003</code> name the same year, in widget keys, tidy-frame columns and chart frame lists</td></tr>
+    <tr><td>A trend chart whose x axis is those integer years</td><td>The bokeh decoder never reads an evenly stepped integer column as the plotted totals</td></tr>
+    <tr><td>A line with its points overlaid (<code>Curve * Scatter</code>)</td><td>An <code>Overlay</code> is the trend chart, in the re-run and in the saved output. Map overlays are not</td></tr>
+    <tr><td>2.1.2 with no polygon area printed</td><td>Both NDVI medians in the saved output (0.2025 and 0.3748) prove the city and suburb polygons, since only the right polygons produce both</td></tr>
+    <tr><td>2.2.3 histogram and map in one <code>plt.subplots(1, 2)</code> cell</td><td>That cell counts as both figures</td></tr>
+    <tr><td>2.2.3 city limits drawn as a filled background layer</td><td>Counts as the city outline</td></tr>
+  </tbody>
+</table></div>
+
+<p>A chart with no recorded values also no longer crashes the feedback text. The calibration scripts themselves (<code>hw*_aggregate.py</code>, <code>calibration/</code>) are in <code>.gitignore</code>: even anonymised, they are written against real student results and stay off the repository.</p>
 
 <h3 id="where-the-100-points-go">Where the 100 points go<a class="headerlink" href="#where-the-100-points-go" aria-label="Link to this section">#</a></h3>
 
@@ -288,7 +307,7 @@
       <div class="footer-meta"><a class="edit-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/docs/_pages/assignments.html">Edit this page on GitHub</a><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
     </footer>
   </main>
-  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#assignment-1-the-donut-effect">Assignment 1: The Donut Effect</a></li><li class="toc-l2"><a href="#assignment-2-exploratory-visualization">Assignment 2: Exploratory Visualization</a></li><li class="toc-l3"><a href="#facts-graded-automatically-70-points">Facts, graded automatically (70 points)</a></li><li class="toc-l3"><a href="#judgement-graded-by-a-person-30-points">Judgement, graded by a person (30 points)</a></li><li class="toc-l2"><a href="#assignment-3-evictions-and-the-ndvi">Assignment 3: Evictions and the NDVI</a></li><li class="toc-l3"><a href="#plots-are-graded-on-the-objects">Plots are graded on the objects</a></li><li class="toc-l3"><a href="#named-mistakes-not-just-wrong-answers">Named mistakes, not just wrong answers</a></li><li class="toc-l3"><a href="#where-the-100-points-go">Where the 100 points go</a></li><li class="toc-l2"><a href="#assignments-4-6">Assignments 4–6</a></li></ul></nav></aside>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#assignment-1-the-donut-effect">Assignment 1: The Donut Effect</a></li><li class="toc-l2"><a href="#assignment-2-exploratory-visualization">Assignment 2: Exploratory Visualization</a></li><li class="toc-l3"><a href="#facts-graded-automatically-70-points">Facts, graded automatically (70 points)</a></li><li class="toc-l3"><a href="#judgement-graded-by-a-person-30-points">Judgement, graded by a person (30 points)</a></li><li class="toc-l2"><a href="#assignment-3-evictions-and-the-ndvi">Assignment 3: Evictions and the NDVI</a></li><li class="toc-l3"><a href="#plots-are-graded-on-the-objects">Plots are graded on the objects</a></li><li class="toc-l3"><a href="#named-mistakes-not-just-wrong-answers">Named mistakes, not just wrong answers</a></li><li class="toc-l3"><a href="#calibrated-against-a-real-class">Calibrated against a real class</a></li><li class="toc-l3"><a href="#where-the-100-points-go">Where the 100 points go</a></li><li class="toc-l2"><a href="#assignments-4-6">Assignments 4–6</a></li></ul></nav></aside>
 </div>
 <div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
   <div class="search-panel">

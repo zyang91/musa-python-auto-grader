@@ -83,7 +83,7 @@
   <div class="sidebar-scrim" hidden></div>
   <main id="content" class="content content-api">
     <article class="prose">
-<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py">grader/answers.py</a> · 659 lines</p>
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py">grader/answers.py</a> · 674 lines</p>
 <h1 class="module-title"><code>grader.answers</code></h1>
 <div class="module-doc"><p>Answers read out of a notebook&#x27;s own saved outputs (design.md §23, §25).</p>
 <h3 class="doc-heading">Why this exists</h3>
@@ -280,13 +280,13 @@ Out [3]: 384</code></pre>
 
 <dl class="api-object api-function" id="grader.answers.read_answers">
   <dt class="sig"><span class="sig-name">read_answers</span><span class="sig-params">(path: str | Path | None, origin: str) -&gt; <a class="xref" href="#grader.answers.NotebookAnswers">NotebookAnswers</a></span>
-    <a class="headerlink" href="#grader.answers.read_answers" aria-label="Link to read_answers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L562" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.answers.read_answers" aria-label="Link to read_answers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L577" title="View source on GitHub">[source]</a></dt>
   <dd><p>Harvest one notebook&#x27;s saved outputs.</p></dd>
 </dl>
 
 <dl class="api-object api-function" id="grader.answers.collect_answers">
   <dt class="sig"><span class="sig-name">collect_answers</span><span class="sig-params">(executed_path: str | Path | None, submitted_path: str | Path | None) -&gt; <a class="xref" href="#grader.answers.NotebookAnswers">NotebookAnswers</a></span>
-    <a class="headerlink" href="#grader.answers.collect_answers" aria-label="Link to collect_answers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L592" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.answers.collect_answers" aria-label="Link to collect_answers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/answers.py#L607" title="View source on GitHub">[source]</a></dt>
   <dd><p>Answers from both notebooks, merged cell by cell.</p>
 <p>Two notebooks may show the same answer: the one this grading run executed, and the one the student handed in with its outputs already saved. Neither is reliably the better source — the executed run can die on a data path the grader could not resolve, and a saved output can be stale or hand-edited — so they are merged rather than ranked, and each answer keeps the note of where it came from.</p></dd>
 </dl>
