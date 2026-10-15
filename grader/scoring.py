@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, Iterable
 
+from .executor import MODE_NOT_EXECUTED
 from .models import (
     STATUS_EXECUTION_ERROR,
     STATUS_FAIL,
@@ -52,7 +53,9 @@ def apply_review_policy(
                 f"Notebook execution failed at cell {result.execution.error_cell}: "
                 f"{result.execution.error_message}"
             )
-    elif not result.execution.attempted:
+    elif not result.execution.attempted and result.execution.mode != MODE_NOT_EXECUTED:
+        # A rubric that forbids execution graded the saved file on purpose; that
+        # is the design, not a problem for a person to look at.
         reasons.append("Notebook was never executed")
 
     for item in result.items:

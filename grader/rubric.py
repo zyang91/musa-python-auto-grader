@@ -51,6 +51,9 @@ class Rubric:
     discovery: dict[str, Any] = field(default_factory=dict)
     # Data the instructor supplies for every submission (design.md §16-17).
     data: dict[str, Any] = field(default_factory=dict)
+    # How (and whether) submissions are run. ``mode: never`` grades the
+    # submitted file as it stands and starts no kernel at all (Assignment 4).
+    execution: dict[str, Any] = field(default_factory=dict)
     source_path: str | None = None
 
     def item(self, rubric_id: str) -> RubricItem | None:
@@ -72,6 +75,17 @@ class Rubric:
         notebook and confirm them, so the option has to be there.
         """
         return bool(self.data.get("required") or self.data.get("optional"))
+
+    @property
+    def never_executes(self) -> bool:
+        """The notebook must not be run during grading, by any backend.
+
+        Assignment 4 scrapes Craigslist and downloads from OpenStreetMap and
+        ArcGIS. Re-running a class of those notebooks would send every request
+        again, once per student, to servers that are not ours — so the rubric
+        opts out of execution entirely, whatever the TA's execution mode.
+        """
+        return str(self.execution.get("mode", "")).lower() == "never"
 
     @property
     def declared_points(self) -> float:
@@ -138,6 +152,7 @@ def load_rubric(path: str | Path) -> Rubric:
         probe=data.get("probe") or {},
         discovery=data.get("discovery") or {},
         data=data.get("data") or {},
+        execution=data.get("execution") or {},
         source_path=str(path),
     )
 

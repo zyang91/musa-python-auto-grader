@@ -15,17 +15,17 @@ a structural check, a notebook result, or an explicit human judgement.
 - We only used LLM to assist build this tool, but no student assignments were upload to LLM.
 
 
-## Three assignments, three different things to grade against
+## Four assignments, four different things to grade against
 
-The dataset decides what can be checked, and the three assignments hand the
-grader three different situations:
+The dataset decides what can be checked, and the four assignments hand the
+grader four different situations:
 
-| | Assignment 1 — The Donut Effect | Assignment 2 — Exploratory Visualization | Assignment 3 — Evictions and the NDVI |
-|---|---|---|---|
-| Dataset | One Zillow file, **downloaded by each student** | The student's own choice, **never handed in** | **One zip, distributed with the assignment** |
-| Is there an answer key? | No — Zillow revises the file monthly, so counts and percentages differ legitimately | No — every student explores a different dataset | **Yes** — everyone runs the same five files |
-| What is graded | Whether each step *worked*, against the student's own data | Whether the student can *produce the required elements* | Whether each result *is the right one* |
-| Where the evidence comes from | The grading run's own execution | The outputs the student saved in the notebook | **Both** — the answers the notebook shows, confirmed by a re-run when one is possible |
+| | Assignment 1 — The Donut Effect | Assignment 2 — Exploratory Visualization | Assignment 3 — Evictions and the NDVI | Assignment 4 — Street Networks & Scraping |
+|---|---|---|---|---|
+| Dataset | One Zillow file, **downloaded by each student** | The student's own choice, **never handed in** | **One zip, distributed with the assignment** | **Downloaded and scraped live** from OSM, ArcGIS and Craigslist |
+| Is there an answer key? | No — Zillow revises the file monthly, so counts and percentages differ legitimately | No — every student explores a different dataset | **Yes** — everyone runs the same five files | Only the template's own rough figures ("about 3,750 crashes") |
+| What is graded | Whether each step *worked*, against the student's own data | Whether the student can *produce the required elements* | Whether each result *is the right one* | Whether each step is *written and shown run* |
+| Where the evidence comes from | The grading run's own execution | The outputs the student saved in the notebook | **Both** — the answers the notebook shows, confirmed by a re-run when one is possible | The code and saved outputs only — **the notebook is never run** |
 
 ---
 
@@ -284,6 +284,98 @@ right: the melt, the spatial join and the NDVI masking are where the assignment
 is actually taught, and the loading steps are worth 3 or 4 because they are hard
 to get wrong and cheap to fix.
 
+## Assignment 4 — grading without running anything
+
+Every step of Assignment 4 talks to a server that is not ours: Part 1 downloads
+the planning districts from ArcGIS Open Data and the street network from the
+OpenStreetMap Overpass API (osmnx), and Part 2 drives a browser through five
+pages of Craigslist with a sleep between each. Re-running a class of these
+notebooks would repeat every one of those requests once per student, which is
+the load the assignment itself warns will get an IP banned.
+
+So `rubrics/hw4.yaml` says `execution: mode: never`, and the service honours it
+in **every** execution mode, local included: no kernel, no notebook container,
+no browser, no data placement. The grade comes from the file the student handed
+in, read two ways:
+
+- **The code they wrote.** Each code cell is matched to the template cell it was
+  filled in from, and the template's own lines are set aside first — so the
+  `driver.get(url)` and `pd.concat(...)` inside the provided scraping loop, or a
+  `def format_price(price_string): return` stub, earn nothing. Each step is a
+  list of requirements in the rubric, one regex each, scoped to its Part, so a
+  TA can widen one without touching Python.
+- **The outputs their own run saved.** The crash count, the scraping log
+  ("Processing page 3... Number of apartments = 120"), the results table, the
+  rendered histograms, the Folium map and the Altair spec — including the
+  scraped rows the spec embeds.
+
+### The one thing that does run: three pure functions
+
+`format_bedrooms`, `format_size` and `format_price` turn `"2br"` into `2`, and
+calling them is far better evidence than reading them. So they, and only they,
+are cut out of the notebook (`grader/function_sandbox.py`) and called with
+typical Craigslist strings in the Docker sandbox, under the same isolation flags
+as a notebook run — above all `--network none`:
+
+- only the top-level `def` of each named function is extracted; no other
+  statement of the notebook goes anywhere, and the submission itself is not
+  mounted into the container;
+- decorators and annotations are stripped, and a function whose default
+  argument is not a plain literal is refused — those run at definition time;
+- only imports of `re`, `string`, `math`, `decimal`, `numpy` and `pandas` go
+  along; `selenium`, `requests` and `osmnx` do not;
+- the expected answers stay on the host.
+
+**In local mode the functions are not called** (the machine has a network). The
+item then gets a provisional score from the source and goes to a TA, and the
+sidebar says so before the run.
+
+### Scraping has to be shown, not loaded
+
+A results table read back from a CSV proves nothing about a scraper. Item 2.6
+wants the completed loop in the notebook *and* the log it printed when the
+student ran it; the results table only counts when that log is there. A table
+loaded from a file is recorded as such and goes to a TA.
+
+### Reference values, loosely
+
+There is no reference solution, and the street network and the listings both
+change. The only numbers used are the template's own — about 3,750 crashes in
+Center City (3,000–4,500 accepted), 120 listings a page, a price per square foot
+around 1.5 — and each only raises confidence. A number far outside its range
+sends the item to a person; it never costs a point on its own. As everywhere,
+**anything short of full marks reaches a person**.
+
+### Where the 100 points go
+
+| | Item | Points |
+|---|---|---|
+| | Notebook run and submitted with its outputs | 10 |
+| 1.1 | Central planning district polygon | 4 |
+| 1.2 | Drive network from the polygon | 4 |
+| 1.3 | Network edges as a GeoDataFrame | 3 |
+| 1.4 | PennDOT crash data loaded and combined | 4 |
+| 1.5 | Crashes as a GeoDataFrame (latitude-as-x is named) | 4 |
+| 1.6 | Crashes trimmed to Center City | 5 |
+| 1.7 | Graph and crashes projected to EPSG:2272 | 5 |
+| 1.8 | Nearest edge for each crash | 5 |
+| 1.9 | Crash count per street | 5 |
+| 1.10 | Crash counts merged onto the edges | 4 |
+| 1.11 | Crash index | 5 |
+| 1.12 | Histogram of the crash index | 3 |
+| 1.13 | Interactive map of the crash index | 4 |
+| 2.1 | Selenium driver opens Craigslist | 3 |
+| 2.2 | BeautifulSoup from the page source | 2 |
+| 2.3 | Listing elements extracted | 4 |
+| 2.4 | Price, bedrooms, size and title of the first listing | 4 |
+| 2.5 | `format_*` functions, called in the sandbox | 9 |
+| 2.6 | Scraping loop completed *and shown run* | 7 |
+| 2.7 | Histograms of price and price per square foot | 3 |
+| 2.8 | Interactive Altair scatter of price vs size | 3 |
+| | **Total** | **100** |
+
+Execution and output completeness 10, Part 1 55, Part 2 35.
+
 ---
 
 ## Quickstart
@@ -358,6 +450,19 @@ python cli.py grade examples/hw3_submissions --rubric rubrics/hw3.yaml
 Scores: 99.5, 68.5, 34.5 and 10 out of 100. The 0.5 the correct one does not get
 is the styling item's ceiling — no submission reaches full marks on a judgement
 item without a person.
+
+For Assignment 4:
+
+```bash
+python examples/make_hw4_submissions.py
+python cli.py grade examples/hw4_submissions --rubric rubrics/hw4.yaml
+```
+
+Four submissions — complete, one with the usual mistakes and its Craigslist
+results loaded from a CSV, one that crashes in Part 1, and the untouched
+template. Their saved outputs are written in directly; nothing is executed,
+here or when grading. In Docker mode they score 100, 84, 26.5 and 3; in local
+mode the `format_*` item is not called and goes to a TA instead.
 
 To have the grader re-run each notebook and confirm what it shows, unzip the data
 and supply all five files:
@@ -487,6 +592,10 @@ Each submission is copied into its own working directory, the notebook is
 instrumented with probe cells, and a subprocess executes it — by default inside a
 container with no network, capped memory and CPU, a read-only root filesystem and
 no host environment variables (see [docker/README.md](docker/README.md)).
+
+Assignment 4 is the exception: its rubric says `execution: mode: never`, so this
+step is skipped for it entirely, in every mode — see
+[Assignment 4](#assignment-4--grading-without-running-anything).
 
 Errors do not stop grading. `allow_errors` is on, so the notebook runs to the end,
 the first failing cell and its traceback are recorded, and every check that can
@@ -619,6 +728,8 @@ grader/
   executor.py           instrumentation, Docker/local execution
   probe_runtime.py      injected into the student kernel; never runs on the host
   notebook_runner.py    standalone runner executed in the subprocess/container
+  function_sandbox.py   extracts named functions and calls them in the sandbox
+  function_runner.py    standalone runner for those functions, in the container
   notebook.py           static analysis and read-only rendering
   charts.py             chart evidence: library attribution, Vega-Lite specs
   answers.py            the answers a notebook's own saved outputs state
@@ -632,13 +743,15 @@ assignments/
   hw1.py                Assignment 1 checks
   hw2.py                Assignment 2 checks
   hw3.py                Assignment 3 checks
+  hw4.py                Assignment 4 checks (never executes the notebook)
 rubrics/hw1.yaml        the grading policy, as configuration
 rubrics/hw2.yaml        the grading policy, as configuration
 rubrics/hw3.yaml        the answer key, as configuration
+rubrics/hw4.yaml        static grading policy; execution: never
 docker/                 sandbox image, app image, pinned sandbox packages
 docker-compose.yml      runs the app image
 .github/                CI workflow and Dependabot
-tests/                  302 tests
+tests/                  331 tests
 examples/               synthetic data, nine demo notebooks, fifteen submissions
 assignment_template/    the notebooks handed to students, and HW3's data zip
 ```
@@ -664,7 +777,7 @@ results/<session_id>/
 ## Tests
 
 ```bash
-python -m pytest              # 302 tests, ~40s
+python -m pytest              # 331 tests, ~40s
 python -m pytest -m "not slow"  # skip the ones that execute real kernels
 python -m pytest -m docker    # grade a notebook in the sandbox image (needs it built)
 ruff check .                  # syntax errors and undefined names
@@ -680,11 +793,12 @@ pinned packages, the base images and the Actions; each goes through the same CI.
 
 ## Scope
 
-Implemented: Assignments 1, 2 and 3, Streamlit UI, Docker isolation, rubric
+Implemented: Assignments 1, 2, 3 and 4, Streamlit UI, Docker isolation, rubric
 engine, review queue, manual overrides, regrading, exports, optional LLM grading.
 
 Not built (per design.md §37): Canvas API integration, authentication, cloud
-deployment, student accounts, a database, live scraping, Assignments 4–6. Their
+deployment, student accounts, a database, live scraping (Assignment 4 is graded
+without running it, precisely so that nothing is scraped), Assignments 5–6. Their
 templates are in `assignment_template/` and the architecture is ready for them —
 each needs a rubric YAML and a grader class.
 

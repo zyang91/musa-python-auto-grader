@@ -1,0 +1,512 @@
+# ---------------------------------------------------------------------------
+# MUSA 5500 — Assignment 4: Street networks and web scraping.
+#
+# Graded against assignment_template/assignment-4.ipynb.
+#
+# DESIGN NOTE — why this notebook is never run:
+# every step of it talks to a server that is not ours. Part 1 downloads the
+# planning districts from ArcGIS Open Data and the street network from the
+# OpenStreetMap Overpass API (osmnx); Part 2 drives a browser through five pages
+# of Craigslist search results with a sleep between each. Re-running a class of
+# these notebooks would repeat every one of those requests once per student —
+# exactly the load the assignment itself warns will get an IP banned — and in
+# the Docker sandbox, which has no network, it would only fail at cell 1 anyway.
+#
+# So `execution: never` below switches execution off for this assignment,
+# whatever execution mode the TA has selected. No kernel, container or browser
+# is started for a submission, and the grade comes from two readings of the file
+# the student handed in:
+#
+#   * the code they wrote — lines that also appear in the template are set
+#     aside first, so the scaffold the template already provides (the
+#     `driver.get(url)` inside the scraping loop, its `pd.concat`) earns nothing;
+#   * the outputs their own run saved — the crash count, the scraping log, the
+#     results table, the rendered histograms, the Folium map and the Altair spec.
+#
+# The one exception is item 2.5. Its three format_* functions are pure string
+# functions, and calling them is far better evidence than reading them, so they
+# alone are cut out of the notebook and called in the network-less Docker
+# sandbox (grader/function_sandbox.py). Nothing else from the notebook goes with
+# them.
+#
+# DESIGN NOTE — on reference values:
+# there is no reference solution. The only numbers used are the ones the
+# assignment text itself gives — "about 3,750 crashes" in the Central district,
+# 120 listings to a page, a price per square foot "centered around ~1.5" — and
+# each is used with a wide tolerance and only to *raise* confidence. A number
+# outside the range sends the item to a person; it never costs points on its
+# own. The street network changes with every OSM edit and the Craigslist
+# listings change by the hour, so nothing downstream of either is pinned.
+#
+# DESIGN NOTE — scraping has to be shown, not loaded:
+# a results table read back from a CSV proves nothing about the scraper. Item
+# 2.6 therefore wants both the completed loop in the notebook and the log that
+# loop printed when the student ran it. A table loaded from a file, with no
+# saved run of the loop, is recorded as such and goes to a TA.
+#
+# The review policy is the same as every other assignment: the grader can award
+# full marks when the evidence is there, and anything short of full marks goes
+# to a person rather than being recorded as a deduction.
+# ---------------------------------------------------------------------------
+
+assignment:
+  id: hw4
+  name: "Assignment 4: Street Networks & Web Scraping"
+  version: HW4-v1
+  total_points: 100
+  description: >
+    Part 1: load the Central planning district, download its drive network with
+    osmnx, attach three years of PennDOT crashes to the nearest street, compute a
+    normalized log crash index per street, and plot it as a histogram and an
+    interactive Folium map. Part 2: scrape five pages of Philadelphia apartment
+    listings from Craigslist with Selenium and BeautifulSoup, format price, size
+    and bedrooms as numbers, and plot the prices with matplotlib and Altair.
+
+execution:
+  # Never run a submission: see the design note above. Enforced in
+  # grader/service.py for every execution mode, local included.
+  mode: never
+
+settings:
+  score_rounding: 0.5
+  # The template, so the scaffold it provides is not credited as student work.
+  template_notebook: assignment_template/assignment-4.ipynb
+
+discovery:
+  notebook_name_hints: ["assignment-4", "assignment4", "assignment_4", "hw4", "hw-4", "homework4", "musa"]
+  ignore_name_patterns: ["checkpoint", "untitled", "scratch", "practice", "lecture", "solution", "draft", "copy of"]
+
+data:
+  # Nothing to supply: the notebook is not run, so it never needs its data.
+  required: false
+  description: >
+    None. Assignment 4 is graded from the submitted notebook without running it,
+    so the crash CSVs are not needed.
+
+rubric:
+
+  - id: notebook_execution
+    name: Notebook was run and submitted with its outputs
+    points: 10
+    type: execution
+    description: >
+      The grader does not run this notebook, so this item reads the state the
+      student saved it in: whether the cells carry output, and whether any of
+      them shows an error from the student's own run.
+    config:
+      no_outputs_penalty: 7
+      # Plenty of cells in this template only assign a variable and print
+      # nothing, so a complete run still leaves many cells without output.
+      min_output_coverage: 0.3
+      low_coverage_penalty: 3
+      error_penalty_each: 2
+      max_error_penalty: 6
+
+  # =====================================================================
+  # Part 1 — crashes on the Center City street network (55 points)
+  # =====================================================================
+
+  - id: district_polygon
+    name: "1.1 Central planning district polygon"
+    points: 4
+    type: structural
+    description: >
+      The planning districts are read into a GeoDataFrame, the "Central"
+      district selected, and its geometry extracted as a shapely Polygon.
+    config:
+      part: 1
+      anchor: ['read_file\(', '(?i)["'']central["'']']
+      requirements:
+        - label: the planning districts are read with geopandas
+          any: ['read_file\(', 'GeoDataFrame\.from_features\(', 'read_json\(']
+          points: 1.5
+        - label: the "Central" district is selected
+          any: ['(?i)["'']central["'']']
+          points: 1.5
+        - label: the district's geometry is extracted as a single polygon
+          any: ['\.geometry\b', '\[\s*["'']geometry["'']\s*\]', 'unary_union', 'union_all', '\.squeeze\(']
+          points: 1
+
+  - id: street_network
+    name: "1.2 Drive network from the polygon"
+    points: 4
+    type: structural
+    description: osmnx builds a graph from the polygon with network_type="drive".
+    config:
+      part: 1
+      anchor: ['graph_from_polygon\(']
+      requirements:
+        - label: the graph is built from the polygon with ox.graph_from_polygon
+          any: ['graph_from_polygon\(']
+          points: 3
+        - label: the network type is "drive"
+          any: ['network_type\s*=\s*["'']drive["'']', 'graph_from_polygon\([^)]*["'']drive["'']']
+          points: 1
+
+  - id: network_edges
+    name: "1.3 Network edges as a GeoDataFrame"
+    points: 3
+    type: structural
+    description: ox.graph_to_gdfs keeps the edges and not the nodes.
+    config:
+      part: 1
+      anchor: ['graph_to_gdfs\(']
+      requirements:
+        - label: the graph is converted with ox.graph_to_gdfs
+          any: ['graph_to_gdfs\(']
+          points: 2
+        - label: only the edges are kept (nodes=False, or the second of the pair)
+          any: ['nodes\s*=\s*False', 'graph_to_gdfs\([^)]*\)\s*\[\s*1\s*\]', '\w+\s*,\s*\w+\s*=\s*ox\.(?:convert\.|utils_graph\.)?graph_to_gdfs']
+          points: 1
+
+  - id: crash_data
+    name: "1.4 PennDOT crash data loaded and combined"
+    points: 4
+    type: structural
+    description: The three CRASH_PHILADELPHIA_XXXX.csv files are read with pandas and combined with pd.concat.
+    config:
+      part: 1
+      anchor: ['(?i)crash_philadelphia', 'read_csv\(']
+      requirements:
+        - label: the crash CSV files are read with pandas
+          all: ['read_csv\(', '(?i)crash']
+          points: 2
+        - label: the three years are combined with pd.concat
+          any: ['concat\(']
+          points: 2
+
+  - id: crash_geodataframe
+    name: "1.5 Crashes as a GeoDataFrame"
+    points: 4
+    type: structural
+    description: >
+      A GeoDataFrame built from DEC_LONG (x) and DEC_LAT (y), in EPSG:4326.
+      Passing latitude as x is the classic mistake here, and it is checked.
+    config:
+      part: 1
+      anchor: ['points_from_xy\(', 'GeoDataFrame\(']
+      requirements:
+        - label: a GeoDataFrame is created
+          any: ['GeoDataFrame\(']
+          points: 1.5
+        - label: point geometry is built from DEC_LONG and DEC_LAT
+          all: ['DEC_LONG', 'DEC_LAT']
+          any: ['points_from_xy\(', 'Point\(']
+          points: 1.5
+        - label: the CRS is set to EPSG:4326
+          any: ['4326', '(?i)wgs\s*84']
+          points: 1
+      # x=DEC_LAT, y=DEC_LONG puts every crash in Antarctica's neighbourhood.
+      swapped_coordinates_penalty: 2
+
+  - id: trim_crashes
+    name: "1.6 Crashes trimmed to Center City"
+    points: 5
+    type: deterministic
+    description: >
+      The crashes are trimmed with within() to the convex hull of the edges.
+      The template says about 3,750 crashes remain; a count in that range is
+      corroboration, and a count far outside it sends the item to a person.
+    config:
+      part: 1
+      anchor: ['\.within\(', 'convex_hull', 'sjoin\(', '\.clip\(']
+      requirements:
+        - label: an outer boundary is taken from the edges (e.g. unary_union.convex_hull)
+          any: ['convex_hull', 'envelope', 'unary_union', 'union_all', 'concave_hull']
+          points: 2.5
+        - label: the crashes are trimmed to it (within, or an equivalent spatial filter)
+          any: ['\.within\(', 'sjoin\(', '\.clip\(', '\.intersects\(', '\.contains\(']
+          points: 2.5
+      # "About 3,750" in the template. Deliberately wide: the convex hull comes
+      # from an OSM download, and OSM changes.
+      expected_count: 3750
+      count_range: [3000, 4500]
+
+  - id: reproject
+    name: "1.7 Graph and crashes projected to EPSG:2272"
+    points: 5
+    type: structural
+    description: ox.project_graph and .to_crs() both target EPSG:2272.
+    config:
+      part: 1
+      anchor: ['project_graph\(', 'to_crs\(']
+      requirements:
+        - label: the graph is projected with ox.project_graph
+          any: ['project_graph\(']
+          points: 2
+        - label: the crashes are projected with .to_crs()
+          any: ['to_crs\(']
+          points: 2
+        - label: the target CRS is EPSG:2272
+          any: ['2272']
+          points: 1
+
+  - id: nearest_edges
+    name: "1.8 Nearest edge for each crash"
+    points: 5
+    type: structural
+    description: ox.distance.nearest_edges with the graph and the crash x/y coordinates.
+    config:
+      part: 1
+      anchor: ['nearest_edges\(']
+      requirements:
+        - label: ox.distance.nearest_edges is called
+          any: ['nearest_edges\(']
+          points: 3
+        - label: it is given the crashes' x and y coordinates
+          all: ['\.x\b', '\.y\b']
+          points: 2
+
+  - id: crash_counts
+    name: "1.9 Crash count per street"
+    points: 5
+    type: structural
+    description: Group the (u, v, key) frame by u and v, take the size, and name it crash_count.
+    config:
+      part: 1
+      anchor: ['groupby\(', 'crash_count']
+      requirements:
+        - label: the nearest edges are grouped by u and v
+          any: ['groupby\(\s*\[\s*["'']u["'']\s*,\s*["'']v["'']', 'groupby\(\s*\[\s*["'']v["'']\s*,\s*["'']u["'']']
+          points: 2
+        - label: the size of each group is taken
+          any: ['\.size\(\)', '\.count\(\)', 'value_counts\(']
+          points: 1.5
+        - label: the count column is named crash_count
+          all: ['crash_count']
+          any: ['reset_index\(', 'rename\(', '\.name\s*=']
+          points: 1.5
+      expected_columns: [u, v, crash_count]
+
+  - id: merge_edges
+    name: "1.10 Crash counts merged onto the edges"
+    points: 4
+    type: structural
+    description: A left merge of the edges with the counts on u and v, then fillna(0).
+    config:
+      part: 1
+      anchor: ['merge\(']
+      requirements:
+        - label: the edges and counts are merged on u and v
+          all: ['merge\(', '["'']u["'']\s*,\s*["'']v["'']']
+          points: 2
+        - label: the merge is a left merge, so no street is dropped
+          any: ['how\s*=\s*["'']left["'']']
+          points: 1
+        - label: missing counts are filled with zero
+          any: ['fillna\(\s*(?:0|value\s*=\s*0)', 'fillna\(\s*\{[^}]*:\s*0']
+          points: 1
+
+  - id: crash_index
+    name: "1.11 Crash index"
+    points: 5
+    type: structural
+    description: >
+      Crash count per unit length, log10-transformed and normalized to 0-1,
+      computed only where the count is above zero.
+    config:
+      part: 1
+      anchor: ['log10\(']
+      requirements:
+        - label: the crash count is divided by the street length
+          all: ['crash_count', 'length']
+          points: 1.5
+        - label: the ratio is log-transformed with numpy's log10
+          any: ['log10\(']
+          points: 1.5
+        - label: the index is normalized to the 0-1 range
+          any: [['\.min\(', '\.max\('], 'MinMaxScaler', 'ptp\(']
+          points: 1.5
+        - label: only streets with at least one crash are indexed
+          any: ['>\s*0\b', '!=\s*0\b', '>=\s*1\b', '(?i)nonzero', 'replace\([^)]*inf']
+          points: 0.5
+
+  - id: crash_index_histogram
+    name: "1.12 Histogram of the crash index"
+    points: 3
+    type: deterministic
+    description: A matplotlib histogram of the crash index, rendered in the notebook.
+    config:
+      # Part 2 draws histograms too; only Part 1's cells are looked at here.
+      rendered_points: 3
+      source_only_points: 1.5
+
+  - id: crash_index_map
+    name: "1.13 Interactive map of the crash index"
+    points: 4
+    type: deterministic
+    description: A Folium map (e.g. GeoDataFrame.explore) of the streets coloured by the crash index.
+    config:
+      source_any: ['\.explore\(', 'folium\.']
+      saved_markers: ['leaflet', 'folium', 'Make this Notebook Trusted']
+      source_points: 2
+      rendered_points: 2
+
+  # =====================================================================
+  # Part 2 — scraping Craigslist (35 points)
+  # =====================================================================
+
+  - id: selenium_driver
+    name: "2.1 Selenium driver opens Craigslist"
+    points: 3
+    type: structural
+    description: A Chrome, Firefox or Edge webdriver is started and opens the search page.
+    config:
+      part: 2
+      anchor: ['webdriver\.']
+      requirements:
+        - label: a selenium webdriver is created
+          any: ['webdriver\.(?:Chrome|Firefox|Edge|Safari|Remote)\(', '(?:Chrome|Firefox|Edge)\(\s*(?:service|options)']
+          points: 2
+        - label: the driver opens the Craigslist search page
+          any: ['\.get\(\s*["'']https?://[^"'']*craigslist', '\bdriver\w*\.get\(']
+          points: 1
+
+  - id: soup
+    name: "2.2 BeautifulSoup from the page source"
+    points: 2
+    type: structural
+    description: A BeautifulSoup object built from driver.page_source.
+    config:
+      part: 2
+      anchor: ['BeautifulSoup\(']
+      requirements:
+        - label: a BeautifulSoup object is created
+          any: ['BeautifulSoup\(']
+          points: 1
+        - label: it parses the driver's page source
+          any: ['page_source']
+          points: 1
+
+  - id: listing_elements
+    name: "2.3 Listing elements extracted"
+    points: 4
+    type: deterministic
+    description: >
+      The listing elements are selected from the soup. The template expects
+      120 per page; a count is corroboration only, never a requirement, since
+      Craigslist changes its page layout.
+    config:
+      part: 2
+      anchor: ['\.select\(', 'find_all\(', 'findAll\(']
+      requirements:
+        - label: the listing elements are selected with BeautifulSoup
+          any: ['\.select\(', '\.find_all\(', '\.findAll\(', 'find_elements\(']
+          points: 3
+        - label: the number of listings is checked
+          any: ['len\(']
+          points: 1
+      count_range: [20, 1000]
+
+  - id: first_listing_fields
+    name: "2.4 Price, bedrooms, size and title of the first listing"
+    points: 4
+    type: deterministic
+    description: >
+      The first listing is printed with prettify(), and its price, bedrooms,
+      size and title are pulled out and printed.
+    config:
+      requirements:
+        - label: the first listing is printed with prettify()
+          any: ['prettify\(']
+          points: 1
+        - label: its fields are pulled out with BeautifulSoup selectors
+          any: ['\.select_one\(', '\.find\(', '\.select\(', 'get_text\(', '\.text\b', '\.string\b']
+          points: 1
+      # What the printed fields look like on Craigslist. Read from the saved
+      # output of the 2.4 cells; at least two of the three must appear.
+      printed_patterns:
+        price: '\$\s?\d'
+        bedrooms: '(?i)\d\s*br\b'
+        size: '(?i)\d\s*ft'
+      printed_points: 2
+      min_printed: 2
+
+  - id: format_functions
+    name: "2.5 format_bedrooms, format_size and format_price"
+    points: 9
+    type: hidden_test
+    description: >
+      The three functions are cut out of the notebook — nothing else — and
+      called in the network-less Docker sandbox with typical Craigslist strings.
+      Any numeric return type is accepted. 3 points per function.
+    config:
+      type: isolated_functions
+      points_per_function: 3
+      case_timeout_seconds: 5
+      allowed_imports: [re, string, math, decimal, numpy, pandas]
+      functions:
+        format_bedrooms:
+          cases:
+            - {input: "1br", expected: 1}
+            - {input: "2br", expected: 2}
+            - {input: "3br", expected: 3}
+        format_size:
+          cases:
+            - {input: "650ft2", expected: 650}
+            - {input: "850ft2", expected: 850}
+            - {input: "1200ft2", expected: 1200}
+        format_price:
+          cases:
+            - {input: "$950", expected: 950}
+            - {input: "$1,500", expected: 1500}
+            - {input: "$2,350", expected: 2350}
+
+  - id: scraping_loop
+    name: "2.6 Scraping loop completed and run"
+    points: 7
+    type: deterministic
+    description: >
+      The scraping loop is completed in the notebook and its saved output shows
+      it running — pages processed and listings found — with the resulting
+      price/size/bedrooms/title table shown. A table loaded from a saved CSV
+      does not count as scraping.
+    config:
+      # The loop cell: it calls the driver inside a for loop.
+      loop_markers: ['for\s+\w+\s+in\b']
+      driver_markers: ['\.get\(', 'page_source']
+      implementation:
+        - label: each page's HTML is parsed with BeautifulSoup inside the loop
+          any: ['BeautifulSoup\(']
+          points: 1
+        - label: the listings are selected inside the loop
+          any: ['\.select\(', '\.find_all\(', '\.findAll\(']
+          points: 1
+        - label: price, size, bedrooms and title are extracted for each listing
+          # The template leaves these four assignments blank, which does not
+          # even parse; a filled-in loop parses.
+          parses: true
+          points: 1
+      run_log_points: 2
+      # "Number of apartments =  120" — any positive count is accepted.
+      run_log_patterns: ['(?i)number of apartments\s*=?\s*(\d+)', '(?i)processing page\s*(\d+)']
+      # Only a table the loop produced counts: without a saved run of the loop,
+      # a results table is one read back from somewhere else.
+      results_points: 2
+      results_columns: [price, size, bedrooms, title]
+
+  - id: price_histograms
+    name: "2.7 Histograms of price and price per square foot"
+    points: 3
+    type: deterministic
+    description: Two labelled and titled matplotlib histograms — price, and price / size.
+    config:
+      required_count: 2
+      rendered_points: 2
+      labels_points: 1
+
+  - id: altair_scatter
+    name: "2.8 Interactive Altair scatter of price vs size"
+    points: 3
+    type: deterministic
+    description: >
+      Price on x, size on y, coloured by bedrooms, with a tooltip and pan/zoom
+      (.interactive()), read from the chart's own Vega-Lite spec.
+    config:
+      encodings: {x: price, y: size, color: bedrooms}
+      encoding_points: 1.5
+      tooltip_points: 0.5
+      interactive_points: 1
+      # The template: "centered around ~1.5". Recorded as evidence about the
+      # scraped data the chart embeds; never scored.
+      price_per_sqft_range: [0.5, 5.0]

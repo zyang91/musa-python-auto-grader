@@ -26,6 +26,8 @@ from .utils import truncate
 
 MODE_DOCKER = "docker"
 MODE_LOCAL = "local"
+# Recorded on a submission whose rubric forbids running it (``execution: never``).
+MODE_NOT_EXECUTED = "not_executed"
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 RUNNER_SOURCE = PACKAGE_DIR / "notebook_runner.py"
@@ -330,26 +332,37 @@ def _user_flags() -> list[str]:
     return ["--user", f"{getuid()}:{os.getgid()}"]
 
 
+def sandbox_isolation_flags(config: ExecutionConfig) -> list[str]:
+    """``docker run`` flags every sandboxed run gets (design.md §18).
+
+    Shared with ``grader/function_sandbox.py`` so the few functions Assignment 4
+    runs in isolation are held to exactly the same limits as a whole notebook —
+    above all ``--network none``.
+    """
+    return [
+        "--network", "none",
+        "--memory", config.memory_limit,
+        "--memory-swap", config.memory_limit,
+        "--cpus", str(config.cpu_limit),
+        "--pids-limit", "256",
+        "--read-only",
+        "--tmpfs", "/tmp:rw,size=256m",
+        "--env", "HOME=/tmp",
+        *_user_flags(),
+    ]
+
+
 def _build_command(workdir: Path, config: ExecutionConfig, run_subdir: str = "") -> list[str]:
     if config.mode == MODE_DOCKER:
         run = f"/grading/{run_subdir}" if run_subdir else "/grading"
         return [
             "docker", "run", "--rm",
             "--name", f"musa-grader-{workdir.name}"[:60],
-            # Isolation requirements from design.md §18.
-            "--network", "none",
-            "--memory", config.memory_limit,
-            "--memory-swap", config.memory_limit,
-            "--cpus", str(config.cpu_limit),
-            "--pids-limit", "256",
-            "--read-only",
-            "--tmpfs", "/tmp:rw,size=256m",
-            "--env", "HOME=/tmp",
+            *sandbox_isolation_flags(config),
             # Not Agg: under Agg a figure is never displayed, so a chart the
             # student drew leaves no image in the notebook to grade.
             "--env", "MPLBACKEND=module://matplotlib_inline.backend_inline",
             "--env", "MPLCONFIGDIR=/tmp/mpl",
-            *_user_flags(),
             "--workdir", run,
             "-v", f"{workdir}:/grading:rw",
             config.docker_image,

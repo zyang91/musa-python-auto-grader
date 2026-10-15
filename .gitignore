@@ -225,6 +225,7 @@ submissions/
 # and doubling as a scratch area for real student notebooks.
 hw2_submissions/
 hw3_submissions/
+hw4_submissions/
 # Calibration scripts that read a real grading session. Even anonymised, they
 # are written against real student results and stay off the repository.
 hw*_aggregate.py
@@ -236,6 +237,10 @@ calibration/
 examples/hw3_good_submission.ipynb
 examples/hw3_partial_submission.ipynb
 examples/hw3_broken_submission.ipynb
+# Assignment 4's are generated (never executed) by examples/make_hw4_submissions.py.
+examples/hw4_good_submission.ipynb
+examples/hw4_partial_submission.ipynb
+examples/hw4_broken_submission.ipynb
 
 .DS_Store
 .musa_grader_data/

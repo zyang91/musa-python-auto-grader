@@ -21,7 +21,13 @@ from .discovery import (
     extract_zip,
     prepare_workdir,
 )
-from .executor import MODE_DOCKER, MODE_LOCAL, ExecutionConfig, execute_submission
+from .executor import (
+    MODE_DOCKER,
+    MODE_LOCAL,
+    MODE_NOT_EXECUTED,
+    ExecutionConfig,
+    execute_submission,
+)
 from .llm import DisabledQualitativeGrader
 from .models import ExecutionRecord, GradingProgress, SubmissionResult
 from .notebook import analyze_notebook, empty_analysis
@@ -148,6 +154,12 @@ class GradingService:
                 "No assignment data file is set. Students submit only a notebook, "
                 f"so the grader has to supply {wanted.strip()} "
                 "Upload it in the sidebar before running."
+            )
+        if self.grader.isolated_test_items() and self.settings.execution_mode != MODE_DOCKER:
+            problems.append(
+                "This assignment calls a few of each student's functions in the Docker "
+                "sandbox, which has no network. In local mode they are not called, so "
+                "those items are graded from the source and sent to a TA."
             )
         for path in self.settings.shared_data_paths:
             if not Path(path).is_file():
@@ -307,44 +319,14 @@ class GradingService:
             analysis = analyze_notebook(candidate.notebook_path)
             _stage(progress, progress_callback, "structural", "done")
 
-            prefer_student_files = bool(self.rubric.data.get("prefer_student_files", False))
-            prepare_workdir(
-                candidate,
-                workdir,
-                shared_data=self.settings.shared_data_paths,
-                # Read-call arguments first, then any other path-looking literal.
-                referenced_paths=analysis.referenced_files + [
-                    literal for literal in analysis.data_path_literals
-                    if literal not in analysis.referenced_files
-                ],
-                fallback_dirs=self.rubric.data.get("fallback_locations", ["data", ""]),
-                prefer_student_files=prefer_student_files,
-                # Assignment 3 supplies five files, not one, and each is placed at
-                # several candidate paths; the default cap is a one-file cap.
-                max_placements=int(self.rubric.data.get("max_placements", 12)),
-            )
-            result.discovery_warnings.extend(
-                self._data_notes(candidate, prefer_student_files)
-            )
-
-            probe_config = dict(self.grader.probe_config())
-            probe_config["url_redirects"] = self._url_redirects(candidate, analysis)
-
-            _stage(progress, progress_callback, "execution", "running")
-            execution, probe = execute_submission(
-                workdir, probe_config, self.settings.execution_config(self.rubric),
-                run_subdir=candidate.run_subdir,
-            )
-            result.execution = execution
-            _stage(progress, progress_callback, "execution",
-                   "done" if execution.success else "error")
-
-            if execution.executed_notebook_path:
-                stored = session.store_executed_notebook(
-                    candidate.student_id, execution.executed_notebook_path
+            if self.rubric.never_executes:
+                execution, probe = self._not_executed(workdir, progress, progress_callback)
+                result.execution = execution
+            else:
+                execution, probe = self._execute(
+                    candidate, workdir, analysis, session, progress, progress_callback,
+                    result,
                 )
-                if stored:
-                    result.execution.executed_notebook_path = stored
 
             result.artifacts = {
                 "absolute_paths": analysis.absolute_paths,
@@ -358,6 +340,9 @@ class GradingService:
             }
 
             _stage(progress, progress_callback, "hidden", "running")
+            function_tests = self.grader.run_isolated_tests(
+                analysis, workdir, self.settings.execution_config(self.rubric)
+            )
             context = GradingContext(
                 student_id=candidate.student_id,
                 rubric=self.rubric,
@@ -368,6 +353,7 @@ class GradingService:
                 discovery_warnings=result.discovery_warnings,
                 qualitative_grader=self.qualitative_grader,
                 settings=self.settings.to_dict(),
+                function_tests=function_tests,
             )
             result.items = self.grader.grade(context)
             _stage(progress, progress_callback, "hidden", "done")
@@ -388,6 +374,77 @@ class GradingService:
             result.review_reasons.append(f"Grader error: {result.error}")
 
         return result
+
+    def _execute(
+        self,
+        candidate: SubmissionCandidate,
+        workdir: Path,
+        analysis: Any,
+        session: GradingSession,
+        progress: GradingProgress,
+        progress_callback: ProgressCallback | None,
+        result: SubmissionResult,
+    ) -> tuple[ExecutionRecord, dict[str, Any] | None]:
+        """Place the data, run the instrumented notebook, keep the executed copy."""
+        prefer_student_files = bool(self.rubric.data.get("prefer_student_files", False))
+        prepare_workdir(
+            candidate,
+            workdir,
+            shared_data=self.settings.shared_data_paths,
+            # Read-call arguments first, then any other path-looking literal.
+            referenced_paths=analysis.referenced_files + [
+                literal for literal in analysis.data_path_literals
+                if literal not in analysis.referenced_files
+            ],
+            fallback_dirs=self.rubric.data.get("fallback_locations", ["data", ""]),
+            prefer_student_files=prefer_student_files,
+            # Assignment 3 supplies five files, not one, and each is placed at
+            # several candidate paths; the default cap is a one-file cap.
+            max_placements=int(self.rubric.data.get("max_placements", 12)),
+        )
+        result.discovery_warnings.extend(
+            self._data_notes(candidate, prefer_student_files)
+        )
+
+        probe_config = dict(self.grader.probe_config())
+        probe_config["url_redirects"] = self._url_redirects(candidate, analysis)
+
+        _stage(progress, progress_callback, "execution", "running")
+        execution, probe = execute_submission(
+            workdir, probe_config, self.settings.execution_config(self.rubric),
+            run_subdir=candidate.run_subdir,
+        )
+        result.execution = execution
+        _stage(progress, progress_callback, "execution",
+               "done" if execution.success else "error")
+
+        if execution.executed_notebook_path:
+            stored = session.store_executed_notebook(
+                candidate.student_id, execution.executed_notebook_path
+            )
+            if stored:
+                result.execution.executed_notebook_path = stored
+        return execution, probe
+
+    def _not_executed(
+        self,
+        workdir: Path,
+        progress: GradingProgress,
+        progress_callback: ProgressCallback | None,
+    ) -> tuple[ExecutionRecord, None]:
+        """The rubric forbids running this notebook (``execution: never``).
+
+        No data is placed, no container or kernel is started and nothing in the
+        notebook runs — not in Docker, and not in local mode either, where the
+        machine has a network. What is graded is the file the student handed in.
+        The work directory is still made, because an assignment may run a few
+        extracted pure functions in the network-less sandbox
+        (``grader/function_sandbox.py``).
+        """
+        workdir.mkdir(parents=True, exist_ok=True)
+        _stage(progress, progress_callback, "execution", "skipped")
+        record = ExecutionRecord(mode=MODE_NOT_EXECUTED, attempted=False)
+        return record, None
 
     def _data_notes(self, candidate: SubmissionCandidate, prefer_student_files: bool) -> list[str]:
         """Say so when a student handed in data of their own.

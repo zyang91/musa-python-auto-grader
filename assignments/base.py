@@ -11,6 +11,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from grader.executor import ExecutionConfig
+from grader.function_sandbox import (
+    DEFAULT_ALLOWED_IMPORTS,
+    extract_functions,
+    run_isolated_functions,
+)
 from grader.models import (
     STATUS_EXECUTION_ERROR,
     STATUS_FAIL,
@@ -23,6 +29,9 @@ from grader.models import (
 )
 from grader.notebook import NotebookAnalysis
 from grader.rubric import Rubric, RubricItem
+
+# A hidden test that calls functions cut out of the notebook, in the sandbox.
+ISOLATED_FUNCTIONS = "isolated_functions"
 
 
 @dataclass
@@ -41,6 +50,9 @@ class GradingContext:
     # Scratch space for work shared between checks on one submission — e.g.
     # HW2 reads the executed notebook once and grades seven items from it.
     cache: dict[str, Any] = field(default_factory=dict)
+    # Results of functions run on their own in the sandbox, keyed by rubric id
+    # (``AssignmentGrader.run_isolated_tests``).
+    function_tests: dict[str, Any] = field(default_factory=dict)
 
     @property
     def probe_ok(self) -> bool:
@@ -78,6 +90,8 @@ class AssignmentGrader:
                 continue
             config = item.config
             kind = config.get("type", "scalar_args")
+            if kind == ISOLATED_FUNCTIONS:
+                continue  # run by ``run_isolated_tests``, never by the probe
             spec: dict[str, Any] = {
                 "id": item.id,
                 "type": kind,
@@ -100,6 +114,41 @@ class AssignmentGrader:
                 ]
             specs.append(spec)
         return specs
+
+    def isolated_test_items(self) -> list[RubricItem]:
+        return [
+            item for item in self.rubric.items
+            if item.type == "hidden_test" and item.config.get("type") == ISOLATED_FUNCTIONS
+        ]
+
+    def run_isolated_tests(
+        self, analysis: NotebookAnalysis, workdir: Path, config: ExecutionConfig
+    ) -> dict[str, Any]:
+        """Call the functions a ``type: isolated_functions`` item names.
+
+        The functions are cut out of the notebook and run on their own in the
+        network-less sandbox (``grader/function_sandbox.py``); the rest of the
+        notebook is never run. Only the inputs go into the container — the
+        expected values stay in the rubric, on the host.
+        """
+        runs: dict[str, Any] = {}
+        for item in self.isolated_test_items():
+            functions = item.config.get("functions") or {}
+            extracted = extract_functions(
+                analysis.code_cells,
+                list(functions),
+                item.config.get("allowed_imports", DEFAULT_ALLOWED_IMPORTS),
+            )
+            cases = [
+                {"id": f"{name}#{index}", "function": name, "args": [case.get("input")]}
+                for name, spec in functions.items()
+                for index, case in enumerate((spec or {}).get("cases", []))
+            ]
+            runs[item.id] = run_isolated_functions(
+                workdir, extracted, cases, config,
+                case_timeout=int(item.config.get("case_timeout_seconds", 5)),
+            )
+        return runs
 
     # -- grading -----------------------------------------------------------
     def grade(self, ctx: GradingContext) -> list[RubricItemResult]:
@@ -270,14 +319,14 @@ def register(cls: type[AssignmentGrader]) -> type[AssignmentGrader]:
 
 def get_grader(rubric: Rubric) -> AssignmentGrader:
     """Return the grader for a rubric, falling back to the generic base."""
-    from . import hw1, hw2, hw3  # noqa: F401  (importing registers the graders)
+    from . import hw1, hw2, hw3, hw4  # noqa: F401  (importing registers the graders)
 
     cls = _REGISTRY.get(rubric.id, AssignmentGrader)
     return cls(rubric)
 
 
 def registered_assignments() -> list[str]:
-    from . import hw1, hw2, hw3  # noqa: F401
+    from . import hw1, hw2, hw3, hw4  # noqa: F401
 
     return sorted(_REGISTRY)
 
