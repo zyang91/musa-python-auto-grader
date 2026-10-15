@@ -10,7 +10,7 @@ ipykernel==7.4.0
 
 # Assignments 1 and 2
 pandas==3.0.6
-numpy==2.5.3
+numpy==2.5.4
 matplotlib==3.11.2
 seaborn==0.13.2
 altair==6.3.0
@@ -18,7 +18,7 @@ vega_datasets==0.9.0
 vl-convert-python==1.9.0.post1
 scikit-learn==1.9.1
 geopandas==1.2.0
-shapely==2.1.2
+shapely==2.2.0
 pyproj==3.8.0
 requests==2.34.2
 openpyxl==3.1.5
