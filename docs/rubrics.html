@@ -63,6 +63,8 @@
 <li><a href="api/grader.executor.html"><code>grader.executor</code></a></li>
 <li><a href="api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
 <li><a href="api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+<li><a href="api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a></li>
+<li><a href="api/grader.function_runner.html"><code>grader.function_runner</code></a></li>
 </ul></li>
 <li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
 <li><a href="api/grader.notebook.html"><code>grader.notebook</code></a></li>
@@ -78,6 +80,7 @@
 <li><a href="api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
 <li><a href="api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+<li><a href="api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
@@ -95,12 +98,13 @@
     <li><strong>Assignment 1:</strong> the <code>center_city_zips</code> list matches the one printed in the student template, and <code>start_date</code>/<code>end_date</code> match the dates in the instructions. Nothing else needs updating when the data changes.</li>
     <li><strong>Assignment 2:</strong> there is no answer key to check. <code>hw2.yaml</code> holds policy: how much a chart that never rendered is worth, what counts as a transformation, how many words make a discussion, and the ceiling on an unreviewed aesthetics score.</li>
     <li><strong>Assignment 3:</strong> every expected count and median was computed from <code>assignment_template/assignment3-data.zip</code>. If you hand out a different zip, they all change together. Re-run the reference solution and update the numbers, or widen the tolerances.</li>
+    <li><strong>Assignment 4:</strong> there is no reference solution. The only numbers are the template's own rough figures (about 3,750 crashes, 120 listings a page), each with a wide tolerance, and they only raise confidence. Keep <code>execution: mode: never</code>, and <code>settings.template_notebook</code> pointing at the template handed out.</li>
   </ul>
 </div>
 
 <h2 id="file-layout">File layout<a class="headerlink" href="#file-layout" aria-label="Link to this section">#</a></h2>
 
-<p>A rubric has six top-level blocks. Only <code>assignment.id</code> and at least one <code>rubric</code> item are required.</p>
+<p>A rubric has seven top-level blocks. Only <code>assignment.id</code> and at least one <code>rubric</code> item are required.</p>
 
 <pre><code class="language-yaml">assignment:            # who this rubric is for
   id: hw1              # required; selects the grader class registered under this id
@@ -113,6 +117,7 @@
 settings: {...}        # grading behaviour
 discovery: {...}       # how to find the notebook in a submission
 data: {...}            # data the instructor supplies
+execution: {...}       # whether submissions are run at all (optional)
 probe: {...}           # hints for the in-kernel probe
 rubric: [...]          # the graded items</code></pre>
 
@@ -162,6 +167,15 @@ rubric: [...]          # the graded items</code></pre>
   max_placements: 12                 # cap on target paths per submission (HW3: 40)
   prefer_student_files: false        # grade on the student's own file if they sent one</code></pre>
 
+<h2 id="execution"><code>execution</code><a class="headerlink" href="#execution" aria-label="Link to this section">#</a></h2>
+
+<p>Optional. Leave it out and every submission is run in the execution mode the TA selected. Set <code>mode: never</code> and no submission of this assignment is run, in any mode, local included: no data is placed and no kernel or notebook container is started. The grade then comes from the submitted file's code and saved outputs, plus any <a href="#isolated-functions"><code>isolated_functions</code></a> hidden test. Assignment 4 uses it because its notebooks scrape Craigslist and download from OpenStreetMap and ArcGIS.</p>
+
+<pre><code class="language-yaml">execution:
+  mode: never      # grade the file as handed in; enforced in grader/service.py</code></pre>
+
+<p>The check is <a href="api/grader.rubric.html#grader.rubric.Rubric.never_executes"><code>Rubric.never_executes</code></a>.</p>
+
 <h2 id="probe"><code>probe</code><a class="headerlink" href="#probe" aria-label="Link to this section">#</a></h2>
 
 <p>Hints the in-kernel probe uses to recognise columns, plus limits on how much it reports. Hints are matched against column names, case-insensitively.</p>
@@ -194,14 +208,14 @@ rubric: [...]          # the graded items</code></pre>
     <tr><td><code>execution</code></td><td>Did the notebook run? Handled by the shared <code>check_notebook_execution</code>. Partial credit is proportional to how far it got, scaled by <code>partial_credit_ratio</code>.</td></tr>
     <tr><td><code>structural</code></td><td>Checks on the source: imports, read calls, relative paths, functions defined.</td></tr>
     <tr><td><code>deterministic</code></td><td>Checks on results: probe objects, saved answers, chart specs. This is the default type.</td></tr>
-    <tr><td><code>hidden_test</code></td><td>A function is called inside the student's kernel with inputs from the rubric. Expected values never leave the host.</td></tr>
+    <tr><td><code>hidden_test</code></td><td>A function is called with inputs from the rubric: inside the student's kernel, or on its own in the sandbox for <code>isolated_functions</code>. Expected values never leave the host.</td></tr>
     <tr><td><code>qualitative</code></td><td>Needs a person's judgement, or an LLM if enabled. Always reviewed.</td></tr>
   </tbody>
 </table></div>
 
 <h3 id="hidden-test-config">Hidden-test config<a class="headerlink" href="#hidden-test-config" aria-label="Link to this section">#</a></h3>
 
-<p>Two call styles are supported. <code>scalar_args</code> passes literal arguments. <code>group_frame</code> asks the probe to build a DataFrame from interpolated anchor points, using the student's own column names.</p>
+<p>Three call styles are supported. <code>scalar_args</code> passes literal arguments. <code>group_frame</code> asks the probe to build a DataFrame from interpolated anchor points, using the student's own column names. Both run inside the student's kernel. <a href="#isolated-functions"><code>isolated_functions</code></a> runs without the notebook.</p>
 
 <pre><code class="language-yaml">- id: percent_increase_function
   points: 20
@@ -231,6 +245,26 @@ rubric: [...]          # the graded items</code></pre>
 
 <p>For <code>scalar_args</code>, each case has <code>args</code> and optional <code>kwargs</code> and <code>label</code>.</p>
 
+<h3 id="isolated-functions"><code>isolated_functions</code><a class="headerlink" href="#isolated-functions" aria-label="Link to this section">#</a></h3>
+
+<p>For an assignment that is never run (<code>execution: mode: never</code>). Only the top-level <code>def</code> of each named function is cut out of the notebook and called in the Docker sandbox with <code>--network none</code>; no other statement of the notebook goes along, and the submission is not mounted. Decorators and annotations are stripped, a function whose default argument is not a plain literal is refused, and only top-level imports of the modules in <code>allowed_imports</code> are sent with it. Each case's <code>input</code> is passed as the single argument; the <code>expected</code> values stay on the host.</p>
+
+<pre><code class="language-yaml">- id: format_functions
+  points: 9
+  type: hidden_test
+  config:
+    type: isolated_functions
+    points_per_function: 3
+    case_timeout_seconds: 5
+    allowed_imports: [re, string, math, decimal, numpy, pandas]   # the default set
+    functions:
+      format_price:
+        cases:
+          - {input: "$950", expected: 950}
+          - {input: "$1,500", expected: 1500}</code></pre>
+
+<p>In local mode the functions are not called, since the machine has a network. The item is graded provisionally from the source and goes to a TA, and preflight warns before the run. The code is in <a href="api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a> and <a href="api/grader.function_runner.html"><code>grader.function_runner</code></a>.</p>
+
 <h3 id="credit-ratios">Credit ratios<a class="headerlink" href="#credit-ratios" aria-label="Link to this section">#</a></h3>
 
 <p>Most item configs end in <code>*_credit_ratio</code> or <code>*_penalty</code> keys. These are the named near-misses: each is the fraction of the item's points awarded when the check recognises that particular mistake. They are policy, so tune them freely. The <a href="api/assignments.hw1.html">assignment grader reference</a> documents which keys each check reads.</p>
@@ -250,7 +284,7 @@ load_rubric("rubrics/hw4.yaml")   # raises RubricError with the reason</code></p
       <div class="footer-meta"><a class="edit-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/docs/_pages/rubrics.html">Edit this page on GitHub</a><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
     </footer>
   </main>
-  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#before-grading-a-real-class">Before grading a real class</a></li><li class="toc-l2"><a href="#file-layout">File layout</a></li><li class="toc-l2"><a href="#assignment">assignment</a></li><li class="toc-l2"><a href="#settings">settings</a></li><li class="toc-l2"><a href="#discovery">discovery</a></li><li class="toc-l2"><a href="#data">data</a></li><li class="toc-l2"><a href="#probe">probe</a></li><li class="toc-l2"><a href="#rubric-items">rubric items</a></li><li class="toc-l3"><a href="#item-types">Item types</a></li><li class="toc-l3"><a href="#hidden-test-config">Hidden-test config</a></li><li class="toc-l3"><a href="#credit-ratios">Credit ratios</a></li><li class="toc-l2"><a href="#validating-a-rubric">Validating a rubric</a></li></ul></nav></aside>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#before-grading-a-real-class">Before grading a real class</a></li><li class="toc-l2"><a href="#file-layout">File layout</a></li><li class="toc-l2"><a href="#assignment">assignment</a></li><li class="toc-l2"><a href="#settings">settings</a></li><li class="toc-l2"><a href="#discovery">discovery</a></li><li class="toc-l2"><a href="#data">data</a></li><li class="toc-l2"><a href="#execution">execution</a></li><li class="toc-l2"><a href="#probe">probe</a></li><li class="toc-l2"><a href="#rubric-items">rubric items</a></li><li class="toc-l3"><a href="#item-types">Item types</a></li><li class="toc-l3"><a href="#hidden-test-config">Hidden-test config</a></li><li class="toc-l3"><a href="#isolated-functions">isolated_functions</a></li><li class="toc-l3"><a href="#credit-ratios">Credit ratios</a></li><li class="toc-l2"><a href="#validating-a-rubric">Validating a rubric</a></li></ul></nav></aside>
 </div>
 <div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
   <div class="search-panel">

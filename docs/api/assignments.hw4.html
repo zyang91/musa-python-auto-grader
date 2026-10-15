@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>assignments.hw4 · MUSA Grader</title>
+<meta name="description" content="Assignment 4 autograder — street networks and web scraping.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)" id="hljs-dark">
+<script>
+  (function () {
+    try { var t = localStorage.getItem("musa-docs-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  })();
+</script>
+</head>
+<body data-root="../">
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="topbar">
+  <button class="icon-button menu-button" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <a class="brand" href="../index.html"><svg viewBox="0 0 32 32" aria-hidden="true" class="logo"><rect x="3" y="3" width="26" height="26" rx="7" class="logo-bg"/><path d="M9.5 16.5l4.2 4.2 8.8-9.4" class="logo-check"/></svg><span>MUSA Grader</span><span class="version">v0.1.0</span></a>
+  <button class="search-trigger" type="button" aria-label="Search the documentation"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search docs</span><kbd>/</kbd></button>
+  <div class="topbar-actions">
+    <button class="icon-button theme-toggle" type="button" aria-label="Toggle dark mode"><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" class="icon-moon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+    <a class="icon-button" href="https://github.com/zyang91/musa-python-auto-grader" aria-label="GitHub repository"><svg viewBox="0 0 16 16" aria-hidden="true" class="filled"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</header>
+<div class="layout">
+  <aside class="sidebar" id="sidebar" aria-label="Documentation">
+    <nav><p class="nav-section">Introduction</p><ul class="nav-list">
+<li><a href="../index.html">Overview</a></li>
+<li><a href="../getting-started.html">Getting started</a></li>
+</ul>
+<p class="nav-section">User guide</p><ul class="nav-list">
+<li><a href="../ta-workflow.html">TA workflow</a></li>
+<li><a href="../cli.html">CLI reference</a></li>
+<li><a href="../how-it-works.html">How grading works</a></li>
+<li><a href="../assignments.html">Assignments</a></li>
+<li><a href="../rubrics.html">Rubrics</a></li>
+<li><a href="../docker.html">Docker sandbox</a></li>
+<li><a href="../results.html">Results and exports</a></li>
+</ul>
+<p class="nav-section">Developer guide</p><ul class="nav-list">
+<li><a href="../extending.html">Adding an assignment</a></li>
+<li><a href="../testing.html">Testing and CI</a></li>
+</ul>
+<p class="nav-section">API reference</p><ul class="nav-list">
+<li><a href="../api/index.html">Overview</a></li>
+<li class="nav-group"><span class="nav-group-label">Package</span><ul>
+<li><a href="../api/grader.html"><code>grader</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Engine</span><ul>
+<li><a href="../api/grader.service.html"><code>grader.service</code></a></li>
+<li><a href="../api/grader.rubric.html"><code>grader.rubric</code></a></li>
+<li><a href="../api/grader.models.html"><code>grader.models</code></a></li>
+<li><a href="../api/grader.results.html"><code>grader.results</code></a></li>
+<li><a href="../api/grader.scoring.html"><code>grader.scoring</code></a></li>
+<li><a href="../api/grader.feedback.html"><code>grader.feedback</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Execution</span><ul>
+<li><a href="../api/grader.discovery.html"><code>grader.discovery</code></a></li>
+<li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
+<li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
+<li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+<li><a href="../api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a></li>
+<li><a href="../api/grader.function_runner.html"><code>grader.function_runner</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
+<li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
+<li><a href="../api/grader.inspection.html"><code>grader.inspection</code></a></li>
+<li><a href="../api/grader.answers.html"><code>grader.answers</code></a></li>
+<li><a href="../api/grader.charts.html"><code>grader.charts</code></a></li>
+<li><a href="../api/grader.llm.html"><code>grader.llm</code></a></li>
+<li><a href="../api/grader.utils.html"><code>grader.utils</code></a></li>
+</ul></li>
+<li class="nav-group"><span class="nav-group-label">Assignments</span><ul>
+<li><a href="../api/assignments.html"><code>assignments</code></a></li>
+<li><a href="../api/assignments.base.html"><code>assignments.base</code></a></li>
+<li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
+<li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
+<li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+<li><a href="../api/assignments.hw4.html" class="active" aria-current="page"><code>assignments.hw4</code></a></li>
+</ul></li></ul></nav>
+  </aside>
+  <div class="sidebar-scrim" hidden></div>
+  <main id="content" class="content content-api">
+    <article class="prose">
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py">assignments/hw4.py</a> · 1029 lines</p>
+<h1 class="module-title"><code>assignments.hw4</code></h1>
+<div class="module-doc"><p>Assignment 4 autograder — street networks and web scraping.</p>
+<p>This assignment is graded <strong>without running the notebook</strong> (<code>execution: never</code> in <code>rubrics/hw4.yaml</code>). Every step of it talks to a server that is not ours — ArcGIS Open Data for the planning districts, the OpenStreetMap Overpass API for the street network, and five pages of Craigslist through a real browser — so a re-run would repeat all of those requests once per student. The service starts no kernel, container or browser for these submissions in any execution mode.</p>
+<p>What is graded instead is the file the student handed in, read two ways:</p>
+<ul><li><strong>The code they wrote.</strong> Lines the template already provides are set aside first, cell by cell (<code>SubmittedCode</code>), so the scaffold — the <code>driver.get(url)</code> and <code>pd.concat</code> inside the provided scraping loop, the <code>def format_price(price_string):</code> stub — earns nothing by being left in place. Each step is then a list of requirements in the rubric, a regex each, so a TA can widen one without touching Python.</li><li><strong>The outputs their own run saved.</strong> The crash count, the scraping log, the results table, the histograms, the Folium map and the Altair spec are all in the notebook as the student ran it. Reference numbers come only from the assignment text (&quot;about 3,750 crashes&quot;, 120 listings a page) and only raise confidence; a number outside its range sends an item to a person, it never costs points on its own.</li></ul>
+<p>The single exception is 2.5: the three <code>format_*</code> functions are cut out of the notebook and called on their own in the network-less Docker sandbox (<code>grader/function_sandbox.py</code>). Nothing else from the notebook goes with them.</p>
+<p>Review policy as elsewhere: full marks when the evidence is there, and anything short of full marks reaches a person (<code>grader/scoring.py</code>).</p></div>
+<h2 id="summary">Summary</h2>
+<div class="table-wrap"><table class="summary-table"><thead><tr><th>Name</th><th>Kind</th><th>Description</th></tr></thead><tbody><tr><td><a href="#assignments.hw4.CodeCell"><code>CodeCell</code></a></td><td><span class="kind">class</span></td><td></td></tr><tr><td><a href="#assignments.hw4.SubmittedCode"><code>SubmittedCode</code></a></td><td><span class="kind">class</span></td><td></td></tr><tr><td><a href="#assignments.hw4.HW4Grader"><code>HW4Grader</code></a></td><td><span class="kind">class</span></td><td></td></tr><tr><td><a href="#assignments.hw4.strip_comments"><code>strip_comments()</code></a></td><td><span class="kind">function</span></td><td>Drop comments without touching a <code>#</code> inside a string (<code>#search=1~</code>).</td></tr><tr><td><a href="#assignments.hw4.build_code"><code>build_code()</code></a></td><td><span class="kind">function</span></td><td>Each code cell, with any template scaffold it was filled in from removed.</td></tr><tr><td><a href="#assignments.hw4.requirement_met"><code>requirement_met()</code></a></td><td><span class="kind">function</span></td><td></td></tr></tbody></table></div>
+<h2 id="constants">Constants</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr id="assignments.hw4.ROOT"><td><code class="field-name">ROOT</code></td><td><code>Path(__file__).resolve().parent.parent</code></td><td></td></tr><tr id="assignments.hw4.PART2_RE"><td><code class="field-name">PART2_RE</code></td><td><code>re.compile(&#x27;webdriver|BeautifulSoup|craigslist|page_source&#x27;)</code></td><td>Where Part 2 begins: the first cell that touches the browser or the soup.</td></tr><tr id="assignments.hw4.HIST_RE"><td><code class="field-name">HIST_RE</code></td><td><code>re.compile(&#x27;\\bhist\\s*\\(|kind\\s*=\\s*[\\&quot;\&#x27;]hist[\\&quot;\&#x27;]|\\.plot\\.hist\\s*\\(|histplot\\s*\\(&#x27;)</code></td><td></td></tr><tr id="assignments.hw4.READ_CSV_RE"><td><code class="field-name">READ_CSV_RE</code></td><td><code>re.compile(&#x27;read_csv\\s*\\(&#x27;)</code></td><td></td></tr><tr id="assignments.hw4.SOURCE_CONFIDENCE"><td><code class="field-name">SOURCE_CONFIDENCE</code></td><td><code>0.85</code></td><td>Confidence for a step judged from source alone. Above the review threshold: the code is the evidence the step asks for. Lower when the student&#x27;s own run shows that step raising.</td></tr><tr id="assignments.hw4.CORROBORATED_CONFIDENCE"><td><code class="field-name">CORROBORATED_CONFIDENCE</code></td><td><code>0.95</code></td><td></td></tr><tr id="assignments.hw4.DOUBT_CONFIDENCE"><td><code class="field-name">DOUBT_CONFIDENCE</code></td><td><code>0.6</code></td><td></td></tr></tbody></table></div>
+<h2 id="classes">Classes</h2>
+
+<section class="api-class" id="assignments.hw4.CodeCell">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">CodeCell</span><span class="sig-params"></span>
+    <a class="headerlink" href="#assignments.hw4.CodeCell" aria-label="Link to CodeCell">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L109" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p class="muted">No description.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">number</code></td><td><code>int</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">source</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">code</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">student</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td><code>code</code> minus the lines of the template cell this cell was filled in from.</td></tr><tr><td><code class="field-name">parses</code></td><td><code>bool</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">from_template</code></td><td><code>bool</code></td><td><code>False</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+  </div>
+</section>
+
+<section class="api-class" id="assignments.hw4.SubmittedCode">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">SubmittedCode</span><span class="sig-params"></span>
+    <a class="headerlink" href="#assignments.hw4.SubmittedCode" aria-label="Link to SubmittedCode">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L120" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">dataclass</span></p>
+    <p class="muted">No description.</p>
+    
+<div class="field-table">
+  <p class="rubric">Fields</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">cells</code></td><td><code>list[<a class="xref" href="#assignments.hw4.CodeCell">CodeCell</a>]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">part2_start</code></td><td><code>int</code></td><td><code>10 ** 9</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+    
+<p class="rubric">Properties</p>
+
+<dl class="api-object api-property" id="assignments.hw4.SubmittedCode.student_text">
+  <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">student_text</span><span class="sig-params">: str</span>
+    <a class="headerlink" href="#assignments.hw4.SubmittedCode.student_text" aria-label="Link to student_text">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L125" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="assignments.hw4.SubmittedCode.part1">
+  <dt class="sig"><span class="sig-name">part1</span><span class="sig-params">() -&gt; list[<a class="xref" href="#assignments.hw4.CodeCell">CodeCell</a>]</span>
+    <a class="headerlink" href="#assignments.hw4.SubmittedCode.part1" aria-label="Link to part1">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L128" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.SubmittedCode.part2">
+  <dt class="sig"><span class="sig-name">part2</span><span class="sig-params">() -&gt; list[<a class="xref" href="#assignments.hw4.CodeCell">CodeCell</a>]</span>
+    <a class="headerlink" href="#assignments.hw4.SubmittedCode.part2" aria-label="Link to part2">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L131" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.SubmittedCode.text">
+  <dt class="sig"><span class="sig-name">text</span><span class="sig-params">(cells: Iterable[<a class="xref" href="#assignments.hw4.CodeCell">CodeCell</a>]) -&gt; str</span>
+    <a class="headerlink" href="#assignments.hw4.SubmittedCode.text" aria-label="Link to text">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L134" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+  </div>
+</section>
+
+<section class="api-class" id="assignments.hw4.HW4Grader">
+  <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">HW4Grader</span><span class="sig-params">(<a class="xref" href="assignments.base.html#assignments.base.AssignmentGrader">AssignmentGrader</a>)</span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader" aria-label="Link to HW4Grader">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L249" title="View source on GitHub">[source]</a></div>
+  <div class="api-body">
+    <p class="class-meta"><span class="badge">registered grader</span></p>
+    <p class="muted">No description.</p>
+    
+    
+<div class="field-table">
+  <p class="rubric">Class attributes</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+    <tbody><tr><td><code class="field-name">assignment_id</code></td><td><code></code></td><td><code>&#x27;hw4&#x27;</code></td><td></td></tr><tr><td><code class="field-name">check_district_polygon</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr><tr><td><code class="field-name">check_street_network</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr><tr><td><code class="field-name">check_network_edges</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr><tr><td><code class="field-name">check_crash_data</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr><tr><td><code class="field-name">check_reproject</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr><tr><td><code class="field-name">check_nearest_edges</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr><tr><td><code class="field-name">check_merge_edges</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr><tr><td><code class="field-name">check_crash_index</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr><tr><td><code class="field-name">check_selenium_driver</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr><tr><td><code class="field-name">check_soup</code></td><td><code></code></td><td><code>source_steps</code></td><td></td></tr></tbody>
+  </table></div>
+</div>
+<p class="rubric">Methods</p>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.template_path">
+  <dt class="sig"><span class="sig-name">template_path</span><span class="sig-params">() -&gt; Path | None</span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.template_path" aria-label="Link to template_path">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L253" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.code">
+  <dt class="sig"><span class="sig-name">code</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>) -&gt; <a class="xref" href="#assignments.hw4.SubmittedCode">SubmittedCode</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.code" aria-label="Link to code">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L260" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.answers">
+  <dt class="sig"><span class="sig-name">answers</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>) -&gt; <a class="xref" href="grader.answers.html#grader.answers.NotebookAnswers">NotebookAnswers</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.answers" aria-label="Link to answers">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L267" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.raw_outputs">
+  <dt class="sig"><span class="sig-name">raw_outputs</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>) -&gt; dict[int, list[dict[str, Any]]]</span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.raw_outputs" aria-label="Link to raw_outputs">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L274" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Saved outputs by code-cell number, for what <code>answers</code> does not keep.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.answer_cell">
+  <dt class="sig"><span class="sig-name">answer_cell</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, number: int)</span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.answer_cell" aria-label="Link to answer_cell">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L292" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.scored">
+  <dt class="sig"><span class="sig-name">scored</span><span class="sig-params">(item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>, deductions: list[tuple[float, str]], evidence: dict[str, Any], confidence: float, pass_feedback: str, notes: list[str] | None = None) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.scored" aria-label="Link to scored">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L299" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.run_requirements">
+  <dt class="sig"><span class="sig-name">run_requirements</span><span class="sig-params">(requirements: list[dict[str, Any]], text: str) -&gt; tuple[list[tuple[float, str]], list[str]]</span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.run_requirements" aria-label="Link to run_requirements">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L319" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.part_cells">
+  <dt class="sig"><span class="sig-name">part_cells</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; list[<a class="xref" href="#assignments.hw4.CodeCell">CodeCell</a>]</span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.part_cells" aria-label="Link to part_cells">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L332" title="View source on GitHub">[source]</a></dt>
+  <dd><p>The cells of the Part this step belongs to (<code>part:</code> in the rubric).</p>
+<p>Without it a Part 1 <code>len(crashes)</code> would satisfy &quot;the number of listings is checked&quot; in Part 2.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.anchor_cells">
+  <dt class="sig"><span class="sig-name">anchor_cells</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; list[<a class="xref" href="#assignments.hw4.CodeCell">CodeCell</a>]</span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.anchor_cells" aria-label="Link to anchor_cells">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L346" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.run_state">
+  <dt class="sig"><span class="sig-name">run_state</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, cells: list[<a class="xref" href="#assignments.hw4.CodeCell">CodeCell</a>]) -&gt; tuple[float, str]</span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.run_state" aria-label="Link to run_state">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L353" title="View source on GitHub">[source]</a></dt>
+  <dd><p>How far the student&#x27;s own run of these cells backs the source up.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.source_steps">
+  <dt class="sig"><span class="sig-name">source_steps</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.source_steps" aria-label="Link to source_steps">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L367" title="View source on GitHub">[source]</a></dt>
+  <dd><p>A step graded on what the student wrote, backed by their saved run.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.hist_cells">
+  <dt class="sig"><span class="sig-name">hist_cells</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, cells: list[<a class="xref" href="#assignments.hw4.CodeCell">CodeCell</a>]) -&gt; list[dict[str, Any]]</span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.hist_cells" aria-label="Link to hist_cells">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L560" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Histogram cells, with how many histograms each saved run shows.</p></dd>
+</dl>
+<p class="rubric">Rubric checks <span class="count">12</span></p>
+<p class="muted small">Each <code>check_&lt;rubric_id&gt;</code> method grades the rubric item with that id and returns one <code>RubricItemResult</code>.</p>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_notebook_execution">
+  <dt class="sig"><span class="sig-name">check_notebook_execution</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_notebook_execution" aria-label="Link to check_notebook_execution">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L393" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">10 pts</span><span class="badge badge-gray">execution</span><strong>Notebook was run and submitted with its outputs</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>Was the notebook run through before it was handed in?</p>
+<p>This grader never runs it (see the module docstring), so the question is answered from the state it was saved in, exactly as Assignment 2 does.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>error_penalty_each</code> <code>low_coverage_penalty</code> <code>max_error_penalty</code> <code>min_output_coverage</code> <code>no_outputs_penalty</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_crash_geodataframe">
+  <dt class="sig"><span class="sig-name">check_crash_geodataframe</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_crash_geodataframe" aria-label="Link to check_crash_geodataframe">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L468" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">structural</span><strong>1.5 Crashes as a GeoDataFrame</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>The steps, plus the one mistake worth naming: latitude passed as x.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>anchor</code> <code>part</code> <code>requirements</code> <code>swapped_coordinates_penalty</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_trim_crashes">
+  <dt class="sig"><span class="sig-name">check_trim_crashes</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_trim_crashes" aria-label="Link to check_trim_crashes">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L528" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">5 pts</span><span class="badge badge-gray">deterministic</span><strong>1.6 Crashes trimmed to Center City</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>The steps; the template&#x27;s &quot;about 3,750&quot; only decides who looks again.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>anchor</code> <code>count_range</code> <code>expected_count</code> <code>part</code> <code>requirements</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_crash_counts">
+  <dt class="sig"><span class="sig-name">check_crash_counts</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_crash_counts" aria-label="Link to check_crash_counts">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L550" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">5 pts</span><span class="badge badge-gray">structural</span><strong>1.9 Crash count per street</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>Group the (u, v, key) frame by u and v, take the size, and name it crash_count.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>anchor</code> <code>expected_columns</code> <code>part</code> <code>requirements</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_crash_index_histogram">
+  <dt class="sig"><span class="sig-name">check_crash_index_histogram</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_crash_index_histogram" aria-label="Link to check_crash_index_histogram">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L581" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">3 pts</span><span class="badge badge-gray">deterministic</span><strong>1.12 Histogram of the crash index</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>A matplotlib histogram of the crash index, rendered in the notebook.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>rendered_points</code> <code>source_only_points</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_crash_index_map">
+  <dt class="sig"><span class="sig-name">check_crash_index_map</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_crash_index_map" aria-label="Link to check_crash_index_map">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L606" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>1.13 Interactive map of the crash index</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>A Folium map (e.g. GeoDataFrame.explore) of the streets coloured by the crash index.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>rendered_points</code> <code>saved_markers</code> <code>source_any</code> <code>source_points</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_listing_elements">
+  <dt class="sig"><span class="sig-name">check_listing_elements</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_listing_elements" aria-label="Link to check_listing_elements">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L644" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>2.3 Listing elements extracted</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>The listing elements are selected from the soup. The template expects 120 per page; a count is corroboration only, never a requirement, since Craigslist changes its page layout.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>anchor</code> <code>count_range</code> <code>part</code> <code>requirements</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_first_listing_fields">
+  <dt class="sig"><span class="sig-name">check_first_listing_fields</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_first_listing_fields" aria-label="Link to check_first_listing_fields">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L657" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">4 pts</span><span class="badge badge-gray">deterministic</span><strong>2.4 Price, bedrooms, size and title of the first listing</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>The first listing is printed with prettify(), and its price, bedrooms, size and title are pulled out and printed.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>min_printed</code> <code>printed_patterns</code> <code>printed_points</code> <code>requirements</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_format_functions">
+  <dt class="sig"><span class="sig-name">check_format_functions</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_format_functions" aria-label="Link to check_format_functions">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L690" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">9 pts</span><span class="badge badge-gray">hidden_test</span><strong>2.5 format_bedrooms, format_size and format_price</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>Called in the sandbox when possible; otherwise read, and sent to a TA.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>allowed_imports</code> <code>case_timeout_seconds</code> <code>functions</code> <code>points_per_function</code> <code>type</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_scraping_loop">
+  <dt class="sig"><span class="sig-name">check_scraping_loop</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_scraping_loop" aria-label="Link to check_scraping_loop">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L802" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">7 pts</span><span class="badge badge-gray">deterministic</span><strong>2.6 Scraping loop completed and run</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>The loop must be written <em>and</em> shown running; a CSV is not a scrape.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>driver_markers</code> <code>implementation</code> <code>loop_markers</code> <code>results_columns</code> <code>results_points</code> <code>run_log_patterns</code> <code>run_log_points</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_price_histograms">
+  <dt class="sig"><span class="sig-name">check_price_histograms</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_price_histograms" aria-label="Link to check_price_histograms">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L884" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">3 pts</span><span class="badge badge-gray">deterministic</span><strong>2.7 Histograms of price and price per square foot</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>Two labelled and titled matplotlib histograms — price, and price / size.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>labels_points</code> <code>rendered_points</code> <code>required_count</code></p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.hw4.HW4Grader.check_altair_scatter">
+  <dt class="sig"><span class="sig-name">check_altair_scatter</span><span class="sig-params">(ctx: <a class="xref" href="assignments.base.html#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
+    <a class="headerlink" href="#assignments.hw4.HW4Grader.check_altair_scatter" aria-label="Link to check_altair_scatter">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L938" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="rubric-ref"><span class="badge">3 pts</span><span class="badge badge-gray">deterministic</span><strong>2.8 Interactive Altair scatter of price vs size</strong><a class="muted small" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/rubrics/hw4.yaml">rubrics/hw4.yaml</a></p><p>Price on x, size on y, coloured by bedrooms, with a tooltip and pan/zoom (.interactive()), read from the chart&#x27;s own Vega-Lite spec.</p><p class="config-keys"><span class="muted">Config keys:</span> <code>encoding_points</code> <code>encodings</code> <code>interactive_points</code> <code>price_per_sqft_range</code> <code>tooltip_points</code></p></dd>
+</dl>
+  </div>
+</section>
+<h2 id="functions">Functions</h2>
+
+<dl class="api-object api-function" id="assignments.hw4.strip_comments">
+  <dt class="sig"><span class="sig-name">strip_comments</span><span class="sig-params">(source: str) -&gt; str</span>
+    <a class="headerlink" href="#assignments.hw4.strip_comments" aria-label="Link to strip_comments">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L87" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Drop comments without touching a <code>#</code> inside a string (<code>#search=1~</code>).</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="assignments.hw4.build_code">
+  <dt class="sig"><span class="sig-name">build_code</span><span class="sig-params">(code_cells: list[str], template_path: Path | None) -&gt; <a class="xref" href="#assignments.hw4.SubmittedCode">SubmittedCode</a></span>
+    <a class="headerlink" href="#assignments.hw4.build_code" aria-label="Link to build_code">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L155" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Each code cell, with any template scaffold it was filled in from removed.</p>
+<p>A cell counts as filled in from a template cell when it keeps at least half of that cell&#x27;s lines. Only then are those lines removed — so a student who writes <code>driver.get(url)</code> in their own 2.1 cell keeps it, even though the same line is also part of the provided scraping loop.</p></dd>
+</dl>
+
+<dl class="api-object api-function" id="assignments.hw4.requirement_met">
+  <dt class="sig"><span class="sig-name">requirement_met</span><span class="sig-params">(requirement: dict[str, Any], text: str) -&gt; bool</span>
+    <a class="headerlink" href="#assignments.hw4.requirement_met" aria-label="Link to requirement_met">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/hw4.py#L194" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+    </article>
+    <footer class="page-footer">
+      <nav class="pager" aria-label="Pages"><a class="pager-prev" href="../api/assignments.hw3.html"><small>Previous</small><span>assignments.hw3</span></a></nav>
+      <div class="footer-meta"><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
+    </footer>
+  </main>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#summary">Summary</a></li><li class="toc-l2"><a href="#constants">Constants</a></li><li class="toc-l2"><a href="#classes">Classes</a></li><li class="toc-l3"><a href="#assignments.hw4.CodeCell">CodeCell</a></li><li class="toc-l3"><a href="#assignments.hw4.SubmittedCode">SubmittedCode</a></li><li class="toc-l3"><a href="#assignments.hw4.HW4Grader">HW4Grader</a></li><li class="toc-l2"><a href="#functions">Functions</a></li><li class="toc-l3"><a href="#assignments.hw4.strip_comments">strip_comments()</a></li><li class="toc-l3"><a href="#assignments.hw4.build_code">build_code()</a></li><li class="toc-l3"><a href="#assignments.hw4.requirement_met">requirement_met()</a></li></ul></nav></aside>
+</div>
+<div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
+  <div class="search-panel">
+    <div class="search-input-row"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Search guides and API…" aria-label="Search" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+    <ul class="search-results" role="listbox"></ul>
+    <p class="search-hint">Type to search pages, sections, classes and functions.</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="../assets/search-index.js"></script>
+<script src="../assets/main.js"></script>
+</body>
+</html>

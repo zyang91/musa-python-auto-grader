@@ -63,6 +63,8 @@
 <li><a href="api/grader.executor.html"><code>grader.executor</code></a></li>
 <li><a href="api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
 <li><a href="api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+<li><a href="api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a></li>
+<li><a href="api/grader.function_runner.html"><code>grader.function_runner</code></a></li>
 </ul></li>
 <li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
 <li><a href="api/grader.notebook.html"><code>grader.notebook</code></a></li>
@@ -78,6 +80,7 @@
 <li><a href="api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
 <li><a href="api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+<li><a href="api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
@@ -134,17 +137,17 @@
   </a>
 </div>
 
-<h2 id="three-assignments-three-ways-to-grade">Three assignments, three ways to grade<a class="headerlink" href="#three-assignments-three-ways-to-grade" aria-label="Link to this section">#</a></h2>
+<h2 id="four-assignments-four-ways-to-grade">Four assignments, four ways to grade<a class="headerlink" href="#four-assignments-four-ways-to-grade" aria-label="Link to this section">#</a></h2>
 
-<p>What the grader can check depends on the dataset. Each of the three assignments gives it a different situation:</p>
+<p>What the grader can check depends on the dataset. Each of the four assignments gives it a different situation:</p>
 
 <div class="table-wrap"><table>
-  <thead><tr><th></th><th>Assignment 1: The Donut Effect</th><th>Assignment 2: Exploratory Visualization</th><th>Assignment 3: Evictions and the NDVI</th></tr></thead>
+  <thead><tr><th></th><th>Assignment 1: The Donut Effect</th><th>Assignment 2: Exploratory Visualization</th><th>Assignment 3: Evictions and the NDVI</th><th>Assignment 4: Street Networks &amp; Scraping</th></tr></thead>
   <tbody>
-    <tr><td><strong>Dataset</strong></td><td>One Zillow file, <strong>downloaded by each student</strong></td><td>The student's own choice, <strong>never handed in</strong></td><td><strong>One zip, distributed with the assignment</strong></td></tr>
-    <tr><td><strong>Answer key?</strong></td><td>No. Zillow revises the file monthly</td><td>No. Every student uses a different dataset</td><td><strong>Yes.</strong> Everyone runs the same five files</td></tr>
-    <tr><td><strong>What is graded</strong></td><td>Whether each step <em>worked</em>, checked against the student's own data</td><td>Whether the student can <em>produce the required elements</em></td><td>Whether each result <em>is correct</em></td></tr>
-    <tr><td><strong>Evidence from</strong></td><td>The grading run's own execution</td><td>The outputs saved in the notebook</td><td><strong>Both</strong>, combined</td></tr>
+    <tr><td><strong>Dataset</strong></td><td>One Zillow file, <strong>downloaded by each student</strong></td><td>The student's own choice, <strong>never handed in</strong></td><td><strong>One zip, distributed with the assignment</strong></td><td><strong>Downloaded and scraped live</strong> from OSM, ArcGIS and Craigslist</td></tr>
+    <tr><td><strong>Answer key?</strong></td><td>No. Zillow revises the file monthly</td><td>No. Every student uses a different dataset</td><td><strong>Yes.</strong> Everyone runs the same five files</td><td>Only the template's own rough figures ("about 3,750 crashes")</td></tr>
+    <tr><td><strong>What is graded</strong></td><td>Whether each step <em>worked</em>, checked against the student's own data</td><td>Whether the student can <em>produce the required elements</em></td><td>Whether each result <em>is correct</em></td><td>Whether each step is <em>written and shown run</em></td></tr>
+    <tr><td><strong>Evidence from</strong></td><td>The grading run's own execution</td><td>The outputs saved in the notebook</td><td><strong>Both</strong>, combined</td><td>The code and saved outputs only. <strong>The notebook is never run.</strong></td></tr>
   </tbody>
 </table></div>
 
@@ -182,7 +185,7 @@ print(session.summary())</code></pre>
       <div class="footer-meta"><a class="edit-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/docs/_pages/index.html">Edit this page on GitHub</a><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
     </footer>
   </main>
-  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#what-it-does">What it does</a></li><li class="toc-l2"><a href="#three-assignments-three-ways-to-grade">Three assignments, three ways to grade</a></li><li class="toc-l2"><a href="#student-data">Student data</a></li><li class="toc-l2"><a href="#architecture-at-a-glance">Architecture at a glance</a></li></ul></nav></aside>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#what-it-does">What it does</a></li><li class="toc-l2"><a href="#four-assignments-four-ways-to-grade">Four assignments, four ways to grade</a></li><li class="toc-l2"><a href="#student-data">Student data</a></li><li class="toc-l2"><a href="#architecture-at-a-glance">Architecture at a glance</a></li></ul></nav></aside>
 </div>
 <div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
   <div class="search-panel">

@@ -63,6 +63,8 @@
 <li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
 <li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
 <li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+<li><a href="../api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a></li>
+<li><a href="../api/grader.function_runner.html"><code>grader.function_runner</code></a></li>
 </ul></li>
 <li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
 <li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
@@ -78,12 +80,13 @@
 <li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
 <li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+<li><a href="../api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
   <main id="content" class="content content-api">
     <article class="prose">
-<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py">grader/service.py</a> · 460 lines</p>
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py">grader/service.py</a> · 517 lines</p>
 <h1 class="module-title"><code>grader.service</code></h1>
 <div class="module-doc"><p>The grading service the UI talks to.</p>
 <p>Streamlit never calls the executor or the rubric engine directly (design.md §4): it hands a source and a config to this service and receives progress snapshots and a <code>GradingSession</code> back.</p></div>
@@ -95,7 +98,7 @@
 
 <section class="api-class" id="grader.service.GraderSettings">
   <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">GraderSettings</span><span class="sig-params"></span>
-    <a class="headerlink" href="#grader.service.GraderSettings" aria-label="Link to GraderSettings">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L44" title="View source on GitHub">[source]</a></div>
+    <a class="headerlink" href="#grader.service.GraderSettings" aria-label="Link to GraderSettings">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L50" title="View source on GitHub">[source]</a></div>
   <div class="api-body">
     <p class="class-meta"><span class="badge">dataclass</span></p>
     <p>Everything the Settings page can change (design.md §33).</p>
@@ -112,14 +115,14 @@
 
 <dl class="api-object api-method" id="grader.service.GraderSettings.execution_config">
   <dt class="sig"><span class="sig-name">execution_config</span><span class="sig-params">(rubric: &#x27;<a class="xref" href="grader.rubric.html#grader.rubric.Rubric">Rubric</a> | None&#x27; = None) -&gt; <a class="xref" href="grader.executor.html#grader.executor.ExecutionConfig">ExecutionConfig</a></span>
-    <a class="headerlink" href="#grader.service.GraderSettings.execution_config" aria-label="Link to execution_config">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L64" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.GraderSettings.execution_config" aria-label="Link to execution_config">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L70" title="View source on GitHub">[source]</a></dt>
   <dd><p>Execution limits, raised if the assignment declares it needs longer.</p>
 <p>A rubric&#x27;s <code>execution_timeout_seconds</code> is assignment knowledge, not a preference: Assignment 3 reads a 24 MB GeoJSON, joins 34,108 points and masks a ten-band raster twice, and cutting it short times out the whole class at once. So it acts as a floor on the configured timeout, never as a cap — a TA who raises the limit keeps their value.</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="grader.service.GraderSettings.to_dict">
   <dt class="sig"><span class="sig-name">to_dict</span><span class="sig-params">() -&gt; dict[str, Any]</span>
-    <a class="headerlink" href="#grader.service.GraderSettings.to_dict" aria-label="Link to to_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L85" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.GraderSettings.to_dict" aria-label="Link to to_dict">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L91" title="View source on GitHub">[source]</a></dt>
   <dd><p>The settings as stored in <code>grading_session.json</code>.</p></dd>
 </dl>
   </div>
@@ -127,7 +130,7 @@
 
 <section class="api-class" id="grader.service.LoadedSubmissions">
   <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">LoadedSubmissions</span><span class="sig-params"></span>
-    <a class="headerlink" href="#grader.service.LoadedSubmissions" aria-label="Link to LoadedSubmissions">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L103" title="View source on GitHub">[source]</a></div>
+    <a class="headerlink" href="#grader.service.LoadedSubmissions" aria-label="Link to LoadedSubmissions">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L109" title="View source on GitHub">[source]</a></div>
   <div class="api-body">
     <p class="class-meta"><span class="badge">dataclass</span></p>
     <p>What <code>GradingService.load_submissions</code> found: one <code>SubmissionCandidate</code> per student, plus where a Canvas ZIP was extracted to.</p>
@@ -144,13 +147,13 @@
 
 <dl class="api-object api-property" id="grader.service.LoadedSubmissions.ok_count">
   <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">ok_count</span><span class="sig-params">: int</span>
-    <a class="headerlink" href="#grader.service.LoadedSubmissions.ok_count" aria-label="Link to ok_count">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L109" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.LoadedSubmissions.ok_count" aria-label="Link to ok_count">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L115" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
 
 <dl class="api-object api-property" id="grader.service.LoadedSubmissions.warning_count">
   <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">warning_count</span><span class="sig-params">: int</span>
-    <a class="headerlink" href="#grader.service.LoadedSubmissions.warning_count" aria-label="Link to warning_count">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L113" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.LoadedSubmissions.warning_count" aria-label="Link to warning_count">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L119" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
   </div>
@@ -158,7 +161,7 @@
 
 <section class="api-class" id="grader.service.GradingService">
   <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">GradingService</span><span class="sig-params">(rubric: <a class="xref" href="grader.rubric.html#grader.rubric.Rubric">Rubric</a>, settings: <a class="xref" href="#grader.service.GraderSettings">GraderSettings</a> | None = None, qualitative_grader: Any | None = None)</span>
-    <a class="headerlink" href="#grader.service.GradingService" aria-label="Link to GradingService">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L117" title="View source on GitHub">[source]</a></div>
+    <a class="headerlink" href="#grader.service.GradingService" aria-label="Link to GradingService">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L123" title="View source on GitHub">[source]</a></div>
   <div class="api-body">
     <p class="class-meta"></p>
     <p>Orchestrates a grading run: find submissions, place the data, execute each notebook, run the assignment&#x27;s checks and apply the review policy.</p>
@@ -169,39 +172,39 @@
 
 <dl class="api-object api-classmethod" id="grader.service.GradingService.from_rubric_path">
   <dt class="sig"><span class="sig-kind">classmethod </span><span class="sig-name">from_rubric_path</span><span class="sig-params">(path: str | Path, settings: <a class="xref" href="#grader.service.GraderSettings">GraderSettings</a> | None = None, qualitative_grader: Any | None = None) -&gt; &#x27;<a class="xref" href="#grader.service.GradingService">GradingService</a>&#x27;</span>
-    <a class="headerlink" href="#grader.service.GradingService.from_rubric_path" aria-label="Link to from_rubric_path">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L132" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.GradingService.from_rubric_path" aria-label="Link to from_rubric_path">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L138" title="View source on GitHub">[source]</a></dt>
   <dd><p>Load a rubric YAML and build a service for it.</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="grader.service.GradingService.preflight">
   <dt class="sig"><span class="sig-name">preflight</span><span class="sig-params">() -&gt; list[str]</span>
-    <a class="headerlink" href="#grader.service.GradingService.preflight" aria-label="Link to preflight">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L137" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.GradingService.preflight" aria-label="Link to preflight">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L143" title="View source on GitHub">[source]</a></dt>
   <dd><p>Problems that would make a grading run misleading rather than wrong.</p>
 <p>The big one: this assignment&#x27;s students submit a notebook and nothing else, so without instructor-supplied data every notebook fails at <code>read_csv</code> and the whole class looks broken.</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="grader.service.GradingService.load_submissions">
   <dt class="sig"><span class="sig-name">load_submissions</span><span class="sig-params">(source: str | Path, extract_to: str | Path | None = None) -&gt; <a class="xref" href="#grader.service.LoadedSubmissions">LoadedSubmissions</a></span>
-    <a class="headerlink" href="#grader.service.GradingService.load_submissions" aria-label="Link to load_submissions">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L172" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.GradingService.load_submissions" aria-label="Link to load_submissions">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L184" title="View source on GitHub">[source]</a></dt>
   <dd><p>Accept a folder or a Canvas ZIP (design.md §16).</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="grader.service.GradingService.new_session">
   <dt class="sig"><span class="sig-name">new_session</span><span class="sig-params">(source: str) -&gt; <a class="xref" href="grader.results.html#grader.results.GradingSession">GradingSession</a></span>
-    <a class="headerlink" href="#grader.service.GradingService.new_session" aria-label="Link to new_session">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L192" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.GradingService.new_session" aria-label="Link to new_session">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L204" title="View source on GitHub">[source]</a></dt>
   <dd><p>An empty <code>GradingSession</code> for this rubric and these settings, with a fresh timestamped session id.</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="grader.service.GradingService.run">
   <dt class="sig"><span class="sig-name">run</span><span class="sig-params">(candidates: Iterable[<a class="xref" href="grader.discovery.html#grader.discovery.SubmissionCandidate">SubmissionCandidate</a>], session: <a class="xref" href="grader.results.html#grader.results.GradingSession">GradingSession</a> | None = None, progress_callback: ProgressCallback | None = None, cancel_event: threading.Event | None = None, preserve_overrides: dict[str, Any] | None = None, workdir_root: str | Path | None = None) -&gt; <a class="xref" href="grader.results.html#grader.results.GradingSession">GradingSession</a></span>
-    <a class="headerlink" href="#grader.service.GradingService.run" aria-label="Link to run">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L204" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.GradingService.run" aria-label="Link to run">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L216" title="View source on GitHub">[source]</a></dt>
   <dd><p>Grade every candidate and return the saved session.</p>
 <p>Submissions are graded one at a time. <code>progress_callback</code> receives a <code>GradingProgress</code> snapshot at every stage (a callback that raises never stops grading); setting <code>cancel_event</code> stops after the current submission. <code>preserve_overrides</code> is a snapshot from <code>GradingSession.collect_overrides</code> to re-apply on top of the fresh automatic scores. Working directories are deleted afterwards unless <code>GraderSettings.keep_workdirs</code> is set.</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="grader.service.GradingService.regrade">
   <dt class="sig"><span class="sig-name">regrade</span><span class="sig-params">(session: <a class="xref" href="grader.results.html#grader.results.GradingSession">GradingSession</a>, candidates: Iterable[<a class="xref" href="grader.discovery.html#grader.discovery.SubmissionCandidate">SubmissionCandidate</a>], preserve_overrides: bool = True, progress_callback: ProgressCallback | None = None, cancel_event: threading.Event | None = None) -&gt; <a class="xref" href="grader.results.html#grader.results.GradingSession">GradingSession</a></span>
-    <a class="headerlink" href="#grader.service.GradingService.regrade" aria-label="Link to regrade">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L422" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#grader.service.GradingService.regrade" aria-label="Link to regrade">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/grader/service.py#L479" title="View source on GitHub">[source]</a></dt>
   <dd><p>Grade the same candidates again into the same session id and directory.</p>
 <p>With <code>preserve_overrides</code> (the default) every manual override is snapshotted first and restored on top of the new automatic scores.</p></dd>
 </dl>

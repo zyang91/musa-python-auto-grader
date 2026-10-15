@@ -63,6 +63,8 @@
 <li><a href="../api/grader.executor.html"><code>grader.executor</code></a></li>
 <li><a href="../api/grader.notebook_runner.html"><code>grader.notebook_runner</code></a></li>
 <li><a href="../api/grader.probe_runtime.html"><code>grader.probe_runtime</code></a></li>
+<li><a href="../api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a></li>
+<li><a href="../api/grader.function_runner.html"><code>grader.function_runner</code></a></li>
 </ul></li>
 <li class="nav-group"><span class="nav-group-label">Evidence</span><ul>
 <li><a href="../api/grader.notebook.html"><code>grader.notebook</code></a></li>
@@ -78,22 +80,25 @@
 <li><a href="../api/assignments.hw1.html"><code>assignments.hw1</code></a></li>
 <li><a href="../api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="../api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
+<li><a href="../api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
   <main id="content" class="content content-api">
     <article class="prose">
-<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py">assignments/base.py</a> · 297 lines</p>
+<p class="eyebrow">API reference · <a href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py">assignments/base.py</a> · 346 lines</p>
 <h1 class="module-title"><code>assignments.base</code></h1>
 <div class="module-doc"><p>Assignment grader base class and registry.</p>
 <p>An assignment module maps rubric ids to check methods. Every check receives the same context and returns one <code>RubricItemResult</code> carrying a score, a status, a confidence and the evidence behind it (design.md §24).</p></div>
 <h2 id="summary">Summary</h2>
 <div class="table-wrap"><table class="summary-table"><thead><tr><th>Name</th><th>Kind</th><th>Description</th></tr></thead><tbody><tr><td><a href="#assignments.base.GradingContext"><code>GradingContext</code></a></td><td><span class="kind">class</span></td><td>Everything a check may look at.</td></tr><tr><td><a href="#assignments.base.AssignmentGrader"><code>AssignmentGrader</code></a></td><td><span class="kind">class</span></td><td>Base grader: dispatches rubric ids to <code>check_&lt;rubric_id&gt;</code> methods.</td></tr><tr><td><a href="#assignments.base.register"><code>register()</code></a></td><td><span class="kind">function</span></td><td>Class decorator: register an <code>AssignmentGrader</code> subclass under its <code>assignment_id</code>.</td></tr><tr><td><a href="#assignments.base.get_grader"><code>get_grader()</code></a></td><td><span class="kind">function</span></td><td>Return the grader for a rubric, falling back to the generic base.</td></tr><tr><td><a href="#assignments.base.registered_assignments"><code>registered_assignments()</code></a></td><td><span class="kind">function</span></td><td></td></tr></tbody></table></div>
+<h2 id="constants">Constants</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Notes</th></tr></thead><tbody><tr id="assignments.base.ISOLATED_FUNCTIONS"><td><code class="field-name">ISOLATED_FUNCTIONS</code></td><td><code>&#x27;isolated_functions&#x27;</code></td><td>A hidden test that calls functions cut out of the notebook, in the sandbox.</td></tr></tbody></table></div>
 <h2 id="classes">Classes</h2>
 
 <section class="api-class" id="assignments.base.GradingContext">
   <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">GradingContext</span><span class="sig-params"></span>
-    <a class="headerlink" href="#assignments.base.GradingContext" aria-label="Link to GradingContext">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L29" title="View source on GitHub">[source]</a></div>
+    <a class="headerlink" href="#assignments.base.GradingContext" aria-label="Link to GradingContext">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L38" title="View source on GitHub">[source]</a></div>
   <div class="api-body">
     <p class="class-meta"><span class="badge">dataclass</span></p>
     <p>Everything a check may look at.</p>
@@ -102,7 +107,7 @@
   <p class="rubric">Fields</p>
   <div class="table-wrap"><table>
     <thead><tr><th>Name</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
-    <tbody><tr><td><code class="field-name">student_id</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">rubric</code></td><td><code><a class="xref" href="grader.rubric.html#grader.rubric.Rubric">Rubric</a></code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">analysis</code></td><td><code><a class="xref" href="grader.notebook.html#grader.notebook.NotebookAnalysis">NotebookAnalysis</a></code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">execution</code></td><td><code><a class="xref" href="grader.models.html#grader.models.ExecutionRecord">ExecutionRecord</a></code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">probe</code></td><td><code>dict[str, Any] | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">workdir</code></td><td><code>Path | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">discovery_warnings</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">qualitative_grader</code></td><td><code>Any | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">settings</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">cache</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td>Scratch space for work shared between checks on one submission — e.g. HW2 reads the executed notebook once and grades seven items from it.</td></tr></tbody>
+    <tbody><tr><td><code class="field-name">student_id</code></td><td><code>str</code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">rubric</code></td><td><code><a class="xref" href="grader.rubric.html#grader.rubric.Rubric">Rubric</a></code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">analysis</code></td><td><code><a class="xref" href="grader.notebook.html#grader.notebook.NotebookAnalysis">NotebookAnalysis</a></code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">execution</code></td><td><code><a class="xref" href="grader.models.html#grader.models.ExecutionRecord">ExecutionRecord</a></code></td><td><span class="muted">required</span></td><td></td></tr><tr><td><code class="field-name">probe</code></td><td><code>dict[str, Any] | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">workdir</code></td><td><code>Path | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">discovery_warnings</code></td><td><code>list[str]</code></td><td><code>field(default_factory=list)</code></td><td></td></tr><tr><td><code class="field-name">qualitative_grader</code></td><td><code>Any | None</code></td><td><code>None</code></td><td></td></tr><tr><td><code class="field-name">settings</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td></td></tr><tr><td><code class="field-name">cache</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td>Scratch space for work shared between checks on one submission — e.g. HW2 reads the executed notebook once and grades seven items from it.</td></tr><tr><td><code class="field-name">function_tests</code></td><td><code>dict[str, Any]</code></td><td><code>field(default_factory=dict)</code></td><td>Results of functions run on their own in the sandbox, keyed by rubric id (<code>AssignmentGrader.run_isolated_tests</code>).</td></tr></tbody>
   </table></div>
 </div>
     
@@ -110,7 +115,7 @@
 
 <dl class="api-object api-property" id="assignments.base.GradingContext.probe_ok">
   <dt class="sig"><span class="sig-kind">property </span><span class="sig-name">probe_ok</span><span class="sig-params">: bool</span>
-    <a class="headerlink" href="#assignments.base.GradingContext.probe_ok" aria-label="Link to probe_ok">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L46" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.GradingContext.probe_ok" aria-label="Link to probe_ok">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L58" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
   </div>
@@ -118,7 +123,7 @@
 
 <section class="api-class" id="assignments.base.AssignmentGrader">
   <div class="sig sig-class"><span class="sig-kind">class </span><span class="sig-name">AssignmentGrader</span><span class="sig-params">(rubric: <a class="xref" href="grader.rubric.html#grader.rubric.Rubric">Rubric</a>)</span>
-    <a class="headerlink" href="#assignments.base.AssignmentGrader" aria-label="Link to AssignmentGrader">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L50" title="View source on GitHub">[source]</a></div>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader" aria-label="Link to AssignmentGrader">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L62" title="View source on GitHub">[source]</a></div>
   <div class="api-body">
     <p class="class-meta"></p>
     <p>Base grader: dispatches rubric ids to <code>check_&lt;rubric_id&gt;</code> methods.</p>
@@ -135,33 +140,46 @@
 
 <dl class="api-object api-method" id="assignments.base.AssignmentGrader.probe_config">
   <dt class="sig"><span class="sig-name">probe_config</span><span class="sig-params">() -&gt; dict[str, Any]</span>
-    <a class="headerlink" href="#assignments.base.AssignmentGrader.probe_config" aria-label="Link to probe_config">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L59" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader.probe_config" aria-label="Link to probe_config">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L71" title="View source on GitHub">[source]</a></dt>
   <dd><p>Config handed to the in-kernel probe (hidden tests included).</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="assignments.base.AssignmentGrader.hidden_test_specs">
   <dt class="sig"><span class="sig-name">hidden_test_specs</span><span class="sig-params">() -&gt; list[dict[str, Any]]</span>
-    <a class="headerlink" href="#assignments.base.AssignmentGrader.hidden_test_specs" aria-label="Link to hidden_test_specs">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L67" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader.hidden_test_specs" aria-label="Link to hidden_test_specs">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L79" title="View source on GitHub">[source]</a></dt>
   <dd><p>Only selectors and call inputs — expected values stay on the host.</p>
 <p>Two call styles: <code>scalar_args</code> passes literal arguments, <code>group_frame</code> asks the probe to build a DataFrame from interpolated anchor points and pass that. Either way the container is told what to call the function with, never what it should return.</p></dd>
 </dl>
 
+<dl class="api-object api-method" id="assignments.base.AssignmentGrader.isolated_test_items">
+  <dt class="sig"><span class="sig-name">isolated_test_items</span><span class="sig-params">() -&gt; list[<a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>]</span>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader.isolated_test_items" aria-label="Link to isolated_test_items">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L118" title="View source on GitHub">[source]</a></dt>
+  <dd><p class="muted">No description.</p></dd>
+</dl>
+
+<dl class="api-object api-method" id="assignments.base.AssignmentGrader.run_isolated_tests">
+  <dt class="sig"><span class="sig-name">run_isolated_tests</span><span class="sig-params">(analysis: <a class="xref" href="grader.notebook.html#grader.notebook.NotebookAnalysis">NotebookAnalysis</a>, workdir: Path, config: <a class="xref" href="grader.executor.html#grader.executor.ExecutionConfig">ExecutionConfig</a>) -&gt; dict[str, Any]</span>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader.run_isolated_tests" aria-label="Link to run_isolated_tests">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L124" title="View source on GitHub">[source]</a></dt>
+  <dd><p>Call the functions a <code>type: isolated_functions</code> item names.</p>
+<p>The functions are cut out of the notebook and run on their own in the network-less sandbox (<code>grader/function_sandbox.py</code>); the rest of the notebook is never run. Only the inputs go into the container — the expected values stay in the rubric, on the host.</p></dd>
+</dl>
+
 <dl class="api-object api-method" id="assignments.base.AssignmentGrader.grade">
   <dt class="sig"><span class="sig-name">grade</span><span class="sig-params">(ctx: <a class="xref" href="#assignments.base.GradingContext">GradingContext</a>) -&gt; list[<a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a>]</span>
-    <a class="headerlink" href="#assignments.base.AssignmentGrader.grade" aria-label="Link to grade">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L105" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader.grade" aria-label="Link to grade">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L154" title="View source on GitHub">[source]</a></dt>
   <dd><p>Run every rubric item&#x27;s <code>check_&lt;id&gt;</code> method and return one result per item.</p>
 <p>A missing check returns <code>manual_review</code>; a check that raises returns <code>manual_review</code> with confidence 0 and the error in its evidence, so a broken check never loses a submission.</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="assignments.base.AssignmentGrader.result">
   <dt class="sig"><span class="sig-name">result</span><span class="sig-params">(item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>, score: float, status: str, confidence: float = 1.0, feedback: str = &#x27;&#x27;, evidence: dict[str, Any] | None = None) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
-    <a class="headerlink" href="#assignments.base.AssignmentGrader.result" aria-label="Link to result">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L142" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader.result" aria-label="Link to result">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L191" title="View source on GitHub">[source]</a></dt>
   <dd><p>Build a <code>RubricItemResult</code>, rounding the score to the rubric&#x27;s <code>score_rounding</code> increment and clamping it to <code>[0, points]</code>.</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="assignments.base.AssignmentGrader.no_probe_result">
   <dt class="sig"><span class="sig-name">no_probe_result</span><span class="sig-params">(item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>, ctx: <a class="xref" href="#assignments.base.GradingContext">GradingContext</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
-    <a class="headerlink" href="#assignments.base.AssignmentGrader.no_probe_result" aria-label="Link to no_probe_result">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L180" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader.no_probe_result" aria-label="Link to no_probe_result">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L229" title="View source on GitHub">[source]</a></dt>
   <dd><p>Shared response when the kernel never reported its namespace.</p></dd>
 </dl>
 <p class="rubric">Rubric checks <span class="count">2</span></p>
@@ -169,13 +187,13 @@
 
 <dl class="api-object api-method" id="assignments.base.AssignmentGrader.check_unimplemented">
   <dt class="sig"><span class="sig-name">check_unimplemented</span><span class="sig-params">(ctx: <a class="xref" href="#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
-    <a class="headerlink" href="#assignments.base.AssignmentGrader.check_unimplemented" aria-label="Link to check_unimplemented">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L170" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader.check_unimplemented" aria-label="Link to check_unimplemented">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L219" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
 
 <dl class="api-object api-method" id="assignments.base.AssignmentGrader.check_notebook_execution">
   <dt class="sig"><span class="sig-name">check_notebook_execution</span><span class="sig-params">(ctx: <a class="xref" href="#assignments.base.GradingContext">GradingContext</a>, item: <a class="xref" href="grader.rubric.html#grader.rubric.RubricItem">RubricItem</a>) -&gt; <a class="xref" href="grader.models.html#grader.models.RubricItemResult">RubricItemResult</a></span>
-    <a class="headerlink" href="#assignments.base.AssignmentGrader.check_notebook_execution" aria-label="Link to check_notebook_execution">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L201" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.AssignmentGrader.check_notebook_execution" aria-label="Link to check_notebook_execution">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L250" title="View source on GitHub">[source]</a></dt>
   <dd><p>Shared execution check (design.md §19). Never an automatic zero.</p></dd>
 </dl>
   </div>
@@ -184,19 +202,19 @@
 
 <dl class="api-object api-function" id="assignments.base.register">
   <dt class="sig"><span class="sig-name">register</span><span class="sig-params">(cls: type[<a class="xref" href="#assignments.base.AssignmentGrader">AssignmentGrader</a>]) -&gt; type[<a class="xref" href="#assignments.base.AssignmentGrader">AssignmentGrader</a>]</span>
-    <a class="headerlink" href="#assignments.base.register" aria-label="Link to register">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L266" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.register" aria-label="Link to register">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L315" title="View source on GitHub">[source]</a></dt>
   <dd><p>Class decorator: register an <code>AssignmentGrader</code> subclass under its <code>assignment_id</code>.</p></dd>
 </dl>
 
 <dl class="api-object api-function" id="assignments.base.get_grader">
   <dt class="sig"><span class="sig-name">get_grader</span><span class="sig-params">(rubric: <a class="xref" href="grader.rubric.html#grader.rubric.Rubric">Rubric</a>) -&gt; <a class="xref" href="#assignments.base.AssignmentGrader">AssignmentGrader</a></span>
-    <a class="headerlink" href="#assignments.base.get_grader" aria-label="Link to get_grader">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L271" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.get_grader" aria-label="Link to get_grader">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L320" title="View source on GitHub">[source]</a></dt>
   <dd><p>Return the grader for a rubric, falling back to the generic base.</p></dd>
 </dl>
 
 <dl class="api-object api-function" id="assignments.base.registered_assignments">
   <dt class="sig"><span class="sig-name">registered_assignments</span><span class="sig-params">() -&gt; list[str]</span>
-    <a class="headerlink" href="#assignments.base.registered_assignments" aria-label="Link to registered_assignments">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L279" title="View source on GitHub">[source]</a></dt>
+    <a class="headerlink" href="#assignments.base.registered_assignments" aria-label="Link to registered_assignments">#</a><a class="source-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/assignments/base.py#L328" title="View source on GitHub">[source]</a></dt>
   <dd><p class="muted">No description.</p></dd>
 </dl>
     </article>
@@ -205,7 +223,7 @@
       <div class="footer-meta"><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
     </footer>
   </main>
-  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#summary">Summary</a></li><li class="toc-l2"><a href="#classes">Classes</a></li><li class="toc-l3"><a href="#assignments.base.GradingContext">GradingContext</a></li><li class="toc-l3"><a href="#assignments.base.AssignmentGrader">AssignmentGrader</a></li><li class="toc-l2"><a href="#functions">Functions</a></li><li class="toc-l3"><a href="#assignments.base.register">register()</a></li><li class="toc-l3"><a href="#assignments.base.get_grader">get_grader()</a></li><li class="toc-l3"><a href="#assignments.base.registered_assignments">registered_assignments()</a></li></ul></nav></aside>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#summary">Summary</a></li><li class="toc-l2"><a href="#constants">Constants</a></li><li class="toc-l2"><a href="#classes">Classes</a></li><li class="toc-l3"><a href="#assignments.base.GradingContext">GradingContext</a></li><li class="toc-l3"><a href="#assignments.base.AssignmentGrader">AssignmentGrader</a></li><li class="toc-l2"><a href="#functions">Functions</a></li><li class="toc-l3"><a href="#assignments.base.register">register()</a></li><li class="toc-l3"><a href="#assignments.base.get_grader">get_grader()</a></li><li class="toc-l3"><a href="#assignments.base.registered_assignments">registered_assignments()</a></li></ul></nav></aside>
 </div>
 <div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
   <div class="search-panel">

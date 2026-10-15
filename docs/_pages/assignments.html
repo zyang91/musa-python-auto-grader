@@ -1,5 +1,5 @@
 <!-- title: Assignments -->
-<!-- description: How Assignments 1, 2 and 3 are graded, and where each one's 100 points go. -->
+<!-- description: How Assignments 1, 2, 3 and 4 are graded, and where each one's 100 points go. -->
 
 <p class="eyebrow">User guide</p>
 <h1>Assignments</h1>
@@ -9,6 +9,7 @@
   <a class="card" href="#assignment-1-the-donut-effect"><span class="card-title">Assignment 1</span><p>The Donut Effect. No answer key, so each step is checked against the student's own data.</p></a>
   <a class="card" href="#assignment-2-exploratory-visualization"><span class="card-title">Assignment 2</span><p>Exploratory Visualization. No data handed in, so the required elements are graded from saved outputs.</p></a>
   <a class="card" href="#assignment-3-evictions-and-the-ndvi"><span class="card-title">Assignment 3</span><p>Evictions and the NDVI. One shared zip, so there is an answer key for the first time.</p></a>
+  <a class="card" href="#assignment-4-street-networks-scraping"><span class="card-title">Assignment 4</span><p>Street Networks &amp; Scraping. Everything is downloaded or scraped live, so the notebook is never run.</p></a>
 </div>
 
 <hr>
@@ -215,6 +216,79 @@
 
 <hr>
 
-<h2>Assignments 4–6</h2>
+<h2>Assignment 4: Street Networks &amp; Scraping</h2>
+<p><span class="badge">rubrics/hw4.yaml</span><span class="badge badge-gray">assignments/hw4.py</span><span class="badge badge-gray">no data</span><span class="badge badge-bad">never executed</span></p>
+
+<p>Every step of Assignment 4 talks to a server that is not ours. Part 1 downloads the planning districts from ArcGIS Open Data and the street network from the OpenStreetMap Overpass API (osmnx), and Part 2 drives a browser through five pages of Craigslist with a sleep between each. Re-running a class of these notebooks would repeat every one of those requests once per student, which is exactly the load the assignment itself warns will get an IP banned.</p>
+
+<p>So <code>rubrics/hw4.yaml</code> says <code>execution: mode: never</code>, and the service honours it in <strong>every</strong> execution mode, local included: no kernel, no notebook container, no browser, no data placement. See <a href="how-it-works.html#execution">Execution</a>. The grade comes from the file the student handed in, read two ways:</p>
+
+<ul>
+  <li><strong>The code they wrote.</strong> Each code cell is matched to the template cell it was filled in from, and the template's own lines are set aside first. The <code>driver.get(url)</code> and <code>pd.concat(...)</code> inside the provided scraping loop, or a <code>def format_price(price_string): return</code> stub, earn nothing. Each step is a list of requirements in the rubric, one regex each, scoped to its Part, so a TA can widen one without touching Python.</li>
+  <li><strong>The outputs their own run saved.</strong> The crash count, the scraping log (<code>Processing page 3... Number of apartments = 120</code>), the results table, the rendered histograms, the Folium map and the Altair spec, including the scraped rows the spec embeds.</li>
+</ul>
+
+<h3 id="hw4-isolated-functions">The one thing that does run: three pure functions</h3>
+
+<p><code>format_bedrooms</code>, <code>format_size</code> and <code>format_price</code> turn <code>"2br"</code> into <code>2</code>, and calling them is far better evidence than reading them. So they, and only they, are cut out of the notebook (<a href="api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a>) and called with typical Craigslist strings in the Docker sandbox, under the same isolation flags as a notebook run, above all <code>--network none</code>:</p>
+
+<ul>
+  <li>only the top-level <code>def</code> of each named function is extracted. No other statement of the notebook goes anywhere, and the submission itself is not mounted into the container;</li>
+  <li>decorators and annotations are stripped, and a function whose default argument is not a plain literal is refused, because those run at definition time;</li>
+  <li>only imports of <code>re</code>, <code>string</code>, <code>math</code>, <code>decimal</code>, <code>numpy</code> and <code>pandas</code> go along. <code>selenium</code>, <code>requests</code> and <code>osmnx</code> do not;</li>
+  <li>the expected answers stay on the host. The container runs <a href="api/grader.function_runner.html"><code>grader.function_runner</code></a>, which is told what to call, not what should come back.</li>
+</ul>
+
+<div class="callout callout-warn">
+  <p class="callout-title">In local mode the functions are not called</p>
+  <p>The machine has a network, so item 2.5 gets a provisional score from the source and goes to a TA. The sidebar says so before the run.</p>
+</div>
+
+<h3>Scraping has to be shown, not loaded</h3>
+
+<p>A results table read back from a CSV proves nothing about a scraper. Item 2.6 wants the completed loop in the notebook <em>and</em> the log it printed when the student ran it, and the results table only counts when that log is there. A table loaded from a file is recorded as such and goes to a TA.</p>
+
+<h3>Reference values, loosely</h3>
+
+<p>There is no reference solution, and the street network and the listings both change. The only numbers used are the template's own: about 3,750 crashes in Center City (3,000–4,500 accepted), 120 listings a page, and a price per square foot around 1.5. Each only raises confidence. A number far outside its range sends the item to a person; it never costs a point on its own. As everywhere, <strong>anything short of full marks reaches a person</strong>.</p>
+
+<h3>Where the 100 points go</h3>
+
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>Item</th><th class="num">Points</th></tr></thead>
+  <tbody>
+    <tr><td></td><td>Notebook run and submitted with its outputs</td><td class="num">10</td></tr>
+    <tr><td>1.1</td><td>Central planning district polygon</td><td class="num">4</td></tr>
+    <tr><td>1.2</td><td>Drive network from the polygon</td><td class="num">4</td></tr>
+    <tr><td>1.3</td><td>Network edges as a GeoDataFrame</td><td class="num">3</td></tr>
+    <tr><td>1.4</td><td>PennDOT crash data loaded and combined</td><td class="num">4</td></tr>
+    <tr><td>1.5</td><td>Crashes as a GeoDataFrame (latitude-as-x is named)</td><td class="num">4</td></tr>
+    <tr><td>1.6</td><td>Crashes trimmed to Center City</td><td class="num">5</td></tr>
+    <tr><td>1.7</td><td>Graph and crashes projected to EPSG:2272</td><td class="num">5</td></tr>
+    <tr><td>1.8</td><td>Nearest edge for each crash</td><td class="num">5</td></tr>
+    <tr><td>1.9</td><td>Crash count per street</td><td class="num">5</td></tr>
+    <tr><td>1.10</td><td>Crash counts merged onto the edges</td><td class="num">4</td></tr>
+    <tr><td>1.11</td><td>Crash index</td><td class="num">5</td></tr>
+    <tr><td>1.12</td><td>Histogram of the crash index</td><td class="num">3</td></tr>
+    <tr><td>1.13</td><td>Interactive map of the crash index</td><td class="num">4</td></tr>
+    <tr><td>2.1</td><td>Selenium driver opens Craigslist</td><td class="num">3</td></tr>
+    <tr><td>2.2</td><td>BeautifulSoup from the page source</td><td class="num">2</td></tr>
+    <tr><td>2.3</td><td>Listing elements extracted</td><td class="num">4</td></tr>
+    <tr><td>2.4</td><td>Price, bedrooms, size and title of the first listing</td><td class="num">4</td></tr>
+    <tr><td>2.5</td><td><code>format_*</code> functions, called in the sandbox</td><td class="num">9</td></tr>
+    <tr><td>2.6</td><td>Scraping loop completed <em>and shown run</em></td><td class="num">7</td></tr>
+    <tr><td>2.7</td><td>Histograms of price and price per square foot</td><td class="num">3</td></tr>
+    <tr><td>2.8</td><td>Interactive Altair scatter of price vs size</td><td class="num">3</td></tr>
+    <tr class="total"><td></td><td>Total</td><td class="num">100</td></tr>
+  </tbody>
+</table></div>
+
+<p>Execution and output completeness is 10 points, Part 1 is 55 and Part 2 is 35.</p>
+
+<p>The demo class (<code>python examples/make_hw4_submissions.py</code>) has four submissions: complete, one with the usual mistakes and its Craigslist results loaded from a CSV, one that crashes in Part 1, and the untouched template. Their saved outputs are written in directly; nothing is executed, there or when grading. In Docker mode they score 100, 84, 26.5 and 3. In local mode the <code>format_*</code> item is not called and goes to a TA instead.</p>
+
+<hr>
+
+<h2>Assignments 5–6</h2>
 
 <p>Their student templates are in <code>assignment_template/</code>, but they are not graded yet. Each needs a rubric YAML and a grader class. See <a href="extending.html">Adding an assignment</a>.</p>
