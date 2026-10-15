@@ -544,6 +544,18 @@ def _musa_profile_plot(name, obj, source):
         except Exception:
             entry["child_types"] = []
         entry["element_types"] = sorted(set(_musa_hv_children(obj)))
+        # `line * scatter` is one chart drawn twice: its layers plot the same
+        # numbers, so the first layer that carries values speaks for it.
+        if entry["type"] in ("Overlay", "NdOverlay"):
+            try:
+                for child in list(obj.values())[:12]:
+                    values = _musa_hv_values(child)
+                    if values:
+                        entry["values"] = values
+                        entry["n_points"] = int(len(child))
+                        break
+            except Exception:
+                pass
     else:
         entry["element_types"] = [entry["type"]]
         try:

@@ -225,6 +225,10 @@ submissions/
 # and doubling as a scratch area for real student notebooks.
 hw2_submissions/
 hw3_submissions/
+# Calibration scripts that read a real grading session. Even anonymised, they
+# are written against real student results and stay off the repository.
+hw*_aggregate.py
+calibration/
 # Assignment 3's demo notebooks are built by examples/make_hw3_submissions.py,
 # which runs them against the assignment zip and saves their outputs. An hvplot
 # widget embeds every frame it draws, so the good one is ~18 MB — a build

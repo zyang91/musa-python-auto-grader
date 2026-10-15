@@ -85,6 +85,26 @@ WIDGET_CONTAINERS = ("HoloMap", "GridSpace", "NdLayout")
 # is left out, and it holds no frames at all.
 LAZY_CONTAINERS = ("DynamicMap",)
 LAYOUT_CONTAINERS = ("Layout", "NdLayout")
+# Layers drawn on one set of axes (`line * scatter`): one chart, not several.
+OVERLAY_CONTAINERS = ("Overlay", "NdOverlay")
+# Layers that make an overlay a map rather than a chart of yearly totals.
+MAP_ELEMENTS = {"Polygons", "Path", "Shape", "Image", "QuadMesh", "Tiles", "WMTS"}
+
+# Eviction Lab names its year columns "e-03" to "e-16", and many students relabel
+# them as 2003..2016 after the melt. Both name the same fourteen years.
+YEAR_KEY_RE = re.compile(r"(?:e-)?(\d{2}|\d{4})(?:\.0+)?")
+
+
+def keys_cover(keys: Iterable[Any], expected: Iterable[Any]) -> bool:
+    """Every expected key is present, reading "e-03", "2003" and 2003 as one year."""
+
+    def normal(key: Any) -> str:
+        text = str(key).strip()
+        match = YEAR_KEY_RE.fullmatch(text)
+        return f"year:{int(match.group(1)) % 100}" if match else text
+
+    wanted = {normal(k) for k in expected}
+    return bool(wanted) and wanted <= {normal(k) for k in keys}
 
 
 # ===========================================================================
@@ -124,8 +144,7 @@ class _SavedAnswerChecks:
 
     @staticmethod
     def _keys_match(chart: Any, expected: set[str]) -> bool:
-        keys = {str(k) for k in chart.frame_keys}
-        return bool(expected) and expected <= keys
+        return keys_cover(chart.frame_keys, expected)
 
     def _widget_from_outputs(
         self, answers: Any, item: RubricItem, what: str
@@ -281,7 +300,7 @@ class _SavedAnswerChecks:
         frames = answers.frames_with_columns(["GEOID", "geometry"])
         melted = [f for f in frames if len(f.columns) <= 8]
         charted = any(
-            labels <= {str(k) for k in chart.frame_keys}
+            keys_cover(chart.frame_keys, labels)
             or abs(float(chart.values.get("sum", 0)) - total) <= total * 0.001
             for chart in answers.charts()
         )
@@ -305,7 +324,14 @@ class _SavedAnswerChecks:
         rel_tol = float(config.get("total_rel_tol", 0.001))
         accepted = {str(e) for e in config.get("accepted_elements", [])}
 
-        charts = [c for c in answers.charts() if c.kind in accepted and c.values]
+        def drawn(chart: Any) -> bool:
+            layers = set(chart.children)
+            return chart.kind in accepted or (
+                chart.kind in OVERLAY_CONTAINERS and bool(layers & accepted)
+                and not layers & MAP_ELEMENTS
+            )
+
+        charts = [c for c in answers.charts() if drawn(c) and c.values]
         exact = [
             c for c in charts
             if abs(c.values.get("sum", 0) - total) <= total * rel_tol
@@ -324,7 +350,7 @@ class _SavedAnswerChecks:
                 f"{charts[0].values.get('sum', 0):,.0f}, not the {total:,.0f} "
                 "evictions of 2003-2016."
             )
-        bare = [c for c in answers.charts() if c.kind in accepted]
+        bare = [c for c in answers.charts() if drawn(c)]
         if bare:
             return 0.8, (
                 f"The submitted notebook shows an hvplot {bare[0].kind}, but its saved "
@@ -510,6 +536,22 @@ class _SavedAnswerChecks:
             return float(config.get("missing_suburbs_credit_ratio", 0.5)), (
                 "The submitted notebook shows the city limits polygon, but not a "
                 "suburbs polygon built from its envelope."
+            )
+        # Students rarely print an area, but they always print the two medians in
+        # 2.1.4 — and those exist only if both polygons were right: 0.2025 needs
+        # the city limits in the raster's CRS, and 0.3748 needs the envelope with
+        # the city cut out of it (the whole envelope gives 0.315).
+        ndvi = self.rubric.item("ndvi_medians")
+        ndvi_config = ndvi.config if ndvi is not None else {}
+        city_median = float(ndvi_config.get("expected_city_median", 0.2025))
+        suburb_median = float(ndvi_config.get("expected_suburb_median", 0.3748))
+        tolerance = float(ndvi_config.get("median_abs_tol", 0.02))
+        city_cell = answers.shows(city_median, abs_tol=tolerance)
+        if city_cell and answers.shows(suburb_median, abs_tol=tolerance):
+            return 1.0, (
+                f"The submitted notebook prints both NDVI medians (code cell "
+                f"{city_cell.code_cell}), which only a city polygon in the raster's "
+                "CRS and an envelope with the city cut out of it can produce."
             )
         return None, ""
 
@@ -797,7 +839,8 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
             values = cls._samples(profile, column)
             if not values:
                 continue
-            if values == expected or (not exact and values and values <= expected):
+            covered = keys_cover(expected, values)  # every value is an expected label
+            if (covered and keys_cover(values, expected)) or (not exact and covered):
                 return str(column)
         return None
 
@@ -1195,7 +1238,15 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
 
         charts: list[dict[str, Any]] = []
         for plot in self._plots(ctx):
-            if plot.get("is_container") or str(plot.get("type")) not in accepted:
+            element = str(plot.get("type"))
+            if plot.get("is_container"):
+                # A line with its points drawn on top is still the trend chart.
+                layers = [str(t) for t in plot.get("child_types") or []]
+                if (element not in OVERLAY_CONTAINERS or not set(layers) & accepted
+                        or set(layers) & MAP_ELEMENTS):
+                    continue
+                element = next(t for t in layers if t in accepted)
+            elif element not in accepted:
                 continue
             values = plot.get("values") or {}
             total = as_float(values.get("sum"))
@@ -1203,7 +1254,7 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
             charts.append(
                 {
                     "plot": plot.get("name"),
-                    "element": plot.get("type"),
+                    "element": element,
                     "points": count,
                     "plotted_total": total,
                     "matches": total is not None
@@ -1231,7 +1282,8 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
             return self._partial(
                 item, float(config.get("wrong_values_credit_ratio", 0.5)),
                 f"An hvplot chart is there ({best['element']}, {best['points']} points) "
-                f"but the values plotted sum to {best['plotted_total']:,.0f} rather "
+                f"but the values plotted sum to "
+                f"{'an unknown total' if best['plotted_total'] is None else format(best['plotted_total'], ',.0f')} rather "
                 f"than the {expected_total:,.0f} evictions of 2003-2016 — check that "
                 "the group by sums the eviction column across tracts.",
                 evidence,
@@ -1282,7 +1334,7 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
             }
             if self._is_widget(plot):
                 record["right_dimension"] = self._dimension_matches(plot, hints) or bool(
-                    expected_keys and expected_keys <= {str(k) for k in (plot.get("keys") or [])}
+                    expected_keys and keys_cover(plot.get("keys") or [], expected_keys)
                 )
                 record["right_frames"] = int(plot.get("n_frames") or 0) == expected_frames
                 record["polygons"] = self._draws_polygons(plot, polygons)
@@ -2364,14 +2416,31 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
              if self._source_matches(r.source, config.get("histogram_patterns", []))),
             None,
         )
-        mapped = next(
-            (r for r in records
-             if r is not histogram
-             and self._source_matches(r.source, config.get("point_plot_patterns", []))
-             and "column=" in r.source),
-            None,
-        )
+        def is_map(record: Any) -> bool:
+            return (
+                self._source_matches(record.source, config.get("point_plot_patterns", []))
+                and re.search(r"column\s*=", record.source) is not None
+            )
+
+        # Prefer a cell of its own, but `fig, (ax1, ax2) = plt.subplots(1, 2)`
+        # draws the histogram and the map in one cell, and that is both figures.
+        mapped = next((r for r in records if r is not histogram and is_map(r)), None)
+        if mapped is None and histogram is not None and is_map(histogram):
+            mapped = histogram
         return histogram, mapped
+
+    # Two different frames plotted onto one map: the trees, and the city limits
+    # drawn under or over them — filled as a background layer or as an outline.
+    PLOT_RECEIVER_RE = re.compile(r"([A-Za-z_][\w\.\[\]'\"]*)\s*\.\s*plot\s*\(")
+
+    @classmethod
+    def _draws_second_layer(cls, source: str) -> bool:
+        # Compared by base name, so `trees["ndvi"].plot` and `trees.plot` are one.
+        receivers = {
+            re.match(r"[A-Za-z_]\w*", r).group(0)
+            for r in cls.PLOT_RECEIVER_RE.findall(source)
+        }
+        return len(receivers - {"plt", "ax", "ax1", "ax2", "axes", "axs", "fig"}) >= 2
 
     @staticmethod
     def _source_matches(source: str, patterns: Iterable[str]) -> bool:
@@ -2398,6 +2467,8 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
                 parts.append({"figure": label, "found": False, "credit": 0.0})
                 return 0.0
             has_detail = self._source_matches(record.source, detail_patterns)
+            if not has_detail and detail_label == "city_boundary":
+                has_detail = self._draws_second_layer(record.source)
             credit = (1 - detail_share) + (detail_share if has_detail else 0.0)
             if not record.ok:
                 credit *= not_rendered
