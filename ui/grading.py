@@ -17,7 +17,10 @@ STAGE_LABELS = [
     ("feedback", "Feedback generation"),
 ]
 
-STAGE_ICONS = {"done": "✓", "running": "running", "error": "✕", "waiting": "waiting"}
+STAGE_ICONS = {
+    "done": "✓", "running": "running", "error": "✕", "waiting": "waiting",
+    "skipped": "— not run (graded from the saved notebook)",
+}
 
 
 def render() -> None:
