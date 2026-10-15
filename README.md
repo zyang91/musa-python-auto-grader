@@ -191,6 +191,7 @@ graded by their effect:
 | two maps side by side | `Layout`, shape `(1, 2)`, children `[Polygons, Polygons]` | ✓ |
 | the same, panels never trimmed | `Layout` whose children are `HoloMap` | still carries its widget — 75% |
 | the yearly eviction trend | `Curve`, 14 points **summing to 149,472** | graded on the numbers plotted |
+| the same trend with its points drawn on top | `Overlay` of `Curve * Scatter`, same 14 points | the same chart ✓ (an overlay with map layers is not) |
 
 The last row is the point: a chart is not checked for existing, it is checked for
 plotting the right numbers.
@@ -210,6 +211,27 @@ is a deduction they have to re-derive:
 | `np.median` on a masked array | the medians are NaN | named as the NaN trap, 40% |
 | suburbs = the envelope | its area is city + suburbs | `difference()` never applied, 50% |
 | tracts left in EPSG:4326 | the polygon's area is 0.037, not 369 km² | named as degrees vs metres, 40% |
+
+### Calibrated against a real class
+
+The rubric was run over a full class's submissions and checked against
+**per-item aggregates only** — no individual notebook was read to tune it. Every
+pattern that came back marked down when the work was right was fixed in the
+grader and reproduced in `tests/` with a synthetic fixture:
+
+| Correct work the first version marked down | What the grader now accepts |
+|---|---|
+| year columns relabelled `2003`..`2016` after the melt | `"e-03"`, `"2003"` and `2003` name the same year — in widget keys, tidy-frame columns and chart frame lists |
+| a trend chart whose x axis is those integer years | the bokeh decoder never reads an evenly stepped integer column as the plotted totals |
+| a line with its points overlaid (`Curve * Scatter`) | an `Overlay` is the trend chart, in the re-run and in the saved output; map overlays are not |
+| 2.1.2 with no polygon area printed | both NDVI medians in the saved output (0.2025 and 0.3748) prove the city and suburb polygons — only the right polygons produce both |
+| 2.2.3 histogram and map in one `plt.subplots(1, 2)` cell | that cell counts as both figures |
+| 2.2.3 city limits drawn as a filled background layer | counts as the city outline |
+
+A chart with no recorded values also no longer crashes the feedback text. The
+calibration scripts themselves (`hw*_aggregate.py`, `calibration/`) are in
+`.gitignore`: even anonymised, they are written against real student results and
+stay off the repository.
 
 ### What still goes to a person
 
@@ -364,7 +386,9 @@ For a real class, download the ZHVI extract from
 by ZIP code* — and upload that instead. Nothing else changes.
 
 The sidebar takes the file by **upload**, so it does not have to live anywhere in
-particular; uploads are kept in `.musa_grader_data/` and survive a restart. If the
+particular; uploads are kept in `.musa_grader_data/` and survive a restart. Uploads —
+data files and Canvas submission ZIPs alike — can be up to **10 GB**
+(`server.maxUploadSize` in `.streamlit/config.toml`). If the
 file is already on the grading machine, the *"or use a file already on this
 machine"* expander takes a path instead. Either way the files currently in use are
 listed with their size and can be removed individually, and the app refuses to
