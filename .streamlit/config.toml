@@ -1,7 +1,7 @@
 [server]
 headless = true
-# The Zillow ZHVI extract is well over the 200 MB default.
-maxUploadSize = 600
+# Submission ZIPs and the Zillow ZHVI extract can be large; allow up to 10 GB (value in MB).
+maxUploadSize = 10240
 fileWatcherType = "none"
 
 [browser]
