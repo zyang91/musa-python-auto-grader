@@ -9,7 +9,7 @@ nbclient==0.11.0
 ipykernel==7.4.0
 
 # Assignments 1 and 2
-pandas==3.0.6
+pandas==3.1.0
 numpy==2.5.4
 matplotlib==3.11.2
 seaborn==0.13.2
@@ -38,7 +38,7 @@ rasterstats==0.21.0
 hvplot==0.12.2
 holoviews==1.23.2
 bokeh==3.9.2
-panel==1.9.4
-geoviews==1.15.1
+panel==1.10.0
+geoviews==1.16.0
 cartopy==0.26.0
 mapclassify==2.11.0
