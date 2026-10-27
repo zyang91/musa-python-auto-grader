@@ -156,17 +156,46 @@ class HW5Grader(HW4Grader):
     def _corroborate_count(
         self, result: RubricItemResult, ctx: GradingContext, item: RubricItem, what: str
     ) -> RubricItemResult:
-        """A count the student's run showed, inside the expected range, raises confidence."""
+        """Check the count the student's run showed against the expected range.
+
+        Inside the range raises confidence. Outside it sends the item to a
+        person — never a deduction, since the student's data may differ.
+        """
         low, high = item.config.get("count_range") or item.config.get("tract_count_range")
         cells, _ = self.section_cells(ctx, str(item.config.get("section", "")))
-        counts = self._counts_near(ctx, cells, span=1)
+        counts = self._shown_counts(ctx, cells)
         in_range = [n for n in counts if low <= n <= high]
         result.evidence[f"{what}_counts_shown"] = counts[:10]
         result.evidence[f"expected_{what}"] = f"{low:,}-{high:,}"
-        if in_range and result.confidence >= DOUBT_CONFIDENCE:
-            result.confidence = max(result.confidence, CORROBORATED_CONFIDENCE)
+        if in_range:
+            if result.confidence >= DOUBT_CONFIDENCE:
+                result.confidence = max(result.confidence, CORROBORATED_CONFIDENCE)
             result.feedback += f" The saved run shows {in_range[0]:,} {what}."
+        elif counts:
+            result.confidence = min(result.confidence, DOUBT_CONFIDENCE)
+            result.feedback += (
+                f" The saved run shows {counts[0]:,} {what}, outside the expected "
+                f"{low:,}-{high:,}; please check this step."
+            )
         return result
+
+    def _shown_counts(self, ctx: GradingContext, cells: list[CodeCell]) -> list[int]:
+        """Row counts these cells' saved output shows.
+
+        Only what is a count — a table's "N rows", a shape, or a cell whose whole
+        output is one integer (``len(df)``) — never every number in a printed
+        table, where incomes and tract codes would read as counts.
+        """
+        wanted = {cell.number for cell in cells}
+        counts: list[int] = []
+        for answer in self.answers(ctx).cells:
+            if answer.code_cell not in wanted or answer.errored:
+                continue
+            values = list(answer.row_counts) + [rows for rows, _ in answer.shapes]
+            if re.fullmatch(r"\s*\d[\d,]*\s*", answer.text or ""):
+                values.append(int(answer.text.replace(",", "")))
+            counts.extend(int(v) for v in values if v >= 10)
+        return counts
 
     # =====================================================================
     # Part 1
@@ -256,12 +285,22 @@ class HW5Grader(HW4Grader):
                                "the plot drawn with seaborn.lineplot"))
         if not any(re.search(p, text) for p in config.get("stars_x") or []):
             deductions.append((float(config.get("stars_x_points", 2)), "stars on the x axis"))
-        income_y = re.search(r"\by\s*=\s*[\"'](?!stars[\"'])\w", text) or re.search(
-            r"groupby\(\s*[\"']stars[\"']\s*\)\s*\[", text
+        # y must be the income column 1.1 produced. A column the grader cannot
+        # place (a rename through `.columns = [...]`) goes to a person instead.
+        y_column = re.search(r"\by\s*=\s*[\"'](\w+)[\"']", text) or re.search(
+            r"groupby\(\s*[\"']stars[\"']\s*\)\s*\[\s*[\"'](\w+)[\"']", text
         )
-        if not income_y:
+        income_columns = self._income_columns(ctx, config)
+        y_name = y_column.group(1) if y_column else ""
+        unplaced_y = ""
+        if not y_name or y_name == "stars":
             deductions.append((float(config.get("income_y_points", 2)),
                                "median household income on the y axis"))
+        elif y_name not in income_columns:
+            unplaced_y = (
+                f"The y axis is `{y_name}`, which is not the income column from 1.1 "
+                f"({', '.join(sorted(income_columns))}); please check it is income."
+            )
 
         rendered = []
         for cell in plot_cells:
@@ -295,10 +334,12 @@ class HW5Grader(HW4Grader):
             "labels": labels,
             "code": text[:1200],
             "written_answer": written[-1][:800] if written else "",
+            "y_column": y_name,
+            "income_columns": sorted(income_columns),
         }
-        notes = [placement] if placement else []
+        notes = [n for n in (placement, unplaced_y) if n]
         confidence = CORROBORATED_CONFIDENCE if rendered else 0.85
-        if placement:
+        if notes:
             confidence = min(confidence, DOUBT_CONFIDENCE)
         return self.scored(
             item, deductions, evidence, confidence,
@@ -306,3 +347,17 @@ class HW5Grader(HW4Grader):
             f"{rendered[0] if rendered else '?'}, labelled, and the question is answered.",
             notes,
         )
+
+    def _income_columns(self, ctx: GradingContext, config: dict[str, Any]) -> set[str]:
+        """The names the income column goes by: the ACS code and what it was renamed to."""
+        source = "\n".join(cell.code for cell in self.code(ctx).cells)
+        variable = str(config.get("income_variable", "B19013_001E"))
+        names = {variable}
+        names |= set(re.findall(
+            rf"[\"']{re.escape(variable)}[\"']\s*:\s*[\"'](\w+)[\"']", source
+        ))
+        names |= {
+            name for name in re.findall(r"[\"'](\w+)[\"']", source)
+            if re.search(str(config.get("income_name_pattern", r"(?i)income")), name)
+        }
+        return names

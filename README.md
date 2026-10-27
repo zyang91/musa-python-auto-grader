@@ -408,7 +408,8 @@ own run saved.
   markdown cell or typed into the template's own.
 
 The template's "7,350 restaurants" (7,000–7,700 accepted) and Philadelphia's
-~408 tracts (350–420) only raise confidence. A query for another county is not
+~408 tracts (350–420) never cost a point: a count inside its range raises
+confidence, and one outside it sends the item to a person. A query for another county is not
 penalised — the template allows it — but is flagged, because every restaurant
 is in Philadelphia.
 
@@ -814,7 +815,7 @@ rubrics/hw5.yaml        static grading policy; execution: never
 docker/                 sandbox image, app image, pinned sandbox packages
 docker-compose.yml      runs the app image
 .github/                CI workflow and Dependabot
-tests/                  341 tests
+tests/                  347 tests
 examples/               synthetic data, nine demo notebooks, fifteen submissions
 assignment_template/    the notebooks handed to students, and HW3's data zip
 ```
@@ -840,7 +841,7 @@ results/<session_id>/
 ## Tests
 
 ```bash
-python -m pytest              # 341 tests, ~40s
+python -m pytest              # 347 tests, ~40s
 python -m pytest -m "not slow"  # skip the ones that execute real kernels
 python -m pytest -m docker    # grade a notebook in the sandbox image (needs it built)
 ruff check .                  # syntax errors and undefined names

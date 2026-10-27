@@ -205,3 +205,70 @@ def test_an_answer_typed_into_the_template_cell_counts(submissions, tmp_path):
     session = _grade(tmp_path / "subs", tmp_path, MODE_LOCAL)
     plot = _items(session, "student_inline")["stars_income_plot"]
     assert plot.automatic_score == 15, plot.feedback
+
+
+# ---------------------------------------------------------------------------
+# Review fixes: what must not pass unreviewed
+# ---------------------------------------------------------------------------
+
+def _grade_variant(tmp_path, edit):
+    """Grade the complete demo notebook after ``edit(nb)`` changes it."""
+    import nbformat
+
+    nb = _builder().good_notebook()
+    edit(nb)
+    folder = tmp_path / "subs" / "student_variant"
+    folder.mkdir(parents=True)
+    nbformat.write(nb, str(folder / "assignment-5.ipynb"))
+    session = _grade(tmp_path / "subs", tmp_path, MODE_LOCAL)
+    return _items(session, "student_variant")
+
+
+def _replace(nb, old, new):
+    cell = next(c for c in nb.cells if c.cell_type == "code" and old in c.source)
+    cell.source = cell.source.replace(old, new)
+    return cell
+
+
+def test_an_out_of_range_count_goes_to_a_person_without_a_deduction(tmp_path):
+    def edit(nb):
+        _replace(nb, "len(restaurants)", "len(restaurants)").outputs[0]["data"]["text/plain"] = "50"
+
+    restaurants = _grade_variant(tmp_path, edit)["restaurants"]
+    assert restaurants.automatic_score == 15
+    assert restaurants.confidence < 0.8
+    assert "outside the expected" in restaurants.feedback
+
+
+@pytest.mark.parametrize("filter_line", [
+    'income = income.loc[income["B19013_001E"] < 0]\n',
+    'missing = -666666666\n',
+])
+def test_keeping_the_negative_incomes_is_not_removing_them(tmp_path, filter_line):
+    def edit(nb):
+        _replace(nb, 'income = income.loc[income["B19013_001E"] > 0]\n', filter_line)
+
+    income = _grade_variant(tmp_path, edit)["census_income"]
+    assert "negative placeholder" in income.feedback
+    assert income.automatic_score == 17
+
+
+@pytest.mark.parametrize("filter_line", [
+    'income = income.loc[~(income["B19013_001E"] < 0)]\n',
+    'income = income.loc[income["B19013_001E"] != -666666666]\n',
+])
+def test_the_ways_of_excluding_negative_incomes_count(tmp_path, filter_line):
+    def edit(nb):
+        _replace(nb, 'income = income.loc[income["B19013_001E"] > 0]\n', filter_line)
+
+    assert _grade_variant(tmp_path, edit)["census_income"].automatic_score == 20
+
+
+def test_a_plot_of_something_other_than_income_goes_to_a_person(tmp_path):
+    def edit(nb):
+        _replace(nb, 'y="median_income"', 'y="latitude"')
+
+    plot = _grade_variant(tmp_path, edit)["stars_income_plot"]
+    assert plot.confidence < 0.8
+    assert "`latitude`" in plot.feedback
+    assert plot.evidence["y_column"] == "latitude"

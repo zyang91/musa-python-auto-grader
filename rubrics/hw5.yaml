@@ -114,7 +114,16 @@ rubric:
           all: ['(?i)tract', '(?i)county|for_geo|within|\b101\b']
           points: 3
         - label: tracts with the negative placeholder value are removed
-          any: ['>\s*=?\s*0\b', '<\s*0\b', '666666666', '>\s*-?\d', '\.clip\(', '!=\s*-']
+          # Only forms that *exclude* the negative rows. A bare `< 0` keeps
+          # them, and naming -666666666 alone excludes nothing; both need a
+          # negation (~) or a drop to count.
+          any:
+            - '>\s*=?\s*0\b'
+            - '>\s*-\s*\d'
+            - '!=\s*-\s*666666666'
+            - '~[^\n]*(?:<\s*0\b|==\s*-\s*666666666)'
+            - 'drop\([^\n]*(?:<\s*0\b|666666666)'
+            - 'replace\([^)]*666666666[\s\S]*dropna\('
           points: 3
         - label: the income column is given a meaningful name
           any: ['rename\(', '\.columns\s*=']
@@ -233,6 +242,10 @@ rubric:
       stars_x: ['x\s*=\s*["'']stars["'']', 'lineplot\(\s*[\w\[\]"'']*\s*\[\s*["'']stars["'']', 'groupby\(\s*["'']stars["'']']
       stars_x_points: 2
       income_y_points: 2
+      # y must be this ACS variable, a name it was renamed to, or a column
+      # whose name says income; any other column goes to a person.
+      income_variable: B19013_001E
+      income_name_pattern: '(?i)income'
       rendered_points: 4
       labels_points: 1
       answer_points: 2
