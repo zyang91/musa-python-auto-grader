@@ -48,7 +48,6 @@ def submissions(tmp_path_factory) -> Path:
 
 def _tripwire(monkeypatch) -> None:
     """Every way grading could run the notebook, go online or load the data."""
-    import geopandas
     import pandas
 
     def forbidden(what):
@@ -64,6 +63,12 @@ def _tripwire(monkeypatch) -> None:
     monkeypatch.setattr(subprocess, "Popen", forbidden("start a process"))
     for reader in ("read_json", "read_csv", "read_parquet"):
         monkeypatch.setattr(pandas, reader, forbidden("read a data file"))
+    # The grader's own install has no geopandas (only the sandbox image does),
+    # which already keeps it from reading a shapefile; trip it where it exists.
+    try:
+        import geopandas
+    except ImportError:
+        return
     monkeypatch.setattr(geopandas, "read_file", forbidden("read a data file"))
 
 
