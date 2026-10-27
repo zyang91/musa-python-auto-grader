@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Assignments · MUSA Grader</title>
-<meta name="description" content="How Assignments 1, 2, 3 and 4 are graded, and where each one&#x27;s 100 points go.">
+<meta name="description" content="How Assignments 1 to 5 are graded, and where each one&#x27;s 100 points go.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)" id="hljs-light">
@@ -81,6 +81,7 @@
 <li><a href="api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
 <li><a href="api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
+<li><a href="api/assignments.hw5.html"><code>assignments.hw5</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
@@ -95,6 +96,7 @@
   <a class="card" href="#assignment-2-exploratory-visualization"><span class="card-title">Assignment 2</span><p>Exploratory Visualization. No data handed in, so the required elements are graded from saved outputs.</p></a>
   <a class="card" href="#assignment-3-evictions-and-the-ndvi"><span class="card-title">Assignment 3</span><p>Evictions and the NDVI. One shared zip, so there is an answer key for the first time.</p></a>
   <a class="card" href="#assignment-4-street-networks-scraping"><span class="card-title">Assignment 4</span><p>Street Networks &amp; Scraping. Everything is downloaded or scraped live, so the notebook is never run.</p></a>
+  <a class="card" href="#assignment-5-yelp-reviews-census-income"><span class="card-title">Assignment 5</span><p>Yelp Reviews &amp; Census Income. Census downloads and an 8 GB dataset, so the notebook is never run and no data is opened.</p></a>
 </div>
 
 <hr>
@@ -374,9 +376,47 @@
 
 <hr>
 
-<h2 id="assignments-5-6">Assignments 5–6<a class="headerlink" href="#assignments-5-6" aria-label="Link to this section">#</a></h2>
+<h2 id="assignment-5-yelp-reviews-census-income">Assignment 5: Yelp Reviews &amp; Census Income<a class="headerlink" href="#assignment-5-yelp-reviews-census-income" aria-label="Link to this section">#</a></h2>
+<p><span class="badge">rubrics/hw5.yaml</span><span class="badge badge-gray">assignments/hw5.py</span><span class="badge badge-gray">no data</span><span class="badge badge-bad">never executed</span></p>
 
-<p>Their student templates are in <code>assignment_template/</code>, but they are not graded yet. Each needs a rubric YAML and a grader class. See <a href="extending.html">Adding an assignment</a>.</p>
+<p>Assignment 5 has Assignment 4's problem and one of its own. 1.1 queries the Census API through cenpy and 1.2 downloads TIGER tract boundaries through pygris, so a re-run would repeat both downloads once per student. And the restaurants come from the Yelp Dataset Challenge, <strong>8 GB in full</strong>. The class gets a 400 KB Philadelphia extract (<code>restaurants_philly.json.gz</code>), but a notebook that reads the full dump instead would take minutes and run the grading machine out of memory, once per student.</p>
+
+<p>So <code>rubrics/hw5.yaml</code> also says <code>execution: mode: never</code>. No kernel, no container, no data placement, and <strong>no data file is opened</strong>: not the extract, not the dump. The tests make <code>pd.read_json</code>, <code>pd.read_csv</code> and <code>gpd.read_file</code> raise an error during grading. <code>HW5Grader</code> reuses Assignment 4's machinery: the student's code, read against per-step regex requirements, and the outputs their own run saved.</p>
+
+<ul>
+  <li><strong>Each step is graded on the code under its own heading.</strong> The template has a <code>### 1.x</code> heading above each step, so a code cell is graded under the heading it sits beneath. Otherwise the <code>merge</code> written for 1.5 would also earn 1.2's merge. A step with no code under its heading earns nothing from code written elsewhere, and says so, so a TA can look.</li>
+  <li><strong>The usual mistakes are named:</strong> latitude passed as x in <code>points_from_xy</code> (−2), the Census's negative placeholder (−666666666) left in, the tracts never merged with income.</li>
+  <li><strong>A notebook that reads the full Yelp dump is named, not penalised.</strong> The result can be the same, so it costs nothing, but 1.3's feedback says so.</li>
+  <li><strong>1.6 wants the plot and the answer:</strong> a seaborn line plot of stars against income, rendered and labelled, and a written answer to the question, in a new markdown cell or typed into the template's own.</li>
+</ul>
+
+<h3 id="reference-values-loosely-2">Reference values, loosely<a class="headerlink" href="#reference-values-loosely-2" aria-label="Link to this section">#</a></h3>
+
+<p>The template's "7,350 restaurants" (7,000–7,700 accepted) and Philadelphia's ~408 tracts (350–420) never cost a point: a count inside its range raises confidence, and one outside it sends the item to a person. A query for another county is not penalised, since the template allows it, but it is flagged, because every restaurant is in Philadelphia. As everywhere, <strong>anything short of full marks reaches a person</strong>.</p>
+
+<h3 id="where-the-100-points-go-3">Where the 100 points go<a class="headerlink" href="#where-the-100-points-go-3" aria-label="Link to this section">#</a></h3>
+
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>Item</th><th class="num">Points</th></tr></thead>
+  <tbody>
+    <tr><td></td><td>Notebook run and submitted with its outputs</td><td class="num">10</td></tr>
+    <tr><td>1.1</td><td>Median household income by tract from the 2021 ACS (cenpy)</td><td class="num">20</td></tr>
+    <tr><td>1.2</td><td>Census tracts from pygris, merged with income</td><td class="num">15</td></tr>
+    <tr><td>1.3</td><td>Restaurants as a GeoDataFrame (latitude-as-x is named)</td><td class="num">15</td></tr>
+    <tr><td>1.4</td><td>Tract for each restaurant (spatial join)</td><td class="num">15</td></tr>
+    <tr><td>1.5</td><td>Income data added to the restaurants</td><td class="num">10</td></tr>
+    <tr><td>1.6</td><td>Line plot of income vs. stars, and the question answered</td><td class="num">15</td></tr>
+    <tr class="total"><td></td><td>Total</td><td class="num">100</td></tr>
+  </tbody>
+</table></div>
+
+<p>The demo class (<code>python examples/make_hw5_submissions.py</code>) has four submissions: complete, one with the usual mistakes that also reads the full Yelp dump, one that crashes at 1.3, and the untouched template. They score 100, 86, 44 and 3 in either mode; nothing is executed and no data is read.</p>
+
+<hr>
+
+<h2 id="assignment-6">Assignment 6<a class="headerlink" href="#assignment-6" aria-label="Link to this section">#</a></h2>
+
+<p>Its student template is in <code>assignment_template/</code>, but it is not graded yet. It needs a rubric YAML and a grader class. See <a href="extending.html">Adding an assignment</a>.</p>
 
     </article>
     <footer class="page-footer">
@@ -384,7 +424,7 @@
       <div class="footer-meta"><a class="edit-link" href="https://github.com/zyang91/musa-python-auto-grader/blob/main/docs/_pages/assignments.html">Edit this page on GitHub</a><span>MUSA Grader 0.1.0 · MUSA 5500, University of Pennsylvania</span></div>
     </footer>
   </main>
-  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#assignment-1-the-donut-effect">Assignment 1: The Donut Effect</a></li><li class="toc-l2"><a href="#assignment-2-exploratory-visualization">Assignment 2: Exploratory Visualization</a></li><li class="toc-l3"><a href="#facts-graded-automatically-70-points">Facts, graded automatically (70 points)</a></li><li class="toc-l3"><a href="#judgement-graded-by-a-person-30-points">Judgement, graded by a person (30 points)</a></li><li class="toc-l2"><a href="#assignment-3-evictions-and-the-ndvi">Assignment 3: Evictions and the NDVI</a></li><li class="toc-l3"><a href="#plots-are-graded-on-the-objects">Plots are graded on the objects</a></li><li class="toc-l3"><a href="#named-mistakes-not-just-wrong-answers">Named mistakes, not just wrong answers</a></li><li class="toc-l3"><a href="#calibrated-against-a-real-class">Calibrated against a real class</a></li><li class="toc-l3"><a href="#where-the-100-points-go">Where the 100 points go</a></li><li class="toc-l2"><a href="#assignment-4-street-networks-scraping">Assignment 4: Street Networks &amp;amp; Scraping</a></li><li class="toc-l3"><a href="#hw4-isolated-functions">The one thing that does run: three pure functions</a></li><li class="toc-l3"><a href="#scraping-has-to-be-shown-not-loaded">Scraping has to be shown, not loaded</a></li><li class="toc-l3"><a href="#reference-values-loosely">Reference values, loosely</a></li><li class="toc-l3"><a href="#where-the-100-points-go-2">Where the 100 points go</a></li><li class="toc-l2"><a href="#assignments-5-6">Assignments 5–6</a></li></ul></nav></aside>
+  <aside class="toc-column"><nav class="toc" aria-label="On this page"><p class="toc-title">On this page</p><ul><li class="toc-l2"><a href="#assignment-1-the-donut-effect">Assignment 1: The Donut Effect</a></li><li class="toc-l2"><a href="#assignment-2-exploratory-visualization">Assignment 2: Exploratory Visualization</a></li><li class="toc-l3"><a href="#facts-graded-automatically-70-points">Facts, graded automatically (70 points)</a></li><li class="toc-l3"><a href="#judgement-graded-by-a-person-30-points">Judgement, graded by a person (30 points)</a></li><li class="toc-l2"><a href="#assignment-3-evictions-and-the-ndvi">Assignment 3: Evictions and the NDVI</a></li><li class="toc-l3"><a href="#plots-are-graded-on-the-objects">Plots are graded on the objects</a></li><li class="toc-l3"><a href="#named-mistakes-not-just-wrong-answers">Named mistakes, not just wrong answers</a></li><li class="toc-l3"><a href="#calibrated-against-a-real-class">Calibrated against a real class</a></li><li class="toc-l3"><a href="#where-the-100-points-go">Where the 100 points go</a></li><li class="toc-l2"><a href="#assignment-4-street-networks-scraping">Assignment 4: Street Networks &amp;amp; Scraping</a></li><li class="toc-l3"><a href="#hw4-isolated-functions">The one thing that does run: three pure functions</a></li><li class="toc-l3"><a href="#scraping-has-to-be-shown-not-loaded">Scraping has to be shown, not loaded</a></li><li class="toc-l3"><a href="#reference-values-loosely">Reference values, loosely</a></li><li class="toc-l3"><a href="#where-the-100-points-go-2">Where the 100 points go</a></li><li class="toc-l2"><a href="#assignment-5-yelp-reviews-census-income">Assignment 5: Yelp Reviews &amp;amp; Census Income</a></li><li class="toc-l3"><a href="#reference-values-loosely-2">Reference values, loosely</a></li><li class="toc-l3"><a href="#where-the-100-points-go-3">Where the 100 points go</a></li><li class="toc-l2"><a href="#assignment-6">Assignment 6</a></li></ul></nav></aside>
 </div>
 <div class="search-dialog" role="dialog" aria-modal="true" aria-label="Search" hidden>
   <div class="search-panel">

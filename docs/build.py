@@ -79,6 +79,7 @@ API_MODULES = [
     ("assignments/hw2.py", "Assignments"),
     ("assignments/hw3.py", "Assignments"),
     ("assignments/hw4.py", "Assignments"),
+    ("assignments/hw5.py", "Assignments"),
 ]
 
 

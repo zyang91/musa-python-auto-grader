@@ -1,0 +1,253 @@
+# ---------------------------------------------------------------------------
+# MUSA 5500 — Assignment 5: Exploring Yelp reviews in Philadelphia.
+#
+# Graded against assignment_template/assignment-5.ipynb.
+#
+# DESIGN NOTE — why this notebook is never run:
+# 1.1 queries the Census API through cenpy and 1.2 downloads TIGER tract
+# boundaries through pygris. Re-running a class of notebooks would repeat both
+# downloads once per student, and in the network-less Docker sandbox it would
+# only fail at cell 1. There is a second reason, specific to this assignment:
+# the restaurants come from the Yelp Dataset Challenge, which is 8 GB in full.
+# The class is given a 400 KB Philadelphia extract (restaurants_philly.json.gz),
+# but a notebook that reads the full dump instead would take minutes and
+# exhaust a grading machine's memory — once per student.
+#
+# So `execution: never` below switches execution off for this assignment, in
+# every execution mode. No kernel or container is started, no data is placed,
+# and no data file — the extract or the 8 GB dump — is ever opened. The grade
+# comes from the file the student handed in, read two ways:
+#
+#   * the code they wrote, cell by cell, under the "### 1.x" heading each cell
+#     sits beneath, so a merge written for 1.5 does not earn 1.2's merge;
+#   * the outputs their own run saved — the tract and restaurant counts, the
+#     merged tables, the rendered line plot.
+#
+# A notebook that reads the full Yelp dump is not penalised (the result can be
+# the same), but it is named in 1.3's feedback so a TA knows.
+#
+# DESIGN NOTE — on reference values:
+# there is no reference solution. The numbers used are the assignment's own
+# ("7,350 restaurants") and Philadelphia's tract count in the 2021 ACS (408,
+# a few without households), each with a wide tolerance and used only to
+# *raise* confidence. A number outside its range sends the item to a person;
+# it never costs points on its own.
+#
+# The review policy is the same as every other assignment: full marks when the
+# evidence is there, and anything short of full marks goes to a person.
+# ---------------------------------------------------------------------------
+
+assignment:
+  id: hw5
+  name: "Assignment 5: Yelp Reviews & Census Income"
+  version: HW5-v1
+  total_points: 100
+  description: >
+    Download median household income by census tract from the 2021 ACS with
+    cenpy, attach it to tract boundaries from pygris, load the Philadelphia Yelp
+    restaurants as a GeoDataFrame, spatially join each restaurant to its tract
+    and its income, and plot average income against Yelp stars with seaborn.
+
+execution:
+  # Never run a submission: see the design note above. Enforced in
+  # grader/service.py for every execution mode, local included.
+  mode: never
+
+settings:
+  score_rounding: 0.5
+  # The template, so any scaffold it provides is not credited as student work.
+  template_notebook: assignment_template/assignment-5.ipynb
+
+discovery:
+  notebook_name_hints: ["assignment-5", "assignment5", "assignment_5", "hw5", "hw-5", "homework5", "yelp", "musa"]
+  ignore_name_patterns: ["checkpoint", "untitled", "scratch", "practice", "lecture", "solution", "draft", "copy of"]
+
+data:
+  # Nothing to supply: the notebook is not run, so it never needs its data.
+  required: false
+  description: >
+    None. Assignment 5 is graded from the submitted notebook without running it,
+    so neither restaurants_philly.json.gz nor the full Yelp dataset is needed.
+
+rubric:
+
+  - id: notebook_execution
+    name: Notebook was run and submitted with its outputs
+    points: 10
+    type: execution
+    description: >
+      The grader does not run this notebook, so this item reads the state the
+      student saved it in: whether the cells carry output, and whether any of
+      them shows an error from the student's own run.
+    config:
+      no_outputs_penalty: 7
+      min_output_coverage: 0.5
+      low_coverage_penalty: 3
+      error_penalty_each: 2
+      max_error_penalty: 6
+      why_not_executed: >-
+        Assignment 5 queries the Census API and downloads TIGER tracts, and its
+        restaurants come from an 8 GB Yelp dataset; the rubric forbids re-running
+        it (execution: never).
+
+  - id: census_income
+    name: "1.1 Median household income by tract from the 2021 ACS"
+    points: 20
+    type: structural
+    description: >
+      The Census API is queried (cenpy) for B19013_001E, median household income,
+      by tract in the county, from the 2021 ACS 5-year data; tracts with the
+      Census's negative placeholder are removed, and the column is renamed.
+    config:
+      section: "1.1"
+      requirements:
+        - label: the Census API is queried (cenpy, or the API directly)
+          any: ['(?i)cenpy', 'APIConnection\(', 'products\.ACS\(', '(?i)api\.census\.gov', '\bCensus\(']
+          points: 5
+        - label: the median household income variable (B19013_001E) is requested
+          any: ['B19013_001']
+          points: 5
+        - label: the 2021 ACS 5-year data set is used
+          any: ['2021']
+          points: 2
+        - label: income is requested by tract for a county
+          all: ['(?i)tract', '(?i)county|for_geo|within|\b101\b']
+          points: 3
+        - label: tracts with the negative placeholder value are removed
+          # Only forms that *exclude* the negative rows. A bare `< 0` keeps
+          # them, and naming -666666666 alone excludes nothing; both need a
+          # negation (~) or a drop to count.
+          any:
+            - '>\s*=?\s*0\b'
+            - '>\s*-\s*\d'
+            - '!=\s*-\s*666666666'
+            - '~[^\n]*(?:<\s*0\b|==\s*-\s*666666666)'
+            - 'drop\([^\n]*(?:<\s*0\b|666666666)'
+            - 'replace\([^)]*666666666[\s\S]*dropna\('
+          points: 3
+        - label: the income column is given a meaningful name
+          any: ['rename\(', '\.columns\s*=']
+          points: 2
+      # Philadelphia (state 42, county 101) had 408 tracts in the 2021 ACS; a
+      # few have no households. Corroboration only, and only for Philadelphia —
+      # the template lets students pick their county.
+      tract_count_range: [350, 420]
+      philadelphia_patterns: ['(?i)philadelphia', '\b101\b']
+
+  - id: census_tracts
+    name: "1.2 Census tracts from pygris, merged with income"
+    points: 15
+    type: structural
+    description: >
+      The tract boundaries for the same state and county are downloaded with
+      pygris and merged with the income table on the tract identifier.
+    config:
+      section: "1.2"
+      requirements:
+        - label: the tract boundaries are downloaded with pygris
+          any: ['\btracts\(']
+          points: 6
+        - label: the tracts are requested for a state and county
+          any: ['tracts\([^)]*(?:county|state|["''](?:PA|42|101|Philadelphia)["''])']
+          points: 3
+        - label: the tracts are merged with the income data
+          any: ['\.merge\(', '\bmerge\(', '\.join\(']
+          points: 4
+        - label: the merge is on the tract identifier (GEOID, or state/county/tract)
+          any: ['(?i)geoid', 'TRACTCE', 'left_on', 'right_on', '(?i)on\s*=\s*\[?\s*["''][^"'']*tract']
+          points: 2
+
+  - id: restaurants
+    name: "1.3 Restaurants as a GeoDataFrame"
+    points: 15
+    type: structural
+    description: >
+      The restaurants JSON is read with orient="records" and lines=True, and a
+      GeoDataFrame is built from longitude (x) and latitude (y) in EPSG:4326.
+      Passing latitude as x is checked.
+    config:
+      section: "1.3"
+      requirements:
+        - label: the restaurants JSON is read with pandas
+          any: ['read_json\(']
+          points: 4
+        - label: it is read as JSON lines (lines=True)
+          any: ['lines\s*=\s*True']
+          points: 2
+        - label: point geometry is built from longitude and latitude
+          all: ['(?i)longitude', '(?i)latitude']
+          any: ['points_from_xy\(', 'Point\(']
+          points: 5
+        - label: the CRS is set to EPSG:4326
+          any: ['4326', '(?i)wgs\s*84']
+          points: 4
+      swapped_coordinates_penalty: 2
+      x_column: longitude
+      y_column: latitude
+      # "7,350 restaurants" in the template.
+      expected_count: 7350
+      count_range: [7000, 7700]
+      # Reading the full Yelp Dataset Challenge dump (8 GB) instead of the
+      # provided extract. Named in the feedback; never scored.
+      full_dataset_patterns: ['(?i)yelp_academic_dataset', '(?i)yelp_dataset', '(?i)review\.json']
+
+  - id: spatial_join
+    name: "1.4 Tract for each restaurant (spatial join)"
+    points: 15
+    type: structural
+    description: >
+      A spatial join (gpd.sjoin) of the restaurants and the tracts, with both
+      in the same CRS.
+    config:
+      section: "1.4"
+      requirements:
+        - label: the restaurants and tracts are spatially joined (sjoin)
+          any: ['sjoin\(', 'overlay\(']
+          points: 9
+        - label: both frames are brought to the same CRS
+          any: ['to_crs\(', '\.crs\b', 'set_crs\(']
+          points: 6
+
+  - id: income_merge
+    name: "1.5 Income data added to the restaurants"
+    points: 10
+    type: structural
+    description: >
+      The income data is merged onto the restaurants by the tract each one is in.
+      A spatial join with tracts that already carry income counts too.
+    config:
+      section: "1.5"
+      requirements:
+        - label: the income data is merged onto the restaurants
+          any: ['\.merge\(', '\bmerge\(', '\.join\(', 'sjoin\(']
+          points: 6
+        - label: the merge is on the tract identifier
+          any: ['(?i)geoid', '(?i)tract', 'left_on', 'right_on', 'sjoin\(']
+          points: 4
+
+  - id: stars_income_plot
+    name: "1.6 Line plot of income vs. Yelp stars, and the question answered"
+    points: 15
+    type: deterministic
+    description: >
+      A seaborn line plot of stars (x) against median household income (y),
+      rendered and labelled, followed by a written answer on whether ratings
+      and neighbourhood income are correlated.
+    config:
+      section: "1.6"
+      plot_any: ['lineplot\(', 'relplot\([^)]*kind\s*=\s*["'']line', '\.plot\(', 'plt\.plot\(']
+      seaborn_any: ['lineplot\(', 'relplot\(']
+      plot_points: 3
+      seaborn_points: 1
+      stars_x: ['x\s*=\s*["'']stars["'']', 'lineplot\(\s*[\w\[\]"'']*\s*\[\s*["'']stars["'']', 'groupby\(\s*["'']stars["'']']
+      stars_x_points: 2
+      income_y_points: 2
+      # y must be this ACS variable, a name it was renamed to, or a column
+      # whose name says income; any other column goes to a person.
+      income_variable: B19013_001E
+      income_name_pattern: '(?i)income'
+      rendered_points: 4
+      labels_points: 1
+      answer_points: 2
+      answer_min_words: 12
+      answer_pattern: '(?i)correlat|relationship|income|rating|stars|trend|associat'

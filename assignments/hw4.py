@@ -427,7 +427,7 @@ class HW4Grader(AssignmentGrader):
         evidence = {
             "graded_from": "the submitted notebook's saved outputs",
             "executed_by_grader": False,
-            "why_not_executed": (
+            "why_not_executed": config.get("why_not_executed") or (
                 "Assignment 4 scrapes Craigslist and downloads from OpenStreetMap and "
                 "ArcGIS; the rubric forbids re-running it (execution: never)."
             ),
@@ -487,7 +487,10 @@ class HW4Grader(AssignmentGrader):
         )
 
     @staticmethod
-    def _swapped_coordinates(cells: list[CodeCell]) -> str:
+    def _swapped_coordinates(
+        cells: list[CodeCell], x_column: str = "DEC_LONG", y_column: str = "DEC_LAT"
+    ) -> str:
+        """The ``points_from_xy`` call that passes the y column as x, if any."""
         for cell in cells:
             parsed = _parse_cell(cell.code)
             if parsed is None:
@@ -505,7 +508,7 @@ class HW4Grader(AssignmentGrader):
                 if x_arg is None:
                     continue
                 x_source = ast.get_source_segment(source, x_arg) or ""
-                if "DEC_LAT" in x_source and "DEC_LONG" not in x_source:
+                if y_column in x_source and x_column not in x_source:
                     return (ast.get_source_segment(source, node) or "")[:200]
         return ""
 

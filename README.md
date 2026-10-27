@@ -15,17 +15,17 @@ a structural check, a notebook result, or an explicit human judgement.
 - We only used LLM to assist build this tool, but no student assignments were upload to LLM.
 
 
-## Four assignments, four different things to grade against
+## Five assignments, five different things to grade against
 
-The dataset decides what can be checked, and the four assignments hand the
-grader four different situations:
+The dataset decides what can be checked, and the five assignments hand the
+grader five different situations:
 
-| | Assignment 1 — The Donut Effect | Assignment 2 — Exploratory Visualization | Assignment 3 — Evictions and the NDVI | Assignment 4 — Street Networks & Scraping |
-|---|---|---|---|---|
-| Dataset | One Zillow file, **downloaded by each student** | The student's own choice, **never handed in** | **One zip, distributed with the assignment** | **Downloaded and scraped live** from OSM, ArcGIS and Craigslist |
-| Is there an answer key? | No — Zillow revises the file monthly, so counts and percentages differ legitimately | No — every student explores a different dataset | **Yes** — everyone runs the same five files | Only the template's own rough figures ("about 3,750 crashes") |
-| What is graded | Whether each step *worked*, against the student's own data | Whether the student can *produce the required elements* | Whether each result *is the right one* | Whether each step is *written and shown run* |
-| Where the evidence comes from | The grading run's own execution | The outputs the student saved in the notebook | **Both** — the answers the notebook shows, confirmed by a re-run when one is possible | The code and saved outputs only — **the notebook is never run** |
+| | Assignment 1 — The Donut Effect | Assignment 2 — Exploratory Visualization | Assignment 3 — Evictions and the NDVI | Assignment 4 — Street Networks & Scraping | Assignment 5 — Yelp Reviews & Census Income |
+|---|---|---|---|---|---|
+| Dataset | One Zillow file, **downloaded by each student** | The student's own choice, **never handed in** | **One zip, distributed with the assignment** | **Downloaded and scraped live** from OSM, ArcGIS and Craigslist | Census API and TIGER downloads, plus a Yelp extract of an **8 GB** dataset |
+| Is there an answer key? | No — Zillow revises the file monthly, so counts and percentages differ legitimately | No — every student explores a different dataset | **Yes** — everyone runs the same five files | Only the template's own rough figures ("about 3,750 crashes") | Only the template's "7,350 restaurants" and Philadelphia's ~408 tracts |
+| What is graded | Whether each step *worked*, against the student's own data | Whether the student can *produce the required elements* | Whether each result *is the right one* | Whether each step is *written and shown run* | Whether each step is written, *under its own heading*, and shown run |
+| Where the evidence comes from | The grading run's own execution | The outputs the student saved in the notebook | **Both** — the answers the notebook shows, confirmed by a re-run when one is possible | The code and saved outputs only — **the notebook is never run** | The same — **never run, and no data file is ever opened** |
 
 ---
 
@@ -376,6 +376,56 @@ sends the item to a person; it never costs a point on its own. As everywhere,
 
 Execution and output completeness 10, Part 1 55, Part 2 35.
 
+## Assignment 5 — grading without running anything, or loading the data
+
+Assignment 5 has the same problem as Assignment 4 and one of its own. 1.1
+queries the Census API through cenpy and 1.2 downloads TIGER tract boundaries
+through pygris, so a re-run repeats both downloads once per student. And the
+restaurants come from the Yelp Dataset Challenge, **8 GB in full**: the class
+gets a 400 KB Philadelphia extract (`restaurants_philly.json.gz`), but a
+notebook that reads the full dump instead would take minutes and run the
+grading machine out of memory — once per student.
+
+So `rubrics/hw5.yaml` also says `execution: mode: never`. No kernel, no
+container, no data placement, and **no data file is opened** — not the extract,
+not the dump; the tests wire `pd.read_json`, `pd.read_csv` and `gpd.read_file`
+to fail during grading. `HW5Grader` reuses Assignment 4's machinery: the
+student's code, read against per-step regex requirements, and the outputs their
+own run saved.
+
+- **Each step is graded on the code under its own heading.** The template has a
+  `### 1.x` heading above each step, so a code cell is graded under the heading
+  it sits beneath. Otherwise the `merge` written for 1.5 would also earn 1.2's
+  merge. A step with no code under its heading earns nothing from code written
+  elsewhere, and says so, so a TA can look.
+- **The mistakes worth naming are named:** latitude passed as x in
+  `points_from_xy` (−2), the Census's negative placeholder (−666666666) left in,
+  the tracts never merged with income.
+- **A notebook that reads the full Yelp dump is named, not penalised.** The
+  result can be the same, so it costs nothing, but 1.3's feedback says so.
+- **1.6 wants the plot and the answer:** a seaborn line plot of stars against
+  income, rendered and labelled, and a written answer to the question, in a new
+  markdown cell or typed into the template's own.
+
+The template's "7,350 restaurants" (7,000–7,700 accepted) and Philadelphia's
+~408 tracts (350–420) never cost a point: a count inside its range raises
+confidence, and one outside it sends the item to a person. A query for another county is not
+penalised — the template allows it — but is flagged, because every restaurant
+is in Philadelphia.
+
+### Where the 100 points go
+
+| | Item | Points |
+|---|---|---|
+| | Notebook run and submitted with its outputs | 10 |
+| 1.1 | Median household income by tract from the 2021 ACS (cenpy) | 20 |
+| 1.2 | Census tracts from pygris, merged with income | 15 |
+| 1.3 | Restaurants as a GeoDataFrame (latitude-as-x is named) | 15 |
+| 1.4 | Tract for each restaurant (spatial join) | 15 |
+| 1.5 | Income data added to the restaurants | 10 |
+| 1.6 | Line plot of income vs. stars, and the question answered | 15 |
+| | **Total** | **100** |
+
 ---
 
 ## Quickstart
@@ -463,6 +513,17 @@ results loaded from a CSV, one that crashes in Part 1, and the untouched
 template. Their saved outputs are written in directly; nothing is executed,
 here or when grading. In Docker mode they score 100, 84, 26.5 and 3; in local
 mode the `format_*` item is not called and goes to a TA instead.
+
+For Assignment 5:
+
+```bash
+python examples/make_hw5_submissions.py
+python cli.py grade examples/hw5_submissions --rubric rubrics/hw5.yaml
+```
+
+Four submissions — complete, one with the usual mistakes that also reads the
+full Yelp dump, one that crashes at 1.3, and the untouched template. They score
+100, 86, 44 and 3 in either mode; nothing is executed and no data is read.
 
 To have the grader re-run each notebook and confirm what it shows, unzip the data
 and supply all five files:
@@ -593,9 +654,10 @@ instrumented with probe cells, and a subprocess executes it — by default insid
 container with no network, capped memory and CPU, a read-only root filesystem and
 no host environment variables (see [docker/README.md](docker/README.md)).
 
-Assignment 4 is the exception: its rubric says `execution: mode: never`, so this
-step is skipped for it entirely, in every mode — see
-[Assignment 4](#assignment-4--grading-without-running-anything).
+Assignments 4 and 5 are the exception: their rubrics say `execution: mode: never`,
+so this step is skipped for them entirely, in every mode — see
+[Assignment 4](#assignment-4--grading-without-running-anything) and
+[Assignment 5](#assignment-5--grading-without-running-anything-or-loading-the-data).
 
 Errors do not stop grading. `allow_errors` is on, so the notebook runs to the end,
 the first failing cell and its traceback are recorded, and every check that can
@@ -744,14 +806,16 @@ assignments/
   hw2.py                Assignment 2 checks
   hw3.py                Assignment 3 checks
   hw4.py                Assignment 4 checks (never executes the notebook)
+  hw5.py                Assignment 5 checks (never executes it, never reads its data)
 rubrics/hw1.yaml        the grading policy, as configuration
 rubrics/hw2.yaml        the grading policy, as configuration
 rubrics/hw3.yaml        the answer key, as configuration
 rubrics/hw4.yaml        static grading policy; execution: never
+rubrics/hw5.yaml        static grading policy; execution: never
 docker/                 sandbox image, app image, pinned sandbox packages
 docker-compose.yml      runs the app image
 .github/                CI workflow and Dependabot
-tests/                  331 tests
+tests/                  347 tests
 examples/               synthetic data, nine demo notebooks, fifteen submissions
 assignment_template/    the notebooks handed to students, and HW3's data zip
 ```
@@ -777,7 +841,7 @@ results/<session_id>/
 ## Tests
 
 ```bash
-python -m pytest              # 331 tests, ~40s
+python -m pytest              # 347 tests, ~40s
 python -m pytest -m "not slow"  # skip the ones that execute real kernels
 python -m pytest -m docker    # grade a notebook in the sandbox image (needs it built)
 ruff check .                  # syntax errors and undefined names
@@ -793,14 +857,14 @@ pinned packages, the base images and the Actions; each goes through the same CI.
 
 ## Scope
 
-Implemented: Assignments 1, 2, 3 and 4, Streamlit UI, Docker isolation, rubric
+Implemented: Assignments 1, 2, 3, 4 and 5, Streamlit UI, Docker isolation, rubric
 engine, review queue, manual overrides, regrading, exports, optional LLM grading.
 
 Not built (per design.md §37): Canvas API integration, authentication, cloud
 deployment, student accounts, a database, live scraping (Assignment 4 is graded
-without running it, precisely so that nothing is scraped), Assignments 5–6. Their
-templates are in `assignment_template/` and the architecture is ready for them —
-each needs a rubric YAML and a grader class.
+without running it, precisely so that nothing is scraped), Assignment 6. Its
+template is in `assignment_template/` and the architecture is ready for it —
+it needs a rubric YAML and a grader class.
 
 Adding an assignment means a rubric YAML plus a grader class in `assignments/`
 that registers `check_<rubric_id>` methods — `assignments/base.py` handles
