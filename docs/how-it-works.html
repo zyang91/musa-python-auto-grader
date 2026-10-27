@@ -81,6 +81,7 @@
 <li><a href="api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
 <li><a href="api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
+<li><a href="api/assignments.hw5.html"><code>assignments.hw5</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
@@ -136,7 +137,7 @@
 
 <div class="callout">
   <p class="callout-title">When a rubric says <code>execution: mode: never</code></p>
-  <p>Assignment 4 scrapes Craigslist and downloads from OpenStreetMap and ArcGIS, so its rubric opts out of execution entirely. The service honours that in <strong>every</strong> execution mode, local included: no data is placed, no kernel or notebook container is started, and the execution stage is recorded as skipped. The grade comes from the submitted file's code and saved outputs. The only code that runs is a few named pure functions, cut out of the notebook and called in the network-less sandbox, and only in Docker mode. See <a href="assignments.html#assignment-4-street-networks-scraping">Assignment 4</a> and <a href="api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a>.</p>
+  <p>Assignment 4 scrapes Craigslist and downloads from OpenStreetMap and ArcGIS, and Assignment 5 queries the Census API and draws on an 8 GB Yelp dataset, so their rubrics opt out of execution entirely. The service honours that in <strong>every</strong> execution mode, local included: no data is placed, no kernel or notebook container is started, and the execution stage is recorded as skipped. The grade comes from the submitted file's code and saved outputs. The only code that runs is a few named pure functions, cut out of the notebook and called in the network-less sandbox, and only in Docker mode. See <a href="assignments.html#assignment-4-street-networks-scraping">Assignment 4</a>, <a href="assignments.html#assignment-5-yelp-reviews-census-income">Assignment 5</a> and <a href="api/grader.function_sandbox.html"><code>grader.function_sandbox</code></a>.</p>
 </div>
 
 <p>Errors do not stop grading. <code>allow_errors</code> is on, so the notebook runs to the end, the first failing cell and its traceback are recorded, and every check that can still run does. <strong>A failed notebook never becomes an automatic zero.</strong> The execution item itself awards partial credit for how far the notebook got: failing at the last cell is worth more than failing at the first.</p>

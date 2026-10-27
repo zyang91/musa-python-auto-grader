@@ -81,6 +81,7 @@
 <li><a href="api/assignments.hw2.html"><code>assignments.hw2</code></a></li>
 <li><a href="api/assignments.hw3.html"><code>assignments.hw3</code></a></li>
 <li><a href="api/assignments.hw4.html"><code>assignments.hw4</code></a></li>
+<li><a href="api/assignments.hw5.html"><code>assignments.hw5</code></a></li>
 </ul></li></ul></nav>
   </aside>
   <div class="sidebar-scrim" hidden></div>
@@ -99,6 +100,7 @@
     <li><strong>Assignment 2:</strong> there is no answer key to check. <code>hw2.yaml</code> holds policy: how much a chart that never rendered is worth, what counts as a transformation, how many words make a discussion, and the ceiling on an unreviewed aesthetics score.</li>
     <li><strong>Assignment 3:</strong> every expected count and median was computed from <code>assignment_template/assignment3-data.zip</code>. If you hand out a different zip, they all change together. Re-run the reference solution and update the numbers, or widen the tolerances.</li>
     <li><strong>Assignment 4:</strong> there is no reference solution. The only numbers are the template's own rough figures (about 3,750 crashes, 120 listings a page), each with a wide tolerance, and they only raise confidence. Keep <code>execution: mode: never</code>, and <code>settings.template_notebook</code> pointing at the template handed out.</li>
+    <li><strong>Assignment 5:</strong> no reference solution either. "7,350 restaurants" and Philadelphia's ~408 tracts only raise confidence. Each item's <code>section</code> must match a <code>### 1.x</code> heading in the template handed out, since code is graded under the heading it sits beneath.</li>
   </ul>
 </div>
 
@@ -169,7 +171,7 @@ rubric: [...]          # the graded items</code></pre>
 
 <h2 id="execution"><code>execution</code><a class="headerlink" href="#execution" aria-label="Link to this section">#</a></h2>
 
-<p>Optional. Leave it out and every submission is run in the execution mode the TA selected. Set <code>mode: never</code> and no submission of this assignment is run, in any mode, local included: no data is placed and no kernel or notebook container is started. The grade then comes from the submitted file's code and saved outputs, plus any <a href="#isolated-functions"><code>isolated_functions</code></a> hidden test. Assignment 4 uses it because its notebooks scrape Craigslist and download from OpenStreetMap and ArcGIS.</p>
+<p>Optional. Leave it out and every submission is run in the execution mode the TA selected. Set <code>mode: never</code> and no submission of this assignment is run, in any mode, local included: no data is placed and no kernel or notebook container is started. The grade then comes from the submitted file's code and saved outputs, plus any <a href="#isolated-functions"><code>isolated_functions</code></a> hidden test. Assignment 4 uses it because its notebooks scrape Craigslist and download from OpenStreetMap and ArcGIS; Assignment 5 because its notebooks query the Census API and its restaurants come from an 8 GB Yelp dataset.</p>
 
 <pre><code class="language-yaml">execution:
   mode: never      # grade the file as handed in; enforced in grader/service.py</code></pre>
