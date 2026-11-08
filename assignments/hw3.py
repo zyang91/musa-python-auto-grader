@@ -60,6 +60,8 @@ whether a TA is told which one carried the item.
 
 from __future__ import annotations
 
+import ast
+import builtins
 import re
 from typing import Any, Iterable
 
@@ -93,6 +95,69 @@ MAP_ELEMENTS = {"Polygons", "Path", "Shape", "Image", "QuadMesh", "Tiles", "WMTS
 # Eviction Lab names its year columns "e-03" to "e-16", and many students relabel
 # them as 2003..2016 after the melt. Both name the same fourteen years.
 YEAR_KEY_RE = re.compile(r"(?:e-)?(\d{2}|\d{4})(?:\.0+)?")
+
+
+# A column of the tidy eviction frame: "e-03" .. "e-16", or 2003 .. 2016 once
+# relabelled. Two-digit numbers alone are not enough — a count column holds them.
+YEAR_LABEL_RE = re.compile(r"e-\d{2}|20(?:0[0-9]|1[0-6])(?:\.0+)?")
+
+# Names a notebook may use without ever binding them.
+NOTEBOOK_GLOBALS = set(dir(builtins)) | {
+    "display", "get_ipython", "In", "Out", "_", "__", "___", "exit", "quit",
+    "__file__", "__name__",
+}
+MAGIC_LINE_RE = re.compile(r"^\s*[%!?]|^\s*\w+\?\s*$")
+
+
+def undefined_names(sources: Iterable[tuple[int, str]]) -> list[tuple[int, str]]:
+    """Names a notebook reads that no cell of it ever binds, with the first cell.
+
+    This is the signature of a notebook whose saved outputs came from a kernel
+    with history the file no longer holds: a variable from a deleted cell, or one
+    renamed after it was used. Every output still looks complete, and the
+    notebook cannot be run from the top. Deliberately lenient — a name bound
+    anywhere, in any cell or function body, counts as defined — so that only a
+    name with no definition at all is reported.
+    """
+    bound: set[str] = set(NOTEBOOK_GLOBALS)
+    loads: list[tuple[int, str]] = []
+    for code_cell, source in sources:
+        text = "\n".join(
+            "" if MAGIC_LINE_RE.match(line) else line
+            for line in (source or "").splitlines()
+        )
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and any(a.name == "*" for a in node.names):
+                return []  # a star import binds names nobody can list
+            if isinstance(node, ast.Name):
+                if isinstance(node.ctx, ast.Load):
+                    loads.append((code_cell, node.id))
+                else:
+                    bound.add(node.id)
+            elif isinstance(node, (ast.Import, ast.ImportFrom)):
+                for alias in node.names:
+                    bound.add((alias.asname or alias.name).split(".")[0])
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                bound.add(node.name)
+            elif isinstance(node, ast.arg):
+                bound.add(node.arg)
+            elif isinstance(node, ast.ExceptHandler) and node.name:
+                bound.add(node.name)
+            elif isinstance(node, (ast.Global, ast.Nonlocal)):
+                bound.update(node.names)
+            elif hasattr(ast, "MatchAs") and isinstance(node, ast.MatchAs) and node.name:
+                bound.add(node.name)
+    seen: set[str] = set()
+    missing: list[tuple[int, str]] = []
+    for code_cell, name in loads:
+        if name not in bound and name not in seen:
+            seen.add(name)
+            missing.append((code_cell, name))
+    return missing
 
 
 def keys_cover(keys: Iterable[Any], expected: Iterable[Any]) -> bool:
@@ -145,6 +210,40 @@ class _SavedAnswerChecks:
     @staticmethod
     def _keys_match(chart: Any, expected: set[str]) -> bool:
         return keys_cover(chart.frame_keys, expected)
+
+    @staticmethod
+    def _year_column(table: dict[str, list[str]]) -> str | None:
+        """A column of eviction years: the tidy frame's mark on a later result."""
+        for name, values in table.items():
+            if not name or len(values) < 2:
+                continue
+            if all(YEAR_LABEL_RE.fullmatch(v.strip()) for v in values):
+                return name
+        return None
+
+    @staticmethod
+    def _repeated_index(table: dict[str, list[str]]) -> bool:
+        """The same row label shown more than once: one input row, several outputs."""
+        index = [v for v in table.get("", []) if v]
+        return len(index) >= 2 and len(set(index)) < len(index)
+
+    @staticmethod
+    def _integers(values: Iterable[str]) -> list[int] | None:
+        found = []
+        for value in values:
+            try:
+                number = float(value.replace(",", ""))
+            except ValueError:
+                return None
+            if number != int(number):
+                return None
+            found.append(int(number))
+        return found or None
+
+    def _years(self) -> int:
+        item = self.rubric.item("tidy_evictions")
+        labels = (item.config.get("expected_year_labels") if item is not None else None) or []
+        return len(labels) or 14
 
     def _widget_from_outputs(
         self, answers: Any, item: RubricItem, what: str
@@ -242,6 +341,18 @@ class _SavedAnswerChecks:
                 f"only {answered} of {total} code cells show a result, so the "
                 "notebook reads as partly run"
             )
+        missing = undefined_names(
+            (cell.code_cell, cell.source_code) for cell in answers.cells
+        )
+        if missing:
+            ratio -= float(config.get("undefined_name_penalty", 3)) / float(item.points)
+            names = ", ".join(f"`{name}` (code cell {cell})" for cell, name in missing[:3])
+            notes.append(
+                f"the notebook uses {names} but never defines "
+                f"{'it' if len(missing) == 1 else 'them'}, so it cannot run from the "
+                "top — the saved output came from a kernel holding a variable the "
+                "file no longer creates"
+            )
         ratio = max(0.0, min(ratio, 1.0))
         if ratio >= 1.0:
             return 1.0, (
@@ -274,12 +385,40 @@ class _SavedAnswerChecks:
 
     def _saved_philadelphia_tracts(self, ctx, item, answers):
         expected = int(item.config.get("expected_rows", 384))
+        prefix = str(item.config.get("geoid_prefix", "42101"))
         cell = answers.shows(expected) or answers.shows_rows(expected)
         if cell:
             return 1.0, (
                 f"The submitted notebook shows {expected} Philadelphia tracts "
                 f"(code cell {cell.code_cell})."
             )
+        # No count shown, only a `head()`. The raw file opens on Adams County
+        # (42001), so a head of nothing but 42101 tracts, from a cell that filters
+        # on the county, is the subset. Five rows cannot show that none were lost,
+        # so only the filter the instructions point at earns full marks.
+        for shown, table in answers.tables_with_columns(["GEOID"]):
+            geoids = [g for g in table["geoid"] if g]
+            if len(geoids) < 3 or not all(g.startswith(prefix) for g in geoids):
+                continue
+            if self._year_column(table):
+                continue  # the melted frame: proof of a later step, not this one
+            source = shown.source_code
+            exact = re.search(
+                r"""==\s*["']Philadelphia County, Pennsylvania["']"""
+                rf"""|startswith\(\s*["']{prefix}["']|["']{prefix}["']\s*\)""",
+                source,
+            )
+            if exact:
+                return 1.0, (
+                    "The submitted notebook filters on the county and shows only "
+                    f"Philadelphia tracts (GEOID {prefix}…, code cell {shown.code_cell})."
+                )
+            if re.search(r"Philadelphia|" + prefix, source):
+                return float(item.config.get("head_only_credit_ratio", 0.8)), (
+                    "The submitted notebook shows only Philadelphia tracts (code cell "
+                    f"{shown.code_cell}), but no count, so the {expected} tracts "
+                    "could not be confirmed."
+                )
         return None, ""
 
     def _saved_tidy_evictions(self, ctx, item, answers):
@@ -356,6 +495,26 @@ class _SavedAnswerChecks:
                 f"The submitted notebook shows an hvplot {bare[0].kind}, but its saved "
                 "output does not carry the values it drew."
             )
+        # A common misreading: summing the evictions per *tract* instead of per
+        # *year*, and mapping the result. It is an hvplot chart of grouped totals,
+        # but it answers a different question — there is no trend over time in it.
+        maps = [
+            c for c in answers.charts()
+            if not c.is_widget and not c.is_layout and not c.is_lazy
+            and set(c.element_types) & MAP_ELEMENTS
+        ]
+        for chart in maps:
+            source = next(
+                (cell.source_code for cell in answers.cells
+                 if cell.code_cell == chart.code_cell), "",
+            )
+            if re.search(r"groupby", source) and re.search(r"\.sum\(|\bsum\b", source):
+                return float(config.get("map_instead_credit_ratio", 0.3)), (
+                    "The submitted notebook sums the evictions per census tract and "
+                    f"maps them (code cell {chart.code_cell}), but 1.1.4 asks for the "
+                    "total per year from 2003 to 2016 — group by the year column, "
+                    "sum, and plot the fourteen totals as a line or bar chart."
+                )
         return None, ""
 
     def _saved_evictions_choropleth(self, ctx, item, answers):
@@ -392,12 +551,24 @@ class _SavedAnswerChecks:
 
     def _saved_violations_subset(self, ctx, item, answers):
         expected = int(item.config.get("expected_rows", 34108))
+        types = {str(v).strip() for v in item.config.get("violation_types", [])}
         cell = answers.shows(expected) or answers.shows_rows(expected)
         if cell:
             return 1.0, (
                 f"The submitted notebook shows {expected:,} rows after trimming to the "
                 f"fifteen violation types (code cell {cell.code_cell})."
             )
+        # A `head()` of the subset: every type shown is one of the fifteen, from a
+        # cell that filters with `isin` on the list the template provides.
+        for shown, table in answers.tables_with_columns(["violationdescription"]):
+            values = [v.strip() for v in table["violationdescription"] if v.strip()]
+            if len(values) < 3 or not types or not set(values) <= types:
+                continue
+            if re.search(r"\.isin\s*\(", shown.source_code):
+                return 1.0, (
+                    "The submitted notebook filters with `isin()` on the listed types "
+                    f"and shows only those types (code cell {shown.code_cell})."
+                )
         return None, ""
 
     def _saved_spatial_join(self, ctx, item, answers):
@@ -405,6 +576,30 @@ class _SavedAnswerChecks:
         joined = answers.frames_with_columns(["GEOID", "violationdescription", "geometry"])
         kept = answers.shows_rows(expected) or answers.shows(expected)
         called = self._matches_any(ctx, [r"sjoin\s*\("])
+        if joined and not kept:
+            years = self._years()
+            for shown, table in answers.tables_with_columns(
+                ["GEOID", "violationdescription"]
+            ):
+                if "geometry" not in table or shown.code_cell != joined[0].code_cell:
+                    continue
+                year = self._year_column(table)
+                if year or self._repeated_index(table):
+                    # Every tract has all fourteen years, so every count is scaled
+                    # by the same fourteen and the maps keep their pattern. Worth
+                    # saying, not worth marks (instructor's call, Nov 2026).
+                    return float(item.config.get("duplicated_join_credit_ratio", 1.0)), (
+                        "Full marks, with a note: the join was made against the tidy "
+                        "eviction frame, which has "
+                        f"one row per tract per year, so every violation comes out "
+                        f"{years} times (code cell {shown.code_cell} shows the same "
+                        "violation repeated"
+                        + (f" across `{year}`" if year else "")
+                        + "). Every tract repeats the same number of times, so the maps "
+                        "keep their pattern, but the counts are inflated. Joining to "
+                        "one row per tract — only GEOID and geometry — keeps the "
+                        f"{expected:,} violations."
+                    )
         if joined:
             note = (
                 "The submitted notebook shows each violation carrying the GEOID of its "
@@ -435,6 +630,15 @@ class _SavedAnswerChecks:
             if not any(any(h == c or h in c for h in hints) for c in lowered):
                 continue
             counted = any(answers.shows_rows(rows) for rows in allowed)
+            inflated = self._inflated_counts(answers, cell, hints) if not counted else 0
+            if inflated:
+                return float(item.config.get("inflated_counts_credit_ratio", 1.0)), (
+                    "Full marks, with a note: the group-by is right, but every count "
+                    "the submitted notebook "
+                    f"shows (code cell {cell.code_cell}) is a multiple of {inflated}: "
+                    "each violation was counted once per eviction year, because the "
+                    "join in 1.2.4 used the tidy frame. Correct counts sum to 34,108."
+                )
             return 1.0, (
                 "The submitted notebook shows a count per violation type and tract "
                 f"(code cell {cell.code_cell})"
@@ -454,12 +658,48 @@ class _SavedAnswerChecks:
             )
         return None, ""
 
+    def _inflated_counts(self, answers, cell, hints) -> int:
+        """The year count, when every count shown is a multiple of it.
+
+        Five counts that all divide by fourteen do not happen by chance (about one
+        in half a million); they happen when each violation was joined to all
+        fourteen yearly rows of its tract.
+        """
+        years = self._years()
+        for table in cell.tables:
+            for name, values in table.items():
+                lowered = name.lower()
+                if not name or lowered in ("geoid", "violationdescription"):
+                    continue
+                if not any(h == lowered or h in lowered for h in hints):
+                    continue
+                numbers = self._integers(values)
+                if numbers and len(numbers) >= 3 and all(
+                    n > 0 and n % years == 0 for n in numbers
+                ):
+                    return years
+        return 0
+
     def _saved_merge_geometries(self, ctx, item, answers):
         merged = answers.frames_with_columns(
             ["GEOID", "geometry", "violationdescription"]
         )
         for cell in merged:
             if any(c.lower() in ("n", "count", "size") for c in cell.columns):
+                year = next(
+                    (self._year_column(t) for t in cell.tables
+                     if "geometry" in t and self._year_column(t)),
+                    None,
+                )
+                if year:
+                    return float(item.config.get("melted_merge_credit_ratio", 1.0)), (
+                        "Full marks, with a note: the counts were merged onto the tidy "
+                        "eviction frame, which "
+                        f"still carries `{year}` (code cell {cell.code_cell}), so every "
+                        f"count is repeated for each of the {self._years()} years. "
+                        "Merging onto one row per tract — the tract geometries with "
+                        "GEOID — gives one row per type and tract."
+                    )
                 return 1.0, (
                     "The submitted notebook shows the counts merged onto the tract "
                     f"geometries (code cell {cell.code_cell})."
@@ -486,9 +726,14 @@ class _SavedAnswerChecks:
         if layouts:
             # The saved repr names the panels but not the grid, so the row/column
             # deduction is left to the executed run rather than guessed at here.
+            # A map drawn over tiles is an Overlay holding WMTS and Polygons, and
+            # the repr lists all three, so panels are counted at the Overlay.
+            children = layouts[0].children
+            overlays = [c for c in children if c in OVERLAY_CONTAINERS]
+            panels = len(overlays) or len(children)
             return 1.0, (
-                f"The submitted notebook shows a Layout of {len(layouts[0].children)} "
-                f"choropleths (code cell {layouts[0].code_cell})."
+                f"The submitted notebook shows a Layout of {panels} maps "
+                f"(code cell {layouts[0].code_cell})."
             )
         maps = [c for c in answers.charts() if self._polygon_chart(c, polygons)
                 and not c.is_layout and not c.is_widget]
@@ -510,7 +755,22 @@ class _SavedAnswerChecks:
                 f"The submitted notebook shows the scene as {bands} bands in "
                 f"EPSG:{epsg} (code cell {cell.code_cell})."
             )
-        if self._matches_any(ctx, [r"rasterio\.open", r"rasterio\s*\.\s*open"]):
+        # `landsat` on the last line prints the open dataset itself, naming the
+        # file it read — the shipped scene, opened by rasterio.
+        filename = str(item.config.get("expected_filename", "landsat8_philly.tif"))
+        opened = re.compile(
+            r"<open DatasetReader name='[^']*" + re.escape(filename) + "'"
+        )
+        for shown in answers.cells:
+            if opened.search(shown.text):
+                return 1.0, (
+                    f"The submitted notebook shows {filename} open in rasterio (code "
+                    f"cell {shown.code_cell})."
+                )
+        if self._matches_any(ctx, [
+            r"rasterio\.open", r"rasterio\s*\.\s*open",
+            r"\b\w+\.open\s*\([^)]*\.tif",
+        ]):
             return self.SOURCE_ONLY_CREDIT, (
                 "The source opens the scene with rasterio, but the notebook shows "
                 "nothing about it, so the band count and CRS could not be checked."
@@ -1675,6 +1935,20 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
                 "Philadelphia census tract, none lost.",
                 evidence,
             )
+        years = self._years()
+        repeated = [f for f in joined if abs(f["rows"] - expected_rows * years) <= tolerance]
+        if repeated:
+            return self.result(
+                item, item.points * float(config.get("duplicated_join_credit_ratio", 1.0)),
+                STATUS_PASS, 1.0,
+                f"Full marks, with a note: the join holds {repeated[0]['rows']:,} rows, "
+                f"{years} times the {expected_rows:,} violations, because it was made "
+                "against the tidy eviction frame (one row per tract per year). Every "
+                "tract repeats the same number of times, so the maps keep their "
+                "pattern, but the counts are inflated. Joining to one row per tract — "
+                "only GEOID and geometry — keeps the violations once each.",
+                evidence,
+            )
         whole_file = [f for f in joined if abs(f["rows"] - unfiltered) <= max(tolerance, 5)]
         if whole_file:
             return self._partial(
@@ -1715,6 +1989,12 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
             if not summary:
                 continue
             counts = self._numeric_columns_matching(profile, "sum", expected_sum, 0.001)
+            inflated = False
+            if not counts:
+                counts = self._numeric_columns_matching(
+                    profile, "sum", expected_sum * self._years(), 0.001
+                )
+                inflated = bool(counts)
             if not counts:
                 continue
             type_column = None
@@ -1731,6 +2011,7 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
                 ),
                 "type_column": type_column,
                 "tracts": summary["distinct"],
+                "inflated": inflated,
             }
             key = (bool(type_column), candidate["rows"] in allowed, candidate["named_count_column"])
             if best is None or key > (
@@ -1748,6 +2029,16 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
                 ctx, item,
                 "No frame in memory holds a count of violations per type and tract "
                 f"summing to {expected_sum:,.0f}.",
+                evidence,
+            )
+        if best["type_column"] and best["tracts"] > 1 and best["inflated"]:
+            return self.result(
+                item, item.points * float(config.get("inflated_counts_credit_ratio", 1.0)),
+                STATUS_PASS, 1.0,
+                f"Full marks, with a note: counted per violation type and tract, but "
+                f"the counts total {expected_sum * self._years():,.0f} — each violation "
+                f"{self._years()} times, inherited from joining the tidy frame in "
+                f"1.2.4. Correct counts sum to {expected_sum:,.0f}.",
                 evidence,
             )
         if best["type_column"] and best["tracts"] > 1:
@@ -1779,11 +2070,22 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
         allowed = [int(v) for v in config.get("allowed_row_counts", [4000, 5535])]
         expected_sum = 34108.0
 
+        years = self._years()
         merged: list[dict[str, Any]] = []
         for profile in self._frames(ctx):
-            if self._rows(profile) not in allowed or not self._is_narrow(profile):
+            if not self._is_narrow(profile):
                 continue
-            if not self._numeric_columns_matching(profile, "sum", expected_sum, 0.001):
+            rows = self._rows(profile)
+            # Onto the tidy frame: fourteen rows per (type, tract), and the counts
+            # already fourteen times too large if the join in 1.2.4 used it.
+            repeated = rows in [a * years for a in allowed] and any(
+                self._numeric_columns_matching(profile, "sum", expected_sum * f, 0.001)
+                for f in (years, years * years)
+            )
+            if not repeated and (
+                rows not in allowed
+                or not self._numeric_columns_matching(profile, "sum", expected_sum, 0.001)
+            ):
                 continue
             merged.append(
                 {
@@ -1792,6 +2094,7 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
                     "geodataframe": bool(profile.get("is_geodataframe")),
                     "geometry_types": profile.get("geom_types"),
                     "columns": self._columns(profile)[:8],
+                    "onto_tidy_frame": repeated,
                 }
             )
 
@@ -1804,6 +2107,17 @@ class HW3Grader(_SavedAnswerChecks, AssignmentGrader):
                 evidence,
             )
         geo = [m for m in merged if m["geodataframe"]]
+        if geo and all(m["onto_tidy_frame"] for m in geo):
+            return self.result(
+                item, item.points * float(config.get("melted_merge_credit_ratio", 1.0)),
+                STATUS_PASS, 1.0,
+                f"Full marks, with a note: the counts were merged onto the tidy "
+                f"eviction frame, so the GeoDataFrame holds {geo[0]['rows']:,} rows — "
+                f"each (type, tract) count repeated for the {years} years. Merging "
+                "onto one row per tract gives one row per type and tract.",
+                evidence,
+            )
+        geo = [m for m in geo if not m["onto_tidy_frame"]] or geo
         if geo:
             return self._found(
                 item,

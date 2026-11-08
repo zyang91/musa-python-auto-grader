@@ -149,6 +149,9 @@ rubric:
       # partly run rather than run through.
       min_output_coverage: 0.5
       low_coverage_penalty: 3
+      # A name the notebook reads but no cell ever defines: the saved outputs
+      # came from a kernel with history, and the file cannot run from the top.
+      undefined_name_penalty: 3
 
   # =====================================================================
   # Part 1.1 — Eviction Lab data
@@ -185,6 +188,9 @@ rubric:
       impure_credit_ratio: 0.4
       incomplete_credit_ratio: 0.7
       min_purity: 0.95
+      # Saved output only: a head() of Philadelphia tracts with no count shown,
+      # from a filter other than the exact county name or the 42101 prefix.
+      head_only_credit_ratio: 0.8
 
   - id: tidy_evictions
     name: "1.1.3 Melted to tidy format"
@@ -227,6 +233,9 @@ rubric:
       wrong_values_credit_ratio: 0.5
       # Drawn with matplotlib rather than hvplot, as the instructions ask.
       wrong_library_credit_ratio: 0.5
+      # Evictions summed per tract and mapped: a different question, with no
+      # trend over the years in it.
+      map_instead_credit_ratio: 0.3
       accepted_elements: ["Curve", "Bars", "Scatter", "Area", "Points", "Spikes", "Step", "Histogram"]
 
   - id: evictions_choropleth
@@ -345,6 +354,11 @@ rubric:
       # wrong order, and the counts downstream are still recoverable.
       unfiltered_join_credit_ratio: 0.7
       unfiltered_expected_rows: 434052
+      # Joined to the tidy (melted) eviction frame, one row per tract per year,
+      # so every violation appears fourteen times. Every tract is scaled by the
+      # same fourteen, so the maps keep their pattern: noted in the feedback and
+      # left for class discussion, not deducted.
+      duplicated_join_credit_ratio: 1.0
 
   - id: violations_by_tract
     name: "1.2.5 Violations counted per type and tract"
@@ -364,6 +378,9 @@ rubric:
       count_column_hints: ["n", "count", "size", "violations"]
       # Grouped by only one of the two keys.
       partial_grouping_credit_ratio: 0.5
+      # The group-by is right but every count is a multiple of fourteen, inherited
+      # from a join against the tidy frame in 1.2.4. Noted, not deducted.
+      inflated_counts_credit_ratio: 1.0
 
   - id: merge_geometries
     name: "1.2.6 Counts merged back onto tract geometries"
@@ -378,6 +395,9 @@ rubric:
       # Merged the right way round but the result came back as a DataFrame,
       # usually because the counts frame was the left argument.
       not_geodataframe_credit_ratio: 0.5
+      # Merged onto the tidy eviction frame, so each count repeats once per year.
+      # Noted, not deducted.
+      melted_merge_credit_ratio: 1.0
 
   - id: violations_choropleth
     name: "1.2.7 Choropleth per violation type with a widget"
