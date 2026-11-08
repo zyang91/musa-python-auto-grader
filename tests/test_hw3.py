@@ -1032,7 +1032,12 @@ def test_saved_output_never_invents_credit_for_a_step_it_cannot_see(
 def test_a_clean_saved_run_carries_the_execution_item(hw3, hw3_rubric, tmp_path):
     """Their notebook ran; ours could not place the data. That is not their fault."""
     path = _saved_notebook(tmp_path, [
-        ("len(phl)", "384"), ("len(maintenance)", "34108"), ("len(trees)", "2480"),
+        ("import geopandas as gpd\npa = gpd.read_file('data/PA-tracts.geojson')\n"
+         "phl = pa[pa.pl == 'Philadelphia County, Pennsylvania']\nlen(phl)", "384"),
+        ("li = gpd.read_file('data/li_violations.csv')\n"
+         "maintenance = li[li.violationdescription.isin(['CO DETECTOR NEEDED'])]\n"
+         "len(maintenance)", "34108"),
+        ("trees = gpd.read_file('data/trees.geojson')\nlen(trees)", "2480"),
     ])
     ctx = _no_run(hw3_rubric, path)
     charts_from(ctx)
@@ -1189,3 +1194,244 @@ def test_an_overlay_of_maps_is_not_a_trend_chart(hw3, hw3_rubric):
     ]
     result = run(hw3, context(hw3_rubric, payload), "evictions_by_year_plot")
     assert result.status != STATUS_PASS
+
+
+# ---------------------------------------------------------------------------
+# Calibration against a second real submission (patterns only, no student file)
+# ---------------------------------------------------------------------------
+#
+# A notebook whose Docker run never happened and whose saved outputs were read
+# instead. It surfaced four steps the saved reading could not see (a head() with
+# no count, the open dataset's repr) and four it credited too readily: a join
+# against the melted frame that repeats every violation fourteen times, the
+# counts and merge that inherit it, a map drawn where a yearly trend was asked
+# for, and a variable used in the last cells that no cell defines.
+
+def _html_frame(columns, rows, index=None):
+    """The HTML a pandas `head()` writes into a notebook."""
+    index = index if index is not None else list(range(len(rows)))
+    head = "".join(f"<th>{c}</th>" for c in columns)
+    body = "".join(
+        f"<tr><th>{i}</th>" + "".join(f"<td>{v}</td>" for v in row) + "</tr>"
+        for i, row in zip(index, rows)
+    )
+    return (
+        '<div><table border="1" class="dataframe"><thead><tr style="text-align: '
+        f'right;"><th></th>{head}</tr></thead><tbody>{body}</tbody></table></div>'
+    )
+
+
+def _saved_rich_notebook(tmp_path, entries) -> str:
+    """Cells whose outputs are (text/plain, text/html) pairs, or None."""
+    cells = []
+    for source, output in entries:
+        cell = new_code_cell(source)
+        if output is not None:
+            text, html = output
+            data = {"text/plain": text}
+            if html:
+                data["text/html"] = html
+            cell.outputs = [new_output("execute_result", data=data, execution_count=1)]
+        cells.append(cell)
+    path = tmp_path / "submitted.ipynb"
+    nbformat.write(new_notebook(cells=cells), str(path))
+    return str(path)
+
+
+def _saved_grade(hw3, hw3_rubric, tmp_path, entries):
+    path = _saved_rich_notebook(tmp_path, entries)
+    source = "\n".join(source for source, _ in entries)
+    ctx = _no_run(hw3_rubric, path, code_source=source)
+    charts_from(ctx)
+    return {r.rubric_id: r for r in hw3.grade(ctx)}
+
+
+GEOIDS = ["42101000100", "42101000200", "42101000300", "42101000801", "42101000804"]
+
+
+def test_a_variable_no_cell_defines_costs_the_execution_item(hw3, hw3_rubric, tmp_path):
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("import geopandas as gpd\nphl = gpd.read_file('x')\nlen(phl)", ("384", None)),
+        ("len(trees)", ("2480", None)),
+        ("city_4326.plot()\ntrees = 1", ("<Axes: >", None)),
+    ])
+    result = results["notebook_execution"]
+    assert result.automatic_score == result.points_possible - 3
+    assert "`city_4326`" in result.feedback
+
+
+def test_names_bound_anywhere_are_not_reported():
+    from assignments.hw3 import undefined_names
+
+    sources = [
+        (1, "%matplotlib inline\nimport numpy as np\nfrom a import b as c"),
+        (2, "def f(x, *args, k=1):\n    return x + later\nlater = [i for i in range(3)]"),
+        (3, "try:\n    pass\nexcept Exception as err:\n    print(err)\nprint(np, c, f)"),
+        (4, "for key, value in {}.items():\n    display(key)"),
+    ]
+    assert undefined_names(sources) == []
+    assert undefined_names([(1, "print(ghost)")]) == [(1, "ghost")]
+    # A star import binds names nobody can list, so nothing is claimed.
+    assert undefined_names([(1, "from os import *\nprint(ghost)")]) == []
+
+
+def test_a_head_of_philadelphia_tracts_proves_the_trim(hw3, hw3_rubric, tmp_path):
+    rows = [[g, "Philadelphia County, Pennsylvania"] for g in GEOIDS]
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("phl = pa[pa['pl'] == 'Philadelphia County, Pennsylvania']\nphl.head()",
+         ("GEOID pl", _html_frame(["GEOID", "pl"], rows, index=range(435, 440)))),
+    ])
+    assert results["philadelphia_tracts"].automatic_score == 5
+
+
+def test_a_head_of_the_whole_state_does_not_prove_the_trim(hw3, hw3_rubric, tmp_path):
+    rows = [["42003412002", "Allegheny County, Pennsylvania"]] * 5
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("pa = gpd.read_file('data/PA-tracts.geojson')\npa.head()",
+         ("GEOID pl", _html_frame(["GEOID", "pl"], rows))),
+    ])
+    assert results["philadelphia_tracts"].automatic_score == 0
+
+
+def test_a_map_of_tract_totals_is_not_the_yearly_trend(hw3, hw3_rubric, tmp_path):
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("totals = tidy.groupby('GEOID')['Evictions'].sum()\n"
+         "geoms.merge(totals).hvplot(c='Evictions', geo=True)",
+         (":Polygons   [Longitude,Latitude]   (Total Evictions,GEOID)", None)),
+    ])
+    result = results["evictions_by_year_plot"]
+    assert result.automatic_score == pytest.approx(5 * 0.3)
+    assert "per census tract" in result.feedback
+
+
+def test_a_head_after_isin_proves_the_fifteen_types(hw3, hw3_rubric, tmp_path):
+    rows = [[t, "POINT (0 0)"] for t in VIOLATION_TYPES[:5]]
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("trimmed = li[li['violationdescription'].isin(violation_types)]\ntrimmed.head()",
+         ("violationdescription", _html_frame(["violationdescription", "geometry"], rows))),
+    ])
+    assert results["violations_subset"].automatic_score == 4
+
+
+def test_a_head_of_untrimmed_violations_does_not_prove_the_subset(hw3, hw3_rubric, tmp_path):
+    rows = [["CLIP VIOLATION NOTICE", "POINT (0 0)"]] + [
+        [t, "POINT (0 0)"] for t in VIOLATION_TYPES[:4]
+    ]
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("trimmed = li[li['violationdescription'].isin(other)]\ntrimmed.head()",
+         ("violationdescription", _html_frame(["violationdescription", "geometry"], rows))),
+    ])
+    assert results["violations_subset"].automatic_score == 0
+
+
+MELTED_JOIN = _html_frame(
+    ["violationdescription", "geometry", "index_right", "GEOID", "Eviction Year", "Evictions"],
+    [["LICENSE-RES SFD/2FD", "POINT (0 0)", 364 + 384 * i, "42101027100",
+      f"e-{3 + i:02d}", 6.0] for i in range(5)],
+    index=[2, 2, 2, 2, 2],
+)
+
+
+def test_a_join_against_the_melted_frame_is_noted_not_deducted(hw3, hw3_rubric, tmp_path):
+    """Every tract repeats fourteen times, so the maps keep their pattern.
+
+    The instructor's call: the inflated counts are worth explaining in class,
+    not worth marks. The note still reaches the student.
+    """
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("joined = gpd.sjoin(trimmed, tidy)\njoined.head()", ("joined", MELTED_JOIN)),
+        ("counts = joined.groupby(['violationdescription', 'GEOID']).size()"
+         ".reset_index(name='N')\ncounts.head()",
+         ("counts", _html_frame(["violationdescription", "GEOID", "N"],
+                                [["CO DETECTOR NEEDED", g, 14 * k]
+                                 for k, g in enumerate(GEOIDS, start=1)]))),
+        ("merged = tidy.merge(counts, on='GEOID')\nmerged.head()",
+         ("merged", _html_frame(
+             ["GEOID", "geometry", "Eviction Year", "Evictions", "violationdescription", "N"],
+             [[GEOIDS[0], "MULTIPOLYGON (...)", "e-03", 21.0, t, 14 * (k + 1)]
+              for k, t in enumerate(VIOLATION_TYPES[:5])]))),
+    ])
+    join, counts, merge = (
+        results["spatial_join"], results["violations_by_tract"], results["merge_geometries"]
+    )
+    for result in (join, counts, merge):
+        assert result.automatic_score == result.points_possible
+        assert result.status == STATUS_PASS
+        assert result.feedback.startswith("Full marks, with a note")
+    assert "14 times" in join.feedback
+    assert "multiple of 14" in counts.feedback
+    assert "Eviction Year" in merge.feedback
+
+
+def test_the_executed_run_notes_the_melted_join_without_deducting(hw3, hw3_rubric):
+    """Same mistake, seen in the kernel: 14x the rows and 14x the counts."""
+    payload = correct_payload()
+    payload["dataframes"] = [
+        DECOY_WIDE_FRAME,
+        frame("joined", 34108 * 14,
+              ["violationdescription", "geometry", "GEOID", "Eviction Year", "Evictions"],
+              geo=True, geom_types=["Point"], prefix_counts=geoid_counts(34108 * 14)),
+        frame("counts", 4000, ["violationdescription", "GEOID", "N"],
+              prefix_counts=geoid_counts(4000),
+              nunique={"violationdescription": 15, "GEOID": 369},
+              numeric_summary={"N": {"min": 14, "max": 1876, "mean": 119.4,
+                                     "median": 42.0, "sum": 34108 * 14, "count": 4000}}),
+        frame("merged", 4000 * 14,
+              ["GEOID", "geometry", "Eviction Year", "Evictions", "violationdescription", "N"],
+              geo=True, geom_types=["MultiPolygon"], prefix_counts=geoid_counts(4000 * 14),
+              numeric_summary={"N": {"min": 14, "max": 1876, "mean": 119.4,
+                                     "median": 42.0, "sum": 34108 * 14 * 14,
+                                     "count": 4000 * 14}}),
+    ]
+    ctx = context(hw3_rubric, payload)
+    for rubric_id in ("spatial_join", "violations_by_tract", "merge_geometries"):
+        result = run(hw3, ctx, rubric_id)
+        assert result.automatic_score == result.points_possible, rubric_id
+        assert result.feedback.startswith("Full marks, with a note"), rubric_id
+
+
+def test_a_join_against_the_tract_geometries_keeps_full_marks(hw3, hw3_rubric, tmp_path):
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("joined = gpd.sjoin(trimmed, phl[['GEOID', 'geometry']])\njoined.head()",
+         ("joined", _html_frame(
+             ["violationdescription", "geometry", "index_right", "GEOID"],
+             [[t, "POINT (0 0)", 7, g] for t, g in zip(VIOLATION_TYPES, GEOIDS)],
+             index=[2, 25, 30, 31, 34]))),
+        ("counts = joined.groupby(['violationdescription', 'GEOID']).size()"
+         ".reset_index(name='N')\ncounts.head()",
+         ("counts", _html_frame(["violationdescription", "GEOID", "N"],
+                                [["CO DETECTOR NEEDED", g, n]
+                                 for g, n in zip(GEOIDS, [3, 1, 14, 2, 5])]))),
+    ])
+    assert results["spatial_join"].automatic_score == 5
+    assert results["violations_by_tract"].automatic_score == 5
+
+
+def test_the_open_dataset_repr_proves_the_scene_was_loaded(hw3, hw3_rubric, tmp_path):
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("import rasterio as rio\nlandsat = rio.open('data/landsat8_philly.tif')\nlandsat",
+         ("<open DatasetReader name='data/landsat8_philly.tif' mode='r'>", None)),
+    ])
+    assert results["landsat_loading"].automatic_score == 3
+
+
+def test_rasterio_imported_under_an_alias_still_counts_as_opening(hw3, hw3_rubric, tmp_path):
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [
+        ("import rasterio as rio\nlandsat = rio.open('data/landsat8_philly.tif')", None),
+    ])
+    result = results["landsat_loading"]
+    assert 0 < result.automatic_score < result.points_possible
+
+
+def test_a_layout_of_two_tiled_maps_is_counted_as_two(hw3, hw3_rubric, tmp_path):
+    layout = "\n".join([
+        ":Layout",
+        "   .Overlay.I  :Overlay",
+        "      .WMTS.I     :WMTS   [Longitude,Latitude]",
+        "      .Polygons.I :Polygons   [Longitude,Latitude]   (Evictions,GEOID)",
+        "   .Overlay.II :Overlay",
+        "      .WMTS.I     :WMTS   [Longitude,Latitude]",
+        "      .Polygons.I :Polygons   [Longitude,Latitude]   (N,GEOID)",
+    ])
+    results = _saved_grade(hw3, hw3_rubric, tmp_path, [("left + right", (layout, None))])
+    assert "Layout of 2 maps" in results["side_by_side"].feedback

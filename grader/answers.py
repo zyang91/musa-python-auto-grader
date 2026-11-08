@@ -34,9 +34,12 @@ Output                  What it yields
 ``print(...)``          every number in the text — deliberately shown
 a bare final expression  every number, when it is short enough to be a
                         result rather than a table
-a DataFrame repr        ``5376 rows x 4 columns``, the column names, and
-                        nothing else — the cell values of a ``head()`` are
-                        not answers, and harvesting them invents matches
+a DataFrame repr        ``5376 rows x 4 columns`` and the column names.
+                        The cell values of a ``head()`` are kept apart, in
+                        ``tables``: they are never answers (harvesting them
+                        as numbers invents matches), but they do show what
+                        a frame is made of — every GEOID starting 42101, or
+                        each violation repeated once per eviction year
 ``.describe()``         count / mean / median / min / max
 ``.info()``             row count, column names, dtypes
 an hvplot chart         ``:HoloMap [year]`` — the object's own repr, which
@@ -58,6 +61,7 @@ import gzip
 import re
 import struct
 from dataclasses import dataclass, field
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -205,6 +209,9 @@ class CellAnswers:
     columns: list[str] = field(default_factory=list)
     describe: dict[str, float] = field(default_factory=dict)
     holoviews: list[HoloviewsRepr] = field(default_factory=list)
+    # Displayed DataFrames, column name -> the cell values shown (strings, in
+    # row order), plus "" -> the index labels. Never read as answers.
+    tables: list[dict[str, list[str]]] = field(default_factory=list)
     figures: int = 0
     images: int = 0
     errored: bool = False
@@ -292,6 +299,22 @@ class NotebookAnswers:
             cell for cell in self.cells
             if wanted <= {c.lower() for c in cell.columns}
         ]
+
+    def tables_with_columns(
+        self, names: Iterable[str]
+    ) -> list[tuple[CellAnswers, dict[str, list[str]]]]:
+        """Displayed frames carrying all of these columns, matched case-blind.
+
+        The returned table is keyed by the names asked for, lower-cased.
+        """
+        wanted = [str(n).lower() for n in names]
+        found = []
+        for cell in self.cells:
+            for table in cell.tables:
+                lowered = {str(k).lower(): v for k, v in table.items()}
+                if all(w in lowered for w in wanted):
+                    found.append((cell, lowered))
+        return found
 
     def describes(self, key: str, expected: float, abs_tol: float) -> CellAnswers | None:
         for cell in self.cells:
@@ -536,6 +559,7 @@ def _read_structure(answers: CellAnswers, text: str, html: str) -> None:
             # come through as "0", "1", "2" — those are not column names.
             if name.strip() and not name.strip().isdigit()
         )
+        answers.tables.extend(_read_tables(html))
     for count in ENTRIES_RE.findall(text):
         answers.row_counts.append(_int(count))
     answers.columns.extend(INFO_COLUMN_RE.findall(text))
@@ -544,6 +568,88 @@ def _read_structure(answers: CellAnswers, text: str, html: str) -> None:
             answers.describe.setdefault(key, float(value))
         except ValueError:  # pragma: no cover - the regex already restricts this
             continue
+
+
+class _TableParser(HTMLParser):
+    """The header and body cells of the pandas HTML tables in one output."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.tables: list[tuple[list[str], list[list[str]]]] = []
+        self._depth = 0
+        self._header: list[str] = []
+        self._rows: list[list[str]] = []
+        self._row: list[str] | None = None
+        self._cell: list[str] | None = None
+        self._in_head = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "table":
+            self._depth += 1
+            if self._depth == 1:
+                self._header, self._rows = [], []
+        elif self._depth != 1:
+            return
+        elif tag == "thead":
+            self._in_head = True
+        elif tag == "tbody":
+            self._in_head = False
+        elif tag == "tr":
+            self._row = []
+        elif tag in ("td", "th") and self._row is not None:
+            self._cell = []
+
+    def handle_endtag(self, tag):
+        if tag == "table":
+            if self._depth == 1 and self._header:
+                self.tables.append((self._header, self._rows))
+            self._depth = max(0, self._depth - 1)
+        elif self._depth != 1:
+            return
+        elif tag in ("td", "th") and self._cell is not None and self._row is not None:
+            self._row.append("".join(self._cell).strip())
+            self._cell = None
+        elif tag == "tr" and self._row is not None:
+            if self._in_head:
+                # A multi-row header (an index name row) keeps its first row.
+                if not self._header:
+                    self._header = self._row
+            else:
+                self._rows.append(self._row)
+            self._row = None
+
+    def handle_data(self, data):
+        if self._cell is not None:
+            self._cell.append(data)
+
+
+# A `head()` has five rows and a styled frame has ten; anything far bigger is a
+# whole table dumped to the screen, which tells nothing a footer does not.
+MAX_TABLE_ROWS = 60
+
+
+def _read_tables(html: str) -> list[dict[str, list[str]]]:
+    if not html or not HTML_TABLE_RE.search(html):
+        return []
+    parser = _TableParser()
+    try:
+        parser.feed(html)
+        parser.close()
+    except Exception:  # pragma: no cover - a malformed repr is just unread
+        return []
+    tables: list[dict[str, list[str]]] = []
+    for header, rows in parser.tables:
+        # pandas heads the index column with an empty cell.
+        names = ["" if i == 0 and not name else name for i, name in enumerate(header)]
+        table: dict[str, list[str]] = {}
+        for i, name in enumerate(names):
+            if name in table:
+                continue
+            table[name] = [
+                row[i] for row in rows[:MAX_TABLE_ROWS] if i < len(row) and row[i] != "..."
+            ]
+        tables.append(table)
+    return tables
 
 
 def _numbers(text: str) -> list[float]:
