@@ -480,6 +480,14 @@ rubric:
       run_log_points: 2
       # "Number of apartments =  120" — any positive count is accepted.
       run_log_patterns: ['(?i)number of apartments\s*=?\s*(\d+)', '(?i)processing page\s*(\d+)']
+      # Students who wrote their own log: "Number of new apartments = 120",
+      # "Listings found: 84", "Batch 1: 200 unique complete listings collected",
+      # "Processing batch 2...".
+      extra_count_patterns:
+        - '(?i)number of (?:(?:new|unique) (?:apartments|listings)|listings)\s*[=:]?\s*(\d+)'
+        - '(?i)(?:listings|apartments) found\s*[=:]\s*(\d+)'
+        - '(?i)(\d+) (?:new |unique )?(?:complete )?(?:listings|apartments) (?:collected|scraped|found)'
+      extra_page_patterns: ['(?i)processing batch\s*(\d+)', '(?i)\bbatch\s*(\d+)\s*:']
       # Only a table the loop produced counts: without a saved run of the loop,
       # a results table is one read back from somewhere else.
       results_points: 2
@@ -504,7 +512,12 @@ rubric:
       (.interactive()), read from the chart's own Vega-Lite spec.
     config:
       encodings: {x: price, y: size, color: bedrooms}
+      # A column made from the one asked for counts: colour by bedroom_category
+      # or bedrooms_str is still colour by bedrooms.
+      encoding_aliases: {color: '(?i)bed'}
       encoding_points: 1.5
+      # Coded but never run, so no spec to read: half, and a person looks.
+      source_only_points: 1.5
       tooltip_points: 0.5
       interactive_points: 1
       # The template: "centered around ~1.5". Recorded as evidence about the

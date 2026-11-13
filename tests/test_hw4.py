@@ -397,3 +397,185 @@ def test_function_test_run_reports_cases():
     run = FunctionTestRun(status=STATUS_RAN, report={"cases": [{"id": "a", "ok": True}]})
     assert run.case("a") == {"id": "a", "ok": True}
     assert run.case("b") is None
+
+
+# ---------------------------------------------------------------------------
+# Calibration against a real class (November 2026)
+# ---------------------------------------------------------------------------
+
+def _stream(text: str):
+    from nbformat.v4 import new_output
+    return new_output("stream", name="stdout", text=text)
+
+
+def _result(data: dict, count: int = 1):
+    from nbformat.v4 import new_output
+    return new_output("execute_result", data=data, execution_count=count)
+
+
+def _grade_cells(tmp_path, monkeypatch, cells):
+    """Grade one notebook made of (source, outputs) code cells."""
+    import nbformat
+    from nbformat.v4 import new_code_cell, new_notebook
+
+    nb = new_notebook(cells=[
+        new_code_cell(source, outputs=outputs, execution_count=i + 1)
+        for i, (source, outputs) in enumerate(cells)
+    ])
+    folder = tmp_path / "submissions" / "student_real"
+    folder.mkdir(parents=True)
+    nbformat.write(nb, str(folder / "assignment-4.ipynb"))
+    Tripwire(monkeypatch)
+    session = _grade(tmp_path / "submissions", tmp_path / "out", MODE_LOCAL)
+    return _items(session, "student_real")
+
+
+IMPORTS_FIRST = (
+    "import geopandas as gpd\nimport osmnx as ox\nimport pandas as pd\n"
+    "from bs4 import BeautifulSoup\nfrom selenium import webdriver\n%pip install osmnx"
+)
+PART1_CODE = [
+    'districts = gpd.read_file("data/Planning_Districts.geojson")\n'
+    'central = districts[districts["dist_name"] == "Central"]\n'
+    "polygon = central.geometry.iloc[0]",
+    'G = ox.graph_from_polygon(polygon, network_type="drive")',
+    "edges = ox.graph_to_gdfs(G, nodes=False)",
+]
+
+
+def test_importing_selenium_up_front_does_not_move_part_1_into_part_2():
+    from assignments.hw4 import build_code
+
+    code = build_code([IMPORTS_FIRST, *PART1_CODE, "driver = webdriver.Chrome()"], None)
+    assert code.part2_start == 5
+    assert [c.number for c in code.part1()] == [1, 2, 3, 4]
+
+
+def test_a_part_1_written_after_an_all_in_one_import_cell_is_graded(tmp_path, monkeypatch):
+    items = _grade_cells(tmp_path, monkeypatch, [
+        (IMPORTS_FIRST, []),
+        *[(source, []) for source in PART1_CODE],
+        ("driver = webdriver.Chrome()\ndriver.get(url)", []),
+    ])
+    assert items["district_polygon"].automatic_score == 4
+    assert items["street_network"].automatic_score == 4
+    assert items["network_edges"].automatic_score == 3
+
+
+def test_a_count_printed_with_thousands_separators_is_one_number():
+    from grader.answers import _numbers
+
+    assert 3747 in _numbers("Crashes within the street-network convex hull: 3,747")
+    assert 1500.5 in _numbers("Total: $1,500.50")
+    # A tuple printed without a space keeps its pieces, and is not a thousand.
+    assert _numbers("(1,2)") == [1, 2]
+
+
+def test_trimmed_crashes_shown_by_year_add_up_to_the_count(tmp_path, monkeypatch):
+    by_year = (
+        "<table><thead><tr><th></th><th>crashes</th></tr></thead><tbody>"
+        "<tr><th>2020</th><td>1312</td></tr><tr><th>2021</th><td>1302</td></tr>"
+        "<tr><th>2022</th><td>1133</td></tr></tbody></table>"
+    )
+    items = _grade_cells(tmp_path, monkeypatch, [
+        *[(source, []) for source in PART1_CODE],
+        ("boundary = edges.geometry.union_all().convex_hull\n"
+         "central_crashes = crashes.loc[crashes.within(boundary)].copy()\n"
+         'central_crashes.groupby("CRASH_YEAR").size().to_frame("crashes")',
+         [_result({"text/html": by_year, "text/plain": "crashes\n2020 1312"})]),
+    ])
+    trim = items["trim_crashes"]
+    assert trim.confidence >= 0.8
+    assert "3,747 crashes" in trim.feedback
+
+
+def test_a_map_shown_in_the_next_cell_or_through_a_base64_iframe_is_rendered(
+    tmp_path, monkeypatch
+):
+    import base64
+
+    leaflet = "<html><script src='leaflet.js'></script></html>"
+    iframe = ('<iframe src="data:text/html;base64,'
+              + base64.b64encode(leaflet.encode()).decode() + '"></iframe>')
+    for name, cells in {
+        "next_cell": [
+            ('m = edges.explore(column="crash_index")', []),
+            ("m", [_result({"text/html": "<div>Make this Notebook Trusted</div>",
+                            "text/plain": "<folium.folium.Map>"})]),
+        ],
+        "iframe": [
+            ('m = edges.explore(column="crash_index")\ndisplay(IFrame(src))',
+             [_result({"text/html": iframe, "text/plain": "<IFrame>"})]),
+        ],
+    }.items():
+        root = tmp_path / name
+        root.mkdir()
+        items = _grade_cells(root, monkeypatch, [*[(s, []) for s in PART1_CODE], *cells])
+        assert items["crash_index_map"].automatic_score == 4, name
+
+
+def test_a_loop_that_logs_in_its_own_words_and_parses_in_a_helper_counts(
+    tmp_path, monkeypatch
+):
+    helper = (
+        "def get_listings(driver):\n"
+        "    soup = BeautifulSoup(driver.page_source, 'html.parser')\n"
+        "    return soup.select('.cl-search-result')"
+    )
+    loop = (
+        "results = []\n"
+        "for page_num in range(1, 6):\n"
+        "    driver.get(base_url + f'#search={page_num}~gallery~0~0')\n"
+        "    apts = get_listings(driver)\n"
+        "    print('Number of new apartments =', len(apts))\n"
+        "    for apt in apts:\n"
+        "        results.append(apt)"
+    )
+    table = (
+        "<table><thead><tr><th></th><th>price</th><th>size</th><th>bedrooms</th>"
+        "<th>title</th></tr></thead><tbody><tr><th>0</th><td>1500</td><td>800</td>"
+        "<td>2</td><td>Nice</td></tr></tbody></table><p>600 rows × 4 columns</p>"
+    )
+    items = _grade_cells(tmp_path, monkeypatch, [
+        *[(source, []) for source in PART1_CODE],
+        ("driver = webdriver.Chrome()", []),
+        (helper, []),
+        (loop, [_stream("Processing batch 1...\nNumber of new apartments = 120\n")]),
+        ("results = pd.DataFrame(results)\nresults",
+         [_result({"text/html": table, "text/plain": "price size"})]),
+    ])
+    assert items["scraping_loop"].automatic_score == 7, items["scraping_loop"].feedback
+
+
+def test_matplotlib_labels_set_together_count_even_with_parentheses_in_them():
+    from grader.charts import aesthetic_signals
+
+    found = aesthetic_signals(
+        'axes[0].set(xlabel="Monthly rent (USD)", ylabel="Listings", title="Rents")'
+    )
+    assert found["x_label"] and found["y_label"] and found["title"]
+
+
+def test_colour_by_a_bedrooms_column_and_an_unrun_chart():
+    from types import SimpleNamespace
+
+    from assignments.hw4 import HW4Grader
+
+    grader = HW4Grader(load_rubric(RUBRIC))
+    item = grader.rubric.item("altair_scatter")
+    spec = {
+        "encoding": {"x": {"field": "price"}, "y": {"field": "size"},
+                     "color": {"field": "bedroom_category"}, "tooltip": [{"field": "title"}]},
+        "params": [{"bind": "scales"}],
+    }
+    ctx = SimpleNamespace(cache={})
+    grader._altair_specs = lambda ctx: [(30, spec)]
+    assert grader.check_altair_scatter(ctx, item).automatic_score == 3
+
+    grader._altair_specs = lambda ctx: []
+    grader.code = lambda ctx: SimpleNamespace(
+        part2=lambda: [], text=lambda cells: "chart = alt.Chart(results).mark_circle()"
+    )
+    unrun = grader.check_altair_scatter(ctx, item)
+    assert unrun.automatic_score == 1.5
+    assert unrun.status == STATUS_MANUAL_REVIEW

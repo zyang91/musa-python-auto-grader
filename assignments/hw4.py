@@ -33,6 +33,7 @@ short of full marks reaches a person (``grader/scoring.py``).
 from __future__ import annotations
 
 import ast
+import base64
 import io
 import re
 import statistics
@@ -152,6 +153,19 @@ def _template_cells(path: Path | None) -> list[list[str]]:
     return cells
 
 
+IMPORT_LINE_RE = re.compile(r"^\s*(?:import\s|from\s+\S+\s+import\s|[%!]\s*(?:pip|conda)\b)")
+
+
+def _without_imports(code: str) -> str:
+    """The cell less its imports and installs.
+
+    Many students import selenium and BeautifulSoup with everything else in the
+    first cell. That cell is not where Part 2 begins; the first one that uses
+    them is.
+    """
+    return "\n".join(line for line in code.splitlines() if not IMPORT_LINE_RE.match(line))
+
+
 def build_code(code_cells: list[str], template_path: Path | None) -> SubmittedCode:
     """Each code cell, with any template scaffold it was filled in from removed.
 
@@ -175,7 +189,7 @@ def build_code(code_cells: list[str], template_path: Path | None) -> SubmittedCo
         submitted.cells.append(
             CodeCell(number, source, code, student, parses, from_template=bool(scaffold))
         )
-        if submitted.part2_start == 10**9 and PART2_RE.search(code):
+        if submitted.part2_start == 10**9 and PART2_RE.search(_without_imports(code)):
             submitted.part2_start = number
     return submitted
 
@@ -528,13 +542,39 @@ class HW4Grader(AssignmentGrader):
                     numbers.append(int(value))
         return numbers
 
+    def _column_totals(
+        self, ctx: GradingContext, cells: list[CodeCell], span: int = 2
+    ) -> list[int]:
+        """Totals of short count tables shown in or just after these cells.
+
+        ``groupby("CRASH_YEAR").size()`` shows the trimmed crashes one year to a
+        row; their sum is the count. Only whole-number columns of a few rows are
+        added up, never a ``head()`` of the data.
+        """
+        wanted = {c.number + offset for c in cells for offset in range(span + 1)}
+        totals: list[int] = []
+        for answer in self.answers(ctx).cells:
+            if answer.code_cell not in wanted or answer.errored:
+                continue
+            for table in answer.tables:
+                for name, values in table.items():
+                    if not name or not 1 < len(values) <= 12:
+                        continue
+                    cleaned = [v.replace(",", "").strip() for v in values]
+                    if all(v.isdigit() for v in cleaned):
+                        totals.append(sum(int(v) for v in cleaned))
+        return totals
+
     def check_trim_crashes(self, ctx: GradingContext, item: RubricItem) -> RubricItemResult:
         """The steps; the template's "about 3,750" only decides who looks again."""
         result = self.source_steps(ctx, item)
         low, high = item.config.get("count_range", [3000, 4500])
         counts = self._counts_near(ctx, self.anchor_cells(ctx, item))
-        in_range = [n for n in counts if low <= n <= high]
+        totals = self._column_totals(ctx, self.anchor_cells(ctx, item))
+        in_range = [n for n in counts + totals if low <= n <= high]
         result.evidence["counts_shown"] = counts[:10]
+        if totals:
+            result.evidence["table_totals_shown"] = totals[:5]
         result.evidence["expected_count"] = (
             f"about {item.config.get('expected_count', 3750):,} (accepted {low:,}-{high:,})"
         )
@@ -614,11 +654,16 @@ class HW4Grader(AssignmentGrader):
         ]
         markers = [m.lower() for m in config.get("saved_markers", [])]
         rendered_in = None
-        for cell in cells:
-            for output in self.raw_outputs(ctx).get(cell.number, []):
-                html = chartlib._output_text((output.get("data") or {}).get("text/html"))
+        # `m = edges.explore(...)` and then `m` in the next cell: the map is
+        # saved under the cell that shows it.
+        shown_in = sorted({c.number + offset for c in cells for offset in range(3)})
+        for number in shown_in:
+            for output in self.raw_outputs(ctx).get(number, []):
+                html = _map_html(
+                    chartlib._output_text((output.get("data") or {}).get("text/html"))
+                )
                 if html and any(m in html.lower() for m in markers):
-                    rendered_in = cell.number
+                    rendered_in = number
                     break
             if rendered_in:
                 break
@@ -798,9 +843,35 @@ class HW4Grader(AssignmentGrader):
         if answer is None:
             return [], [], "", False
         patterns = list(config.get("run_log_patterns") or []) + ["", ""]
-        counts = [int(n) for n in re.findall(patterns[0], answer.text)] if patterns[0] else []
-        pages = re.findall(patterns[1], answer.text) if patterns[1] else []
+        count_patterns = [patterns[0], *(config.get("extra_count_patterns") or [])]
+        page_patterns = [patterns[1], *(config.get("extra_page_patterns") or [])]
+        counts: list[int] = []
+        for pattern in filter(None, count_patterns):
+            counts.extend(int(n) for n in re.findall(pattern, answer.text))
+        pages: list[str] = []
+        for pattern in filter(None, page_patterns):
+            pages.extend(re.findall(pattern, answer.text))
         return counts, pages, answer.text, answer.errored
+
+    def _with_helpers(self, ctx: GradingContext, loop: CodeCell) -> str:
+        """The loop, plus the Part 2 functions it calls.
+
+        A loop that calls ``get_listings(driver)`` parses and selects inside
+        that function; the work is still done once per page.
+        """
+        called = set(re.findall(r"\b([A-Za-z_]\w*)\s*\(", loop.student))
+        texts = [loop.student]
+        for cell in self.code(ctx).part2():
+            if cell.number == loop.number:
+                continue
+            parsed = _parse_cell(cell.code)
+            if parsed is None:
+                continue
+            tree, source = parsed
+            for node in tree.body:
+                if isinstance(node, ast.FunctionDef) and node.name in called:
+                    texts.append(ast.get_source_segment(source, node) or "")
+        return "\n".join(texts)
 
     def check_scraping_loop(self, ctx: GradingContext, item: RubricItem) -> RubricItemResult:
         """The loop must be written *and* shown running; a CSV is not a scrape."""
@@ -818,12 +889,13 @@ class HW4Grader(AssignmentGrader):
         else:
             evidence["loop_cell"] = loop.number
             evidence["loop_code"] = loop.student[:1500]
+            loop_text = self._with_helpers(ctx, loop)
             for requirement in config.get("implementation") or []:
                 label = str(requirement.get("label"))
                 if requirement.get("parses"):
                     ok = loop.parses and bool(loop.student.strip())
                 else:
-                    ok = requirement_met(requirement, loop.student)
+                    ok = requirement_met(requirement, loop_text)
                 if not ok:
                     deductions.append((float(requirement.get("points", 0)), label))
 
@@ -941,15 +1013,24 @@ class HW4Grader(AssignmentGrader):
     def check_altair_scatter(self, ctx: GradingContext, item: RubricItem) -> RubricItemResult:
         config = item.config
         wanted = config.get("encodings") or {"x": "price", "y": "size", "color": "bedrooms"}
+        aliases = config.get("encoding_aliases") or {}
+
+        def fits(channel: str, field_name: str) -> bool:
+            """The field asked for, or a column made from it (``bedrooms_str``)."""
+            if field_name == wanted[channel]:
+                return True
+            pattern = aliases.get(channel)
+            return bool(pattern and field_name and re.search(pattern, field_name))
+
         best: tuple[int, dict[str, Any], dict[str, Any]] | None = None
         for number, spec in self._altair_specs(ctx):
             views: list[dict[str, Any]] = []
             _walk_encodings(spec, views)
             for view in views:
                 encoding = view["encoding"]
-                hits = sum(1 for ch, f in wanted.items() if _field(encoding.get(ch)) == f)
+                hits = sum(1 for ch in wanted if fits(ch, _field(encoding.get(ch))))
                 if best is None or hits > sum(
-                    1 for ch, f in wanted.items() if _field(best[2].get(ch)) == f
+                    1 for ch in wanted if fits(ch, _field(best[2].get(ch)))
                 ):
                     best = (number, spec, encoding)
 
@@ -957,10 +1038,13 @@ class HW4Grader(AssignmentGrader):
         if best is None:
             source = self.code(ctx).text(self.code(ctx).part2())
             if re.search(r"\balt\.Chart\(", source):
+                # As for a histogram coded but never drawn: half, and a person looks.
+                points = float(config.get("source_only_points", item.points / 2))
                 return self.result(
-                    item, 0.0, STATUS_MANUAL_REVIEW, 0.4,
+                    item, points, STATUS_MANUAL_REVIEW, 0.4,
                     "An Altair chart is coded, but the submitted notebook carries no "
-                    "rendered chart to read. Please check it by hand.",
+                    f"rendered chart to read, so it earns {points:g} of {item.points:g} "
+                    "from the code alone. Please check it by hand.",
                     {"code": source[-1200:]},
                 )
             return self.result(item, 0.0, STATUS_FAIL, SOURCE_CONFIDENCE,
@@ -968,8 +1052,8 @@ class HW4Grader(AssignmentGrader):
 
         number, spec, encoding = best
         deductions: list[tuple[float, str]] = []
-        wrong = {ch: _field(encoding.get(ch)) for ch, f in wanted.items()
-                 if _field(encoding.get(ch)) != f}
+        wrong = {ch: _field(encoding.get(ch)) for ch in wanted
+                 if not fits(ch, _field(encoding.get(ch)))}
         if wrong:
             share = len(wrong) / len(wanted)
             deductions.append((float(config.get("encoding_points", 1.5)) * share,
@@ -1016,6 +1100,27 @@ class HW4Grader(AssignmentGrader):
             "bedrooms, with a tooltip and pan/zoom.",
             notes,
         )
+
+
+DATA_URI_RE = re.compile(r"src=[\"']data:text/html;base64,([A-Za-z0-9+/=\s]+)[\"']")
+
+
+def _map_html(html: str) -> str:
+    """The HTML, plus any page embedded in it as a base64 iframe.
+
+    Some students render the map through ``IFrame("data:text/html;base64,...")``
+    so it keeps a fixed height in VS Code; the Leaflet page is inside the data URI.
+    """
+    if not html:
+        return ""
+    decoded = []
+    for payload in DATA_URI_RE.findall(html[:5_000_000]):
+        try:
+            decoded.append(base64.b64decode(payload, validate=False)[:200_000].decode(
+                "utf-8", "ignore"))
+        except (ValueError, TypeError):
+            continue
+    return "\n".join([html, *decoded])
 
 
 def _is_stub(source: str) -> bool:

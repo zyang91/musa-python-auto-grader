@@ -81,6 +81,8 @@ SOURCE_NONE = "none"
 MAX_SCALAR_CHARS = 6000
 
 NUMBER_RE = re.compile(r"-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?")
+# A number with thousands separators, as f"{n:,}" prints it: "3,747".
+GROUPED_NUMBER_RE = re.compile(r"(?<![\d,.])-?\d{1,3}(?:,\d{3})+(?:\.\d+)?(?![\d,])")
 # pandas prints its shape under a truncated frame: "[5376 rows x 4 columns]" in
 # text and "<p>5376 rows × 4 columns</p>" in HTML (a multiplication sign, not x).
 SHAPE_TEXT_RE = re.compile(r"\[(\d[\d,]*)\s+rows?\s+x\s+(\d[\d,]*)\s+columns?\]")
@@ -661,6 +663,12 @@ def _numbers(text: str) -> list[float]:
             continue
         if len(found) > 400:
             break
+    # f"{n:,}" prints 3,747. The pieces stay (a tuple can print as "1,2"), and
+    # the whole number is added after them.
+    for match in GROUPED_NUMBER_RE.findall(text or ""):
+        if len(found) > 400:
+            break
+        found.append(float(match.replace(",", "")))
     return found
 
 

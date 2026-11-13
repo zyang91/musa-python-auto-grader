@@ -438,10 +438,12 @@ def merge_facts(specs: Iterable[dict[str, Any]]) -> SpecFacts:
 # Static aesthetic signals (matplotlib / seaborn)
 # ---------------------------------------------------------------------------
 
+# `ax.set(xlabel="Rent (USD)", ylabel=...)`: one level of parentheses inside the
+# call, so a label's "(USD)" does not end the search before `ylabel`.
 AESTHETIC_PATTERNS: dict[str, re.Pattern[str]] = {
     "title": re.compile(r"\.set_title\s*\(|\bplt\.title\s*\(|\.suptitle\s*\(|\btitle\s*="),
-    "x_label": re.compile(r"\.set_xlabel\s*\(|\bplt\.xlabel\s*\(|\.set\s*\([^)]*xlabel"),
-    "y_label": re.compile(r"\.set_ylabel\s*\(|\bplt\.ylabel\s*\(|\.set\s*\([^)]*ylabel"),
+    "x_label": re.compile(r"\.set_xlabel\s*\(|\bplt\.xlabel\s*\(|\.set\s*\((?:[^()]|\([^()]*\))*xlabel"),
+    "y_label": re.compile(r"\.set_ylabel\s*\(|\bplt\.ylabel\s*\(|\.set\s*\((?:[^()]|\([^()]*\))*ylabel"),
     "legend": re.compile(r"\.legend\s*\(|\blegend\s*=\s*(?!False)"),
     "explicit_colors": re.compile(r"\bcolor\s*=|\bc\s*=|\bcolors\s*=|\bcmap\s*=|"
                                   r"\bpalette\s*=|\bhue\s*=|\bcolormap\s*="),
