@@ -33,7 +33,7 @@ openpyxl==3.1.5
 # Apple Silicon only. See docker/README.md.
 rasterio==1.5.2
 rasterstats==0.21.0
-hvplot==0.12.2
+hvplot==0.13.0
 holoviews==1.23.2
 bokeh==3.10.2
 panel==1.10.0
